@@ -2,9 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": [
-    "main"
-  ],
+  "windows": ["main"],
   "permissions": [
     "core:default",
     "opener:default",
@@ -13,6 +11,9 @@
     "fs:allow-app-write-recursive",
     "fs:allow-watch",
     "fs:allow-unwatch",
-    "dialog:default"
+    "dialog:default",
+    "core:webview:allow-create-webview-window",
+    "core:window:default",
+    "core:window:allow-show"
   ]
 }

@@ -1,4 +1,5 @@
 import { path } from "@tauri-apps/api";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { message, open } from "@tauri-apps/plugin-dialog";
 import { exists, mkdir, readDir, readTextFile, remove, UnwatchFn, watch, writeTextFile } from "@tauri-apps/plugin-fs";
 import { nanoid } from "nanoid";
@@ -170,4 +171,15 @@ export const removeWidget = async (path: string) => {
     console.error(error);
     await message("Could not remove widget", { title: "Error", kind: 'error' });
   }
+}
+
+export const createCreatorWindow = async () => {
+  const webview = new WebviewWindow("creator", {
+    url: "creator-index.html",
+    title: "Widget creator",
+    maximized: true,
+  });
+  webview.once("tauri://created", async () => {
+    await webview.show();
+  });
 }

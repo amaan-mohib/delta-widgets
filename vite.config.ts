@@ -30,6 +30,12 @@ export default defineConfig(async () => ({
   },
   envPrefix: ['VITE_', 'TAURI_ENV_*'],
   build: {
+    rollupOptions: {
+      input: {
+        main: "index.html",
+        creator: "creator-index.html"
+      }
+    },
     minify: !process.env.TAURI_ENV_DEBUG ? true : false,
     sourcemap: !!process.env.TAURI_ENV_DEBUG,
   }

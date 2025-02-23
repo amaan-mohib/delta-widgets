@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "./App.css";
 import {
+  createCreatorWindow,
   duplicateWidget,
   fileOrFolderPicker,
   getAllWidgets,
@@ -233,7 +234,9 @@ function App() {
         <Card
           className={styles.card}
           style={{ justifyContent: "center" }}
-          onClick={() => {}}>
+          onClick={async () => {
+            await createCreatorWindow();
+          }}>
           <div
             style={{
               display: "flex",
