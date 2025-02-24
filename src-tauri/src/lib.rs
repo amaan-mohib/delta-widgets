@@ -4,6 +4,8 @@ use tauri::{AppHandle, Emitter};
 
 #[path = "commands/media.rs"]
 mod media;
+#[path = "commands/widget.rs"]
+mod widget;
 
 static GLOBAL_APP_HANDLE: OnceLock<AppHandle> = OnceLock::new();
 
@@ -28,7 +30,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             greet,
             media::get_media,
-            media::media_action
+            media::media_action,
+            widget::create_creator_window,
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application")

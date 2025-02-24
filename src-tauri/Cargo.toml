@@ -28,6 +28,7 @@ anyhow = "1"
 windows = { version = "0.59.0", features = ["Media_Control", "Storage_Streams", "Foundation_Collections", "System", "ApplicationModel"] }
 tauri-plugin-fs = { version = "2", features = ["watch"] }
 tauri-plugin-dialog = "2"
+wallpaper = "3.2.0"
 
 [profile.release]
 opt-level = 'z'     # Optimize for size

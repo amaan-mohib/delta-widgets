@@ -1,5 +1,5 @@
 import { path } from "@tauri-apps/api";
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { invoke } from "@tauri-apps/api/core";
 import { message, open } from "@tauri-apps/plugin-dialog";
 import { exists, mkdir, readDir, readTextFile, remove, UnwatchFn, watch, writeTextFile } from "@tauri-apps/plugin-fs";
 import { nanoid } from "nanoid";
@@ -173,13 +173,42 @@ export const removeWidget = async (path: string) => {
   }
 }
 
-export const createCreatorWindow = async () => {
-  const webview = new WebviewWindow("creator", {
-    url: "creator-index.html",
-    title: "Widget creator",
-    maximized: true,
-  });
-  webview.once("tauri://created", async () => {
-    await webview.show();
-  });
+export const createCreatorWindow = async (manifestPath?: string) => {
+  const appDataDir = await path.appDataDir();
+  const savePath = await path.resolve(appDataDir, "saves");
+  if (!(await exists(savePath))) {
+    await mkdir(savePath);
+  }
+  let projectFolder = "";
+
+  const label = manifestPath ? "" : `Untitled-${nanoid(4)}`;
+  const key = manifestPath ? "" : label.toLowerCase();
+  let manifest: Omit<IWidget, 'path'> = {
+    key,
+    label,
+    elements: [{
+      type: "container",
+      styles: {
+        display: "flex",
+        background: "transparent",
+      }
+    }],
+    dimensions: {
+      width: 400,
+      height: 300,
+    },
+  };
+
+  if (!manifestPath) {
+    const timestamp = new Date().getTime();
+    projectFolder = await path.resolve(savePath, timestamp.toString());
+    await mkdir(projectFolder);
+
+    manifestPath = await path.resolve(projectFolder, "manifest.json");
+    await writeTextFile(manifestPath, JSON.stringify(manifest, null, 2));
+  } else {
+    projectFolder = await path.resolve(manifestPath, "..");
+    manifest = JSON.parse(await readTextFile(manifestPath));
+  }
+  await invoke("create_creator_window", { manifest: JSON.stringify({ ...manifest, path: projectFolder }) });
 }

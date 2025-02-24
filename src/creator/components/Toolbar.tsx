@@ -7,7 +7,7 @@ import {
   ToolbarGroup,
   Tooltip,
 } from "@fluentui/react-components";
-import { useManifestStore } from "./Canvas/stores/useManifestStore";
+import { useManifestStore } from "../stores/useManifestStore";
 import { useRef, useState } from "react";
 import {
   CheckmarkRegular,

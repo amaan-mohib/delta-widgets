@@ -11,7 +11,7 @@ import {
   ZoomInRegular,
   ZoomOutRegular,
 } from "@fluentui/react-icons";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   TransformComponent,
   TransformWrapper,
@@ -19,6 +19,7 @@ import {
 } from "react-zoom-pan-pinch";
 import { ResizableBox } from "react-resizable";
 import Dropable from "../Dropable";
+import { Buffer } from "buffer";
 
 const useStyles = makeStyles({
   canvas: {
@@ -107,9 +108,26 @@ const Canvas: React.FC<CanvasProps> = () => {
   const [zoomDisabled, setZoomDisabled] = useState(false);
   const [scale, setScale] = useState(1);
   const centerRef = useRef<HTMLDivElement>(null);
+  const [wallpaper, setWallpaper] = useState("");
+
+  useEffect(() => {
+    if (window.__INITIAL_STATE__?.wallpaper) {
+      setWallpaper(
+        `data:image/png;base64,${Buffer.from(
+          window.__INITIAL_STATE__.wallpaper
+        ).toString("base64")}`
+      );
+    }
+  }, []);
 
   return (
-    <div className={styles.canvas}>
+    <div
+      className={styles.canvas}
+      style={
+        wallpaper
+          ? { backgroundImage: `url(${wallpaper})`, backgroundSize: "cover" }
+          : {}
+      }>
       <TransformWrapper
         minScale={0.2}
         initialScale={1}
