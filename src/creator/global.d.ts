@@ -5,6 +5,7 @@ declare global {
     __INITIAL_STATE__?: {
       manifest: IWidget;
       wallpaper?: number[];
+      existingKeys?: Record<string, null>;
     }
   }
 }

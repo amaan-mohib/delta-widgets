@@ -2,17 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import "./App.css";
 import {
   createCreatorWindow,
-  duplicateWidget,
   fileOrFolderPicker,
   getAllWidgets,
   IWidget,
-  removeWidget,
   watchWidgetFolder,
 } from "./utils/widgets";
 import {
   Card,
-  CardFooter,
-  CardHeader,
+  Divider,
   makeStyles,
   Menu,
   MenuButton,
@@ -20,32 +17,29 @@ import {
   MenuList,
   MenuPopover,
   MenuTrigger,
-  Switch,
   Text,
+  Title3,
 } from "@fluentui/react-components";
 import {
   AddRegular,
   AppsAddInRegular,
   BracesRegular,
   CodeRegular,
-  CopyRegular,
-  DeleteRegular,
   LinkRegular,
-  MoreHorizontal20Regular,
 } from "@fluentui/react-icons";
 import { UnwatchFn } from "@tauri-apps/plugin-fs";
 import AddWidgetDialog, { IDialogState } from "./components/AddWidgetDialog";
+import WidgetCard from "./components/WidgetCard";
 
 const useStyles = makeStyles({
   container: {
     display: "flex",
     flexWrap: "wrap",
-    padding: "16px",
+    padding: "16px 0",
     gap: "16px",
   },
   header: {
-    padding: "16px",
-    paddingBottom: "0px",
+    paddingBottom: "16px",
     display: "flex",
     alignItems: "center",
     justifyContent: "end",
@@ -55,17 +49,12 @@ const useStyles = makeStyles({
     minHeight: "130px",
     height: "100%",
   },
-  cardFooter: {
-    marginTop: "auto",
-  },
-  switch: {
-    marginLeft: "0px",
-  },
 });
 
 function App() {
   const styles = useStyles();
   const [widgets, setWidgets] = useState<Record<string, IWidget>>({});
+  const [savedWidgets, setSavedWidgets] = useState<Record<string, IWidget>>({});
   const [dialogState, setDialogState] = useState<IDialogState>({
     open: false,
     type: "none",
@@ -78,13 +67,19 @@ function App() {
       ),
     [JSON.stringify(widgets)]
   );
+  const savedWidgetsList = useMemo(
+    () =>
+      Object.values(savedWidgets).sort((a, b) =>
+        a.label > b.label ? 1 : b.label > a.label ? -1 : 0
+      ),
+    [JSON.stringify(savedWidgets)]
+  );
 
   const getAndSetWidgets = useCallback(() => {
     getAllWidgets().then((widgets) => {
       setWidgets(widgets);
     });
   }, []);
-
   useEffect(() => {
     let unwatch: UnwatchFn | null;
     (async () => {
@@ -102,8 +97,31 @@ function App() {
     };
   }, []);
 
+  const getAndSetSavedWidgets = useCallback(() => {
+    getAllWidgets(true).then((widgets) => {
+      setSavedWidgets(widgets);
+    });
+  }, []);
+  useEffect(() => {
+    let unwatch: UnwatchFn | null;
+    (async () => {
+      try {
+        unwatch = await watchWidgetFolder(() => {
+          getAndSetSavedWidgets();
+        }, true);
+      } catch (error) {
+        console.error(error);
+      }
+    })();
+
+    return () => {
+      unwatch && unwatch();
+    };
+  }, []);
+
   useEffect(() => {
     getAndSetWidgets();
+    getAndSetSavedWidgets();
     // let unsub: UnlistenFn;
     // (async () => {
     //   unsub = await listen("media_updated", () => {
@@ -184,52 +202,11 @@ function App() {
           </MenuPopover>
         </Menu>
       </header>
+
+      <Title3>Installed</Title3>
       <div className={styles.container} role="list">
         {widgetsList.map((widget) => {
-          return (
-            <Card role="listitem" key={widget.key} className={styles.card}>
-              <CardHeader
-                action={
-                  <Menu positioning={"below-end"}>
-                    <MenuTrigger disableButtonEnhancement>
-                      <MenuButton
-                        size="small"
-                        appearance="transparent"
-                        icon={<MoreHorizontal20Regular />}
-                      />
-                    </MenuTrigger>
-                    <MenuPopover>
-                      <MenuList>
-                        <MenuItem
-                          icon={<CopyRegular />}
-                          onClick={() => {
-                            duplicateWidget(widget).catch(console.log);
-                          }}>
-                          Duplicate
-                        </MenuItem>
-                        <MenuItem
-                          icon={<DeleteRegular />}
-                          onClick={() => removeWidget(widget.path)}>
-                          Remove
-                        </MenuItem>
-                      </MenuList>
-                    </MenuPopover>
-                  </Menu>
-                }
-                header={<Text weight="semibold">{widget.label}</Text>}
-              />
-              {widget.description && <p>{widget.description}</p>}
-              <CardFooter className={styles.cardFooter}>
-                <Switch
-                  className={styles.switch}
-                  label={widget.visible ? "Enabled" : "Disabled"}
-                  style={{ margin: 0 }}
-                  defaultChecked={widget.visible}
-                  indicator={{ className: styles.switch }}
-                />
-              </CardFooter>
-            </Card>
-          );
+          return <WidgetCard widget={widget} cardStyle={styles.card} />;
         })}
         <Card
           className={styles.card}
@@ -256,6 +233,20 @@ function App() {
           onClose={() => {}}
         />
       </div>
+
+      {savedWidgetsList.length > 0 ? (
+        <>
+          <Divider style={{ marginBottom: "16px" }} />
+          <Title3>Drafts</Title3>
+          <div className={styles.container} role="list">
+            {savedWidgetsList.map((widget) => {
+              return (
+                <WidgetCard widget={widget} cardStyle={styles.card} saves />
+              );
+            })}
+          </div>
+        </>
+      ) : null}
     </main>
   );
 }

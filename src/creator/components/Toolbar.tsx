@@ -8,13 +8,14 @@ import {
   Tooltip,
 } from "@fluentui/react-components";
 import { useManifestStore } from "../stores/useManifestStore";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   CheckmarkRegular,
   DismissRegular,
   EditRegular,
   SaveRegular,
 } from "@fluentui/react-icons";
+import { message } from "@tauri-apps/plugin-dialog";
 
 interface ToolbarProps {}
 
@@ -22,6 +23,19 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
   const projectName = useManifestStore((obj) => obj.label);
   const [editName, setEditName] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
+
+  const onSubmit = useCallback(async (key: string, label: string) => {
+    if (key in (window.__INITIAL_STATE__?.existingKeys || {})) {
+      await message("A widget with same label already exist", {
+        title: "Error",
+        kind: "error",
+      });
+      return;
+    }
+
+    useManifestStore.setState({ key, label });
+    setEditName(false);
+  }, []);
 
   return (
     <Toolbar style={{ gap: "5px", justifyContent: "space-between" }}>
@@ -43,12 +57,11 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
         ) : (
           <form
             style={{ gap: "5px", display: "flex", alignItems: "center" }}
-            onSubmit={() => {
+            onSubmit={(e) => {
+              e.preventDefault();
               const label = nameInputRef.current?.value || "";
               const key = label.replace(/ /g, "").toLowerCase();
-
-              useManifestStore.setState({ key, label });
-              setEditName(false);
+              onSubmit(key, label);
             }}>
             <Input size="small" ref={nameInputRef} defaultValue={projectName} />
             <ToolbarButton icon={<CheckmarkRegular />} type="submit" />
