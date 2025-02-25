@@ -83,7 +83,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
                 </MenuItem>
                 <MenuItem
                   icon={<DeleteRegular />}
-                  onClick={() => removeWidget(widget.path)}>
+                  onClick={() => removeWidget(widget.path, saves)}>
                   Remove
                 </MenuItem>
               </MenuList>

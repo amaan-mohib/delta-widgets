@@ -227,11 +227,6 @@ function App() {
             <Text weight="semibold">Create new</Text>
           </div>
         </Card>
-        <AddWidgetDialog
-          dialogState={dialogState}
-          resetDialogState={setDialogState}
-          onClose={() => {}}
-        />
       </div>
 
       {savedWidgetsList.length > 0 ? (
@@ -247,6 +242,12 @@ function App() {
           </div>
         </>
       ) : null}
+
+      <AddWidgetDialog
+        dialogState={dialogState}
+        resetDialogState={setDialogState}
+        onClose={() => {}}
+      />
     </main>
   );
 }

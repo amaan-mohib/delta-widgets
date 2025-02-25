@@ -165,9 +165,9 @@ export const duplicateWidget = async (widget: IWidget, saves?: boolean) => {
   )
 }
 
-export const removeWidget = async (path: string) => {
+export const removeWidget = async (filePath: string, saves?: boolean) => {
   try {
-    await remove(path, { recursive: true });
+    await remove(saves ? await path.resolve(filePath, "..") : filePath, { recursive: true });
   } catch (error) {
     console.error(error);
     await message("Could not remove widget", { title: "Error", kind: 'error' });
