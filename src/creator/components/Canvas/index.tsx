@@ -20,6 +20,7 @@ import {
 import { ResizableBox } from "react-resizable";
 import Dropable from "../Dropable";
 import { Buffer } from "buffer";
+import { useDataTrackStore } from "../../stores/useDataTrackStore";
 
 const useStyles = makeStyles({
   canvas: {
@@ -109,8 +110,12 @@ const Canvas: React.FC<CanvasProps> = () => {
   const [scale, setScale] = useState(1);
   const centerRef = useRef<HTMLDivElement>(null);
   const [wallpaper, setWallpaper] = useState("");
+  const initialStateLoading = useDataTrackStore(
+    (state) => state.initialStateLoading
+  );
 
   useEffect(() => {
+    if (initialStateLoading) return;
     if (window.__INITIAL_STATE__?.wallpaper) {
       setWallpaper(
         `data:image/png;base64,${Buffer.from(
@@ -118,7 +123,7 @@ const Canvas: React.FC<CanvasProps> = () => {
         ).toString("base64")}`
       );
     }
-  }, []);
+  }, [initialStateLoading]);
 
   return (
     <div

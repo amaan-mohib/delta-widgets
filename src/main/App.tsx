@@ -206,7 +206,13 @@ function App() {
       <Title3>Installed</Title3>
       <div className={styles.container} role="list">
         {widgetsList.map((widget) => {
-          return <WidgetCard widget={widget} cardStyle={styles.card} />;
+          return (
+            <WidgetCard
+              key={widget.key}
+              widget={widget}
+              cardStyle={styles.card}
+            />
+          );
         })}
         <Card
           className={styles.card}
@@ -236,7 +242,12 @@ function App() {
           <div className={styles.container} role="list">
             {savedWidgetsList.map((widget) => {
               return (
-                <WidgetCard widget={widget} cardStyle={styles.card} saves />
+                <WidgetCard
+                  key={widget.key}
+                  widget={widget}
+                  cardStyle={styles.card}
+                  saves
+                />
               );
             })}
           </div>

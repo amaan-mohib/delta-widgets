@@ -90,6 +90,12 @@ pub async fn create_creator_window(
             tauri::WindowEvent::CloseRequested { .. } => {
                 webview.show().unwrap();
             }
+            // hack to keep widget unminimized
+            // tauri::WindowEvent::Resized(_) => {
+            //     if new_window.is_minimized().unwrap() {
+            //         new_window.unminimize().unwrap();
+            //     }
+            // }
             _ => {}
         };
     });
