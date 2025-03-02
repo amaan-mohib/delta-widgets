@@ -5,7 +5,8 @@ export interface IUseDataTrackStore {
   initialStateLoadCounter: number,
   incrementInitialStateLoadCounter: () => void,
   activeId: string | null,
-  selectedId: string | null
+  selectedId: string | null,
+  isSaving: boolean;
 }
 
 export const useDataTrackStore = create<IUseDataTrackStore>((set, get) => ({
@@ -15,5 +16,6 @@ export const useDataTrackStore = create<IUseDataTrackStore>((set, get) => ({
     set({ initialStateLoadCounter: get().initialStateLoadCounter + 1 });
   },
   activeId: null,
-  selectedId: null
+  selectedId: null,
+  isSaving: false,
 }));

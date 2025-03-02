@@ -10,10 +10,12 @@ import CreatorToolbar from "./components/Toolbar";
 import { useDataTrackStore } from "./stores/useDataTrackStore";
 import { IWidgetElement } from "../types/manifest";
 import Properties from "./components/Properties";
+import { getManifestFromPath } from "../main/utils/widgets";
 
 const useStyles = makeStyles({
   toolbar: {
-    borderBottom: `1px solid ${tokens.colorNeutralBackground1}`,
+    borderBottom: `1px solid ${tokens.colorNeutralStroke3}`,
+    borderTop: `1px solid ${tokens.colorNeutralStroke3}`,
     padding: "0 3px",
   },
 });
@@ -45,10 +47,15 @@ const App: React.FC<AppProps> = () => {
   useEffect(() => {
     if (initialStateLoading) return;
     const initialManifest = window.__INITIAL_STATE__?.manifest;
-    if (initialManifest) {
-      useManifestStore.setState({ manifest: initialManifest });
+    if (initialManifest && manifestStore === null) {
+      const manifestPath = initialManifest.path;
+      getManifestFromPath(manifestPath).then((manifest) => {
+        useManifestStore.setState({
+          manifest: { ...manifest, path: manifestPath },
+        });
+      });
     } else {
-      const { key, label } = manifestStore;
+      const { key, label } = manifestStore || {};
       if (!key || !label) {
         const newLabel = `Untitled-${nanoid(4)}`;
         const newKey = newLabel.toLowerCase();

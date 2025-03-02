@@ -2,6 +2,7 @@ import { makeStyles } from "@fluentui/react-components";
 import React, { useMemo } from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { useManifestStore } from "../../stores/useManifestStore";
+import WindowProperties from "./WindowProperties";
 
 interface PropertiesProps {}
 
@@ -18,16 +19,19 @@ const Properties: React.FC<PropertiesProps> = () => {
   const styles = useStyles();
   const selectedId = useDataTrackStore((state) => state.selectedId);
   const elementMap = useManifestStore((state) => state.elementMap);
-  const elementProperties = useMemo(() => {
+  const selectedElement = useMemo(() => {
     if (!selectedId) return null;
     return elementMap[selectedId];
   }, [selectedId]);
 
-  if (!selectedId || !elementProperties) return null;
+  const ElementProperties: React.FC = useMemo(() => {
+    if (selectedElement?.type === "container") return () => <></>;
+    return WindowProperties;
+  }, [selectedElement]);
+
   return (
     <div className={styles.container}>
-      {selectedId}
-      {JSON.stringify(elementProperties, null, 2)}
+      <ElementProperties />
     </div>
   );
 };

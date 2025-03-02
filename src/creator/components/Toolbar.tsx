@@ -16,13 +16,17 @@ import {
   SaveRegular,
 } from "@fluentui/react-icons";
 import { message } from "@tauri-apps/plugin-dialog";
+import { useDataTrackStore } from "../stores/useDataTrackStore";
+import { updateManifest } from "../../main/utils/widgets";
 
 interface ToolbarProps {}
 
 const CreatorToolbar: React.FC<ToolbarProps> = () => {
-  const projectName = useManifestStore((obj) => obj.manifest.label);
+  const manifest = useManifestStore((state) => state.manifest);
+  const projectName = useManifestStore((obj) => obj.manifest?.label);
   const [editName, setEditName] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const isSaving = useDataTrackStore((state) => state.isSaving);
 
   const onSubmit = useCallback(async (key: string, label: string) => {
     if (key in (window.__INITIAL_STATE__?.existingKeys || {})) {
@@ -73,7 +77,19 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
         )}
         <ToolbarDivider />
         <Tooltip content="Save" relationship="label">
-          <ToolbarButton icon={<SaveRegular />} />
+          <ToolbarButton
+            disabled={isSaving}
+            icon={<SaveRegular />}
+            onClick={() => {
+              useDataTrackStore.setState({ isSaving: true });
+              if (manifest)
+                updateManifest(manifest)
+                  .catch(console.error)
+                  .finally(() => {
+                    useDataTrackStore.setState({ isSaving: false });
+                  });
+            }}
+          />
         </Tooltip>
       </ToolbarGroup>
       <ToolbarGroup></ToolbarGroup>

@@ -3,9 +3,12 @@ import { IWidget, IWidgetElement } from "../../types/manifest";
 import { subscribeWithSelector } from "zustand/middleware";
 import lodashSet from "lodash.set";
 import lodashGet from "lodash.get";
+import debounce from "lodash.debounce";
+import { updateManifest } from "../../main/utils/widgets";
+import { useDataTrackStore } from "./useDataTrackStore";
 
 export interface IManifestStore {
-  manifest: IWidget;
+  manifest: IWidget | null;
   updateWidgetDimensions: (width: number, height: number) => void;
   updateManifest: (data: Partial<IWidget>) => void;
   addElements: (element: IWidgetElement, parentId: string) => void;
@@ -13,24 +16,23 @@ export interface IManifestStore {
 }
 
 export const useManifestStore = create<IManifestStore>()(subscribeWithSelector((set, get) => ({
-  manifest: {
-    key: "",
-    label: "",
-    dimensions: { width: 400, height: 300 },
-    elements: [],
-    path: "",
-  },
+  manifest: null,
   updateWidgetDimensions(width, height) {
-    const manifest = { ...get().manifest };
+    const oldManifest = get().manifest;
+    if (!oldManifest) return;
+    const manifest = { ...oldManifest };
     manifest.dimensions = { width, height };
     set({ manifest });
   },
   updateManifest(data) {
-    const manifest = { ...get().manifest, ...data };
+    const oldManifest = get().manifest; if (!oldManifest) return;
+    const manifest = { ...oldManifest, ...data };
     set({ manifest });
   },
   addElements(element, parentId) {
-    const manifest = Object.assign(get().manifest, {});
+    const oldManifest = get().manifest;
+    if (!oldManifest) return;
+    const manifest = Object.assign(oldManifest, {});
     const elementPath = get().elementMap[parentId]?.path || "";
     const elementIndex = parentId ? lodashGet(manifest.elements, elementPath)?.children?.length : manifest.elements?.length;
     const newManifest = lodashSet(manifest, parentId ? `elements${elementPath}.children[${elementIndex}]` : `elements[${elementIndex}]`, element);
@@ -73,8 +75,20 @@ function mapElementPaths(
   return map;
 }
 
-useManifestStore.subscribe((state) => state.manifest.elements, (elements) => {
+useManifestStore.subscribe((state) => state.manifest?.elements, (elements) => {
   if (!elements) return;
   const elementMap = mapElementPaths(elements);
   useManifestStore.setState({ elementMap });
-})
+});
+
+const debouncedUpdate = debounce((manifest: IWidget) => {
+  useDataTrackStore.setState({ isSaving: true });
+  updateManifest(manifest).catch(console.error).finally(() => {
+    useDataTrackStore.setState({ isSaving: false });
+  });
+}, 500);
+
+useManifestStore.subscribe(state => state.manifest, manifest => {
+  if (!manifest) return;
+  debouncedUpdate(manifest);
+});

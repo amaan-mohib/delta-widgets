@@ -8,6 +8,8 @@ import {
 } from "@fluentui/react-components";
 import {
   ArrowCounterclockwiseRegular,
+  ImageOffRegular,
+  ImageRegular,
   ZoomInRegular,
   ZoomOutRegular,
 } from "@fluentui/react-icons";
@@ -69,9 +71,13 @@ interface CanvasProps {}
 const Controls = ({
   scale,
   centerRef,
+  showWallpaper,
+  setShowWallpaper,
 }: {
   scale: number;
   centerRef: React.RefObject<HTMLDivElement>;
+  showWallpaper: boolean;
+  setShowWallpaper: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const styles = useStyles();
   const { zoomIn, zoomOut, resetTransform, centerView } = useControls();
@@ -96,6 +102,21 @@ const Controls = ({
             />
           </Tooltip>
         )}
+        {showWallpaper ? (
+          <Tooltip content="Hide wallpaper" relationship="label">
+            <ToolbarButton
+              icon={<ImageOffRegular />}
+              onClick={() => setShowWallpaper(false)}
+            />
+          </Tooltip>
+        ) : (
+          <Tooltip content="Show wallpaper" relationship="label">
+            <ToolbarButton
+              icon={<ImageRegular />}
+              onClick={() => setShowWallpaper(true)}
+            />
+          </Tooltip>
+        )}
       </Toolbar>
       <div
         onClick={() => centerView()}
@@ -107,9 +128,9 @@ const Controls = ({
 const Canvas: React.FC<CanvasProps> = () => {
   const styles = useStyles();
   const widgetDimension = useManifestStore(
-    (state) => state.manifest.dimensions
+    (state) => state.manifest?.dimensions
   );
-  const elements = useManifestStore((state) => state.manifest.elements);
+  const elements = useManifestStore((state) => state.manifest?.elements);
   const [zoomDisabled, setZoomDisabled] = useState(false);
   const [scale, setScale] = useState(1);
   const centerRef = useRef<HTMLDivElement>(null);
@@ -117,6 +138,7 @@ const Canvas: React.FC<CanvasProps> = () => {
   const initialStateLoading = useDataTrackStore(
     (state) => state.initialStateLoading
   );
+  const [showWallpaper, setShowWallpaper] = useState(true);
 
   useEffect(() => {
     if (initialStateLoading) return;
@@ -139,7 +161,7 @@ const Canvas: React.FC<CanvasProps> = () => {
         useDataTrackStore.setState({ selectedId: null });
       }}
       style={
-        wallpaper
+        wallpaper && showWallpaper
           ? {
               backgroundImage: `url(${wallpaper})`,
               backgroundSize: "cover",
@@ -155,7 +177,12 @@ const Canvas: React.FC<CanvasProps> = () => {
         onTransformed={(_, { scale }) => {
           setScale(scale);
         }}>
-        <Controls scale={scale} centerRef={centerRef} />
+        <Controls
+          scale={scale}
+          centerRef={centerRef}
+          showWallpaper={showWallpaper}
+          setShowWallpaper={setShowWallpaper}
+        />
         <TransformComponent wrapperClass={styles.zoomWrapper}>
           <ResizableBox
             minConstraints={[100, 100]}

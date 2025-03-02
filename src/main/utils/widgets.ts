@@ -209,3 +209,19 @@ export const createCreatorWindow = async (manifestPath?: string) => {
     currentFolder: projectFolder
   });
 }
+
+export const getManifestFromPath = async (manifestPath: string) => {
+  if (!manifestPath.endsWith("manifest.json")) {
+    manifestPath = await path.resolve(manifestPath, "manifest.json");
+  }
+  const manifest = await readTextFile(manifestPath);
+  return JSON.parse(manifest) as Omit<IWidget, 'path'>;
+}
+
+export const updateManifest = async (manifest: IWidget) => {
+  const manifestPath = await path.resolve(manifest.path, "manifest.json");
+  if (window && window.__INITIAL_STATE__) {
+    window.__INITIAL_STATE__.manifest = manifest;
+  }
+  await writeTextFile(manifestPath, JSON.stringify({ ...manifest, path: undefined }, null, 2));
+}

@@ -19,6 +19,7 @@
     "@tauri-apps/plugin-fs": "^2.2.0",
     "@tauri-apps/plugin-opener": "^2",
     "buffer": "^6.0.3",
+    "lodash.debounce": "^4.0.8",
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
     "nanoid": "^5.1.2",
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",
+    "@types/lodash.debounce": "^4.0.9",
     "@types/lodash.get": "^4.4.9",
     "@types/lodash.set": "^4.3.9",
     "@types/node": "^22.13.4",
