@@ -20,7 +20,7 @@ import { message } from "@tauri-apps/plugin-dialog";
 interface ToolbarProps {}
 
 const CreatorToolbar: React.FC<ToolbarProps> = () => {
-  const projectName = useManifestStore((obj) => obj.label);
+  const projectName = useManifestStore((obj) => obj.manifest.label);
   const [editName, setEditName] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
@@ -33,7 +33,7 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
       return;
     }
 
-    useManifestStore.setState({ key, label });
+    useManifestStore.getState().updateManifest({ key, label });
     setEditName(false);
   }, []);
 

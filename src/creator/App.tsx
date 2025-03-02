@@ -8,6 +8,8 @@ import { useEffect } from "react";
 import { nanoid } from "nanoid";
 import CreatorToolbar from "./components/Toolbar";
 import { useDataTrackStore } from "./stores/useDataTrackStore";
+import { IWidgetElement } from "../types/manifest";
+import Properties from "./components/Properties";
 
 const useStyles = makeStyles({
   toolbar: {
@@ -19,7 +21,7 @@ interface AppProps {}
 
 const App: React.FC<AppProps> = () => {
   const styles = useStyles();
-  const manifestStore = useManifestStore();
+  const manifestStore = useManifestStore((state) => state.manifest);
   const {
     initialStateLoading,
     incrementInitialStateLoadCounter,
@@ -44,13 +46,15 @@ const App: React.FC<AppProps> = () => {
     if (initialStateLoading) return;
     const initialManifest = window.__INITIAL_STATE__?.manifest;
     if (initialManifest) {
-      useManifestStore.setState(initialManifest);
+      useManifestStore.setState({ manifest: initialManifest });
     } else {
       const { key, label } = manifestStore;
       if (!key || !label) {
         const newLabel = `Untitled-${nanoid(4)}`;
         const newKey = newLabel.toLowerCase();
-        useManifestStore.setState({ key: newKey, label: newLabel });
+        useManifestStore
+          .getState()
+          .updateManifest({ key: newKey, label: newLabel });
       }
     }
   }, [initialStateLoading]);
@@ -62,7 +66,25 @@ const App: React.FC<AppProps> = () => {
       <Spinner size="huge" />
     </main>
   ) : (
-    <DndContext>
+    <DndContext
+      onDragStart={(e) => {
+        useDataTrackStore.setState({ activeId: String(e.active.id) });
+      }}
+      onDragEnd={(e) => {
+        if (e.over?.id) {
+          const element = e.active.data.current as IWidgetElement;
+          const id = `${element.type}-${nanoid(4)}`;
+          useManifestStore.getState().addElements(
+            {
+              ...element,
+              children: [],
+              id,
+            },
+            String(e.over.id)
+          );
+        }
+        useDataTrackStore.setState({ activeId: null });
+      }}>
       <main className="container">
         <div className={styles.toolbar}>
           <CreatorToolbar />
@@ -70,7 +92,7 @@ const App: React.FC<AppProps> = () => {
         <div className="layout">
           <Sidebar />
           <Canvas />
-          {/* <Sidebar /> */}
+          <Properties />
         </div>
       </main>
     </DndContext>

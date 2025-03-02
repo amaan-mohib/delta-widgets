@@ -1,27 +1,38 @@
 import { useDroppable } from "@dnd-kit/core";
 import React, { PropsWithChildren } from "react";
+import Element from "./Element";
 
 interface DropableProps {
   id: string;
+  styles?: React.CSSProperties;
+  disableDrop?: boolean;
 }
 
 const Dropable: React.FC<DropableProps & PropsWithChildren> = ({
   id,
   children,
+  disableDrop,
+  styles,
 }) => {
-  const { isOver, setNodeRef } = useDroppable({
+  if (disableDrop) {
+    return (
+      <Element id={id} styles={styles}>
+        {children}
+      </Element>
+    );
+  }
+  const { isOver, setNodeRef, active } = useDroppable({
     id: id,
   });
-  const style = {
-    border: "2px solid transparent",
-    boderColor: isOver ? "green" : undefined,
-    borderRadius: 2,
-  };
-
   return (
-    <div ref={setNodeRef} style={style}>
+    <Element
+      id={id}
+      styles={styles}
+      active={active}
+      isOver={isOver}
+      wrapperRef={setNodeRef}>
       {children}
-    </div>
+    </Element>
   );
 };
 

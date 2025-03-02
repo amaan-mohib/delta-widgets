@@ -18,9 +18,10 @@ import {
   useControls,
 } from "react-zoom-pan-pinch";
 import { ResizableBox } from "react-resizable";
-import Dropable from "../Dropable";
 import { Buffer } from "buffer";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
+import { useManifestStore } from "../../stores/useManifestStore";
+import ComponentRender from "./ComponentRender";
 
 const useStyles = makeStyles({
   canvas: {
@@ -41,9 +42,11 @@ const useStyles = makeStyles({
     top: 0,
   },
   widgetWindow: {
-    border: `1px solid ${tokens.colorNeutralForeground4}`,
+    border: `1px solid ${tokens.colorNeutralForeground1}`,
     borderRadius: "2px",
     position: "relative",
+    display: "flex",
+    boxShadow: `0px 0px 5px 2px ${tokens.colorNeutralBackground1}`,
   },
   windowInfo: {
     position: "absolute",
@@ -52,11 +55,12 @@ const useStyles = makeStyles({
     transform: "translateY(-100%)",
     width: "100%",
     padding: "3px 0",
-    opacity: 0.75,
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     cursor: "pointer",
+    color: `${tokens.colorNeutralForeground1}`,
+    textShadow: `1px 1px ${tokens.colorNeutralBackground1}`,
   },
 });
 
@@ -102,10 +106,10 @@ const Controls = ({
 };
 const Canvas: React.FC<CanvasProps> = () => {
   const styles = useStyles();
-  const [widgetDimension, setWidgetDimension] = useState({
-    width: 400,
-    height: 300,
-  });
+  const widgetDimension = useManifestStore(
+    (state) => state.manifest.dimensions
+  );
+  const elements = useManifestStore((state) => state.manifest.elements);
   const [zoomDisabled, setZoomDisabled] = useState(false);
   const [scale, setScale] = useState(1);
   const centerRef = useRef<HTMLDivElement>(null);
@@ -125,12 +129,22 @@ const Canvas: React.FC<CanvasProps> = () => {
     }
   }, [initialStateLoading]);
 
+  if (initialStateLoading || !widgetDimension) return null;
+
   return (
     <div
       className={styles.canvas}
+      onClick={(e) => {
+        e.stopPropagation();
+        useDataTrackStore.setState({ selectedId: null });
+      }}
       style={
         wallpaper
-          ? { backgroundImage: `url(${wallpaper})`, backgroundSize: "cover" }
+          ? {
+              backgroundImage: `url(${wallpaper})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }
           : {}
       }>
       <TransformWrapper
@@ -143,34 +157,40 @@ const Canvas: React.FC<CanvasProps> = () => {
         }}>
         <Controls scale={scale} centerRef={centerRef} />
         <TransformComponent wrapperClass={styles.zoomWrapper}>
-          <Dropable id="window">
-            <ResizableBox
-              minConstraints={[100, 100]}
-              maxConstraints={[800, 600]}
-              transformScale={scale}
-              onResizeStart={() => {
-                setZoomDisabled(true);
-              }}
-              onResizeStop={() => {
-                setZoomDisabled(false);
-                centerRef.current && centerRef.current.click();
-              }}
-              onResize={(_, { size }) => {
-                setWidgetDimension(size);
-              }}
-              resizeHandles={["se"]}
-              width={widgetDimension.width}
-              height={widgetDimension.height}
-              className={styles.widgetWindow}
-              draggableOpts={{ grid: [1, 1] }}>
+          <ResizableBox
+            minConstraints={[100, 100]}
+            maxConstraints={[800, 600]}
+            transformScale={scale}
+            onResizeStart={() => {
+              setZoomDisabled(true);
+            }}
+            onResizeStop={() => {
+              setZoomDisabled(false);
+              centerRef.current && centerRef.current.click();
+            }}
+            onResize={(_, { size }) => {
+              useManifestStore
+                .getState()
+                .updateWidgetDimensions(size.width, size.height);
+            }}
+            resizeHandles={["se"]}
+            width={widgetDimension.width}
+            height={widgetDimension.height}
+            className={styles.widgetWindow}
+            draggableOpts={{ grid: [1, 1] }}>
+            <>
               <div className={styles.windowInfo}>
                 {widgetDimension.width > 100 && <Text size={100}>Window</Text>}
                 <Text size={100}>{`${Math.round(
                   widgetDimension.width
                 )}px X ${Math.round(widgetDimension.height)}px`}</Text>
               </div>
-            </ResizableBox>
-          </Dropable>
+              {elements &&
+                elements.map((element) => (
+                  <ComponentRender key={element.id} component={element} />
+                ))}
+            </>
+          </ResizableBox>
         </TransformComponent>
       </TransformWrapper>
     </div>

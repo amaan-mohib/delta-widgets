@@ -3,19 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { message, open } from "@tauri-apps/plugin-dialog";
 import { exists, mkdir, readDir, readTextFile, remove, UnwatchFn, watch, writeTextFile } from "@tauri-apps/plugin-fs";
 import { nanoid } from "nanoid";
-
-export interface IWidget {
-  key: string,
-  label: string,
-  path: string,
-  description?: string,
-  dimensions?: { width: number, height: number },
-  position?: { x: number, y: number },
-  visible?: boolean,
-  elements?: any[],
-  file?: string,
-  url?: string,
-}
+import { IWidget } from "../../types/manifest";
 
 export const getWidgetsDirPath = async (saves?: boolean) => {
   const appDataDir = await path.appDataDir();
@@ -189,10 +177,15 @@ export const createCreatorWindow = async (manifestPath?: string) => {
     label,
     elements: [{
       type: "container",
+      id: "container",
       styles: {
         display: "flex",
         background: "transparent",
-      }
+        flex: 1,
+        width: "100%",
+        padding: "5px"
+      },
+      children: []
     }],
     dimensions: {
       width: 400,

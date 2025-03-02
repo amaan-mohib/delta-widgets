@@ -4,6 +4,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+  --sidebar-width: 280px;
 }
 
 * {
@@ -33,4 +34,23 @@
   bottom: -4px;
   right: -4px;
   cursor: se-resize;
+}
+.dropable-container-hover {
+  outline: 2px solid green !important;
+}
+.selected-element-info {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translateY(-100%);
+  background: green;
+  padding: 2px 7px;
+  color: white;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.selected-element-info > span {
+  white-space: nowrap;
 }

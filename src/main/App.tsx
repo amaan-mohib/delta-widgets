@@ -4,7 +4,6 @@ import {
   createCreatorWindow,
   fileOrFolderPicker,
   getAllWidgets,
-  IWidget,
   watchWidgetFolder,
 } from "./utils/widgets";
 import {
@@ -30,6 +29,7 @@ import {
 import { UnwatchFn } from "@tauri-apps/plugin-fs";
 import AddWidgetDialog, { IDialogState } from "./components/AddWidgetDialog";
 import WidgetCard from "./components/WidgetCard";
+import { IWidget } from "../types/manifest";
 
 const useStyles = makeStyles({
   container: {
