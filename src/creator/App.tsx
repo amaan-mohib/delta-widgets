@@ -8,9 +8,9 @@ import { useEffect } from "react";
 import { nanoid } from "nanoid";
 import CreatorToolbar from "./components/Toolbar";
 import { useDataTrackStore } from "./stores/useDataTrackStore";
-import { IWidgetElement } from "../types/manifest";
 import Properties from "./components/Properties";
 import { getManifestFromPath } from "../main/utils/widgets";
+import { componentTypeToDataMap } from "./components/Sidebar/ComponentList";
 
 const useStyles = makeStyles({
   toolbar: {
@@ -79,16 +79,13 @@ const App: React.FC<AppProps> = () => {
       }}
       onDragEnd={(e) => {
         if (e.over?.id) {
-          const element = e.active.data.current as IWidgetElement;
-          const id = `${element.type}-${nanoid(4)}`;
-          useManifestStore.getState().addElements(
-            {
-              ...element,
-              children: [],
-              id,
-            },
-            String(e.over.id)
-          );
+          const { type } = e.active.data.current as { type: string };
+          const element = componentTypeToDataMap[type]
+            ? componentTypeToDataMap[type]()
+            : null;
+          if (element) {
+            useManifestStore.getState().addElements(element, String(e.over.id));
+          }
         }
         useDataTrackStore.setState({ activeId: null });
       }}>

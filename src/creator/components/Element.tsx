@@ -1,7 +1,7 @@
 import { Active } from "@dnd-kit/core";
 import React, { PropsWithChildren } from "react";
 import { useDataTrackStore } from "../stores/useDataTrackStore";
-import { Text } from "@fluentui/react-components";
+import { Text, tokens } from "@fluentui/react-components";
 
 interface ElementProps {
   id: string;
@@ -25,12 +25,13 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
     padding: active
       ? `calc(${styles?.padding || "0px"} + 5px)`
       : styles?.padding,
-    outline:
-      isOver || selectedId === id
-        ? "2px solid green"
-        : active
-        ? "2px dashed green"
-        : "2px solid transparent",
+    outline: isOver
+      ? `2px solid ${tokens.colorNeutralForeground2BrandHover}`
+      : selectedId === id
+      ? `2px solid ${tokens.colorNeutralForeground2BrandPressed}`
+      : active
+      ? `2px dashed ${tokens.colorNeutralForeground2BrandHover}`
+      : "2px solid transparent",
     borderRadius: 2,
     position: "relative",
   };

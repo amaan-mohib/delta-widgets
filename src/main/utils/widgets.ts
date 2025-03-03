@@ -162,6 +162,27 @@ export const removeWidget = async (filePath: string, saves?: boolean) => {
   }
 }
 
+export const defaultManifest: Omit<IWidget, 'path'> = {
+  key: "",
+  label: "",
+  elements: [{
+    type: "container",
+    id: "container",
+    styles: {
+      display: "flex",
+      background: "transparent",
+      flex: 1,
+      width: "100%",
+      padding: "5px"
+    },
+    children: []
+  }],
+  dimensions: {
+    width: 400,
+    height: 300,
+  },
+};
+
 export const createCreatorWindow = async (manifestPath?: string) => {
   const appDataDir = await path.appDataDir();
   const savePath = await path.resolve(appDataDir, "saves");
@@ -172,26 +193,6 @@ export const createCreatorWindow = async (manifestPath?: string) => {
 
   const label = manifestPath ? "" : `Untitled-${nanoid(4)}`;
   const key = manifestPath ? "" : label.toLowerCase();
-  let manifest: Omit<IWidget, 'path'> = {
-    key,
-    label,
-    elements: [{
-      type: "container",
-      id: "container",
-      styles: {
-        display: "flex",
-        background: "transparent",
-        flex: 1,
-        width: "100%",
-        padding: "5px"
-      },
-      children: []
-    }],
-    dimensions: {
-      width: 400,
-      height: 300,
-    },
-  };
 
   if (!manifestPath) {
     const timestamp = new Date().getTime();
@@ -199,13 +200,12 @@ export const createCreatorWindow = async (manifestPath?: string) => {
     await mkdir(projectFolder);
 
     manifestPath = await path.resolve(projectFolder, "manifest.json");
-    await writeTextFile(manifestPath, JSON.stringify(manifest, null, 2));
+    await writeTextFile(manifestPath, JSON.stringify({ ...defaultManifest, key, label }, null, 2));
   } else {
     projectFolder = await path.resolve(manifestPath, "..");
-    manifest = JSON.parse(await readTextFile(manifestPath));
   }
   await invoke("create_creator_window", {
-    manifest: JSON.stringify({ ...manifest, path: projectFolder }),
+    manifest: JSON.stringify({ path: projectFolder }),
     currentFolder: projectFolder
   });
 }
@@ -220,8 +220,5 @@ export const getManifestFromPath = async (manifestPath: string) => {
 
 export const updateManifest = async (manifest: IWidget) => {
   const manifestPath = await path.resolve(manifest.path, "manifest.json");
-  if (window && window.__INITIAL_STATE__) {
-    window.__INITIAL_STATE__.manifest = manifest;
-  }
   await writeTextFile(manifestPath, JSON.stringify({ ...manifest, path: undefined }, null, 2));
 }

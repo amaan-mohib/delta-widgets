@@ -11,6 +11,7 @@ import { useManifestStore } from "../stores/useManifestStore";
 import { useCallback, useRef, useState } from "react";
 import {
   CheckmarkRegular,
+  DeleteRegular,
   DismissRegular,
   EditRegular,
   SaveRegular,
@@ -27,6 +28,8 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
   const [editName, setEditName] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const isSaving = useDataTrackStore((state) => state.isSaving);
+  const selectedId = useDataTrackStore((state) => state.selectedId);
+  const elementMap = useManifestStore((state) => state.elementMap);
 
   const onSubmit = useCallback(async (key: string, label: string) => {
     if (key in (window.__INITIAL_STATE__?.existingKeys || {})) {
@@ -47,6 +50,7 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
         {!editName ? (
           <Tooltip content="Project name" relationship="label">
             <Button
+              size="small"
               appearance="secondary"
               icon={<EditRegular />}
               onClick={() => {
@@ -91,8 +95,31 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
             }}
           />
         </Tooltip>
+        {selectedId && selectedId !== "container" && (
+          <Tooltip content="Delete" relationship="label">
+            <ToolbarButton
+              icon={<DeleteRegular />}
+              onClick={() => {
+                const selectedElement = selectedId
+                  ? elementMap[selectedId]
+                  : null;
+                if (selectedElement) {
+                  useManifestStore
+                    .getState()
+                    .removeElement(selectedElement.path);
+                  useDataTrackStore.setState({ selectedId: null });
+                }
+              }}
+            />
+          </Tooltip>
+        )}
       </ToolbarGroup>
-      <ToolbarGroup></ToolbarGroup>
+      <ToolbarGroup style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <Button size="small">Preview</Button>
+        <Button size="small" appearance="primary">
+          Publish
+        </Button>
+      </ToolbarGroup>
     </Toolbar>
   );
 };

@@ -38,7 +38,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
         }}>
         <Tab value="components">Components</Tab>
         <Tab value="templates">Templates</Tab>
-        <Tab value="layers">Layers</Tab>
+        <Tab value="layers">Elements</Tab>
       </TabList>
       <div style={{ height: "100%" }}>
         <TabComponent />

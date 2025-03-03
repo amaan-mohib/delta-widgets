@@ -5,20 +5,24 @@ import Draggable from "../Draggable";
 import { DragOverlay } from "@dnd-kit/core";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { IWidgetElement } from "../../../types/manifest";
+import { nanoid } from "nanoid";
 
 interface ComponentListProps {}
 
 export const components: {
   name: string;
+  type: string;
   key: string;
   icon: ReactNode;
-  data: Omit<IWidgetElement, "id">;
+  data: () => IWidgetElement;
 }[] = [
   {
     name: "Flex",
+    type: "container",
     key: "flex-container",
     icon: <Square24Regular />,
-    data: {
+    data: () => ({
+      id: `container-${nanoid(4)}`,
       type: "container",
       styles: {
         display: "flex",
@@ -28,18 +32,21 @@ export const components: {
         width: "100%",
       },
       children: [],
-    },
+    }),
   },
   {
     name: "Text",
     key: "text",
+    type: "text",
     icon: <TextField24Regular />,
-    data: {
-      type: "text",
-      styles: {},
-    },
+    data: () => ({ id: `text-${nanoid(4)}`, type: "text", styles: {} }),
   },
 ];
+
+export const componentTypeToDataMap: Record<string, () => IWidgetElement> = {};
+Object.values(components).forEach((item) => {
+  componentTypeToDataMap[item.type] = item.data;
+});
 
 const useStyles = makeStyles({
   container: {
@@ -48,7 +55,7 @@ const useStyles = makeStyles({
     gap: "10px",
     padding: "10px",
   },
-  chicklet: {
+  chiclet: {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -68,7 +75,7 @@ const ComponentItem: React.FC<{
 
   if (!item) return null;
   return (
-    <Card className={styles.chicklet} key={item.key}>
+    <Card className={styles.chiclet} key={item.key}>
       {item.icon}
       {item.name}
     </Card>
@@ -83,7 +90,11 @@ const ComponentList: React.FC<ComponentListProps> = () => {
     <div>
       <div className={styles.container}>
         {components.map((item) => (
-          <Draggable id={item.key} key={item.key} dragOverlay data={item.data}>
+          <Draggable
+            id={item.key}
+            key={item.key}
+            dragOverlay
+            data={{ type: item.type }}>
             <ComponentItem item={item} />
           </Draggable>
         ))}

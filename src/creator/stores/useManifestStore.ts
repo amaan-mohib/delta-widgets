@@ -4,14 +4,20 @@ import { subscribeWithSelector } from "zustand/middleware";
 import lodashSet from "lodash.set";
 import lodashGet from "lodash.get";
 import debounce from "lodash.debounce";
+import unset from "lodash.unset";
 import { updateManifest } from "../../main/utils/widgets";
 import { useDataTrackStore } from "./useDataTrackStore";
+
+const cloneObject = <T>(obj: T) => {
+  return JSON.parse(JSON.stringify(obj)) as T;
+}
 
 export interface IManifestStore {
   manifest: IWidget | null;
   updateWidgetDimensions: (width: number, height: number) => void;
   updateManifest: (data: Partial<IWidget>) => void;
   addElements: (element: IWidgetElement, parentId: string) => void;
+  removeElement: (path: string) => void;
   elementMap: Record<string, IWidgetElement & { path: string }>,
 }
 
@@ -25,14 +31,15 @@ export const useManifestStore = create<IManifestStore>()(subscribeWithSelector((
     set({ manifest });
   },
   updateManifest(data) {
-    const oldManifest = get().manifest; if (!oldManifest) return;
-    const manifest = { ...oldManifest, ...data };
+    const oldManifest = get().manifest;
+    if (!oldManifest) return;
+    const manifest = { ...cloneObject(oldManifest), ...data };
     set({ manifest });
   },
   addElements(element, parentId) {
     const oldManifest = get().manifest;
     if (!oldManifest) return;
-    const manifest = Object.assign(oldManifest, {});
+    const manifest = cloneObject(oldManifest);
     const elementPath = get().elementMap[parentId]?.path || "";
     const elementIndex = parentId ? lodashGet(manifest.elements, elementPath)?.children?.length : manifest.elements?.length;
     const newManifest = lodashSet(manifest, parentId ? `elements${elementPath}.children[${elementIndex}]` : `elements[${elementIndex}]`, element);
@@ -43,6 +50,19 @@ export const useManifestStore = create<IManifestStore>()(subscribeWithSelector((
         elements: [...(newManifest.elements || [])]
       }
     });
+  },
+  removeElement(path) {
+    const oldManifest = get().manifest;
+    if (!oldManifest) return;
+    const manifest = cloneObject(oldManifest);
+    const parentPath = `${path.split(".").slice(0, -1).join(".")}.children`;
+    unset(manifest, `elements${path}`);
+    const newManifest = lodashSet(
+      manifest,
+      `elements${parentPath}`,
+      (lodashGet(manifest, `elements${parentPath}`) || []).filter((item: any) => !!item)
+    );
+    set({ manifest: newManifest });
   },
   elementMap: {
     "container": {
