@@ -104,9 +104,7 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
                   ? elementMap[selectedId]
                   : null;
                 if (selectedElement) {
-                  useManifestStore
-                    .getState()
-                    .removeElement(selectedElement.path);
+                  useManifestStore.getState().removeElement(selectedElement.id);
                   useDataTrackStore.setState({ selectedId: null });
                 }
               }}

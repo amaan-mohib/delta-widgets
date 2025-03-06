@@ -17,7 +17,7 @@ export const components: {
   data: () => IWidgetElement;
 }[] = [
   {
-    name: "Flex",
+    name: "Container",
     type: "container",
     key: "flex-container",
     icon: <Square24Regular />,
@@ -39,7 +39,12 @@ export const components: {
     key: "text",
     type: "text",
     icon: <TextField24Regular />,
-    data: () => ({ id: `text-${nanoid(4)}`, type: "text", styles: {} }),
+    data: () => ({
+      id: `text-${nanoid(4)}`,
+      type: "text",
+      styles: {},
+      data: { text: "Text" },
+    }),
   },
 ];
 

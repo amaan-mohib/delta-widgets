@@ -138,6 +138,7 @@ const Canvas: React.FC<CanvasProps> = () => {
   const initialStateLoading = useDataTrackStore(
     (state) => state.initialStateLoading
   );
+  const isDragging = useDataTrackStore((state) => state.isDragging);
   const [showWallpaper, setShowWallpaper] = useState(true);
 
   useEffect(() => {
@@ -172,7 +173,7 @@ const Canvas: React.FC<CanvasProps> = () => {
       <TransformWrapper
         minScale={0.2}
         initialScale={1}
-        disabled={zoomDisabled}
+        disabled={zoomDisabled || isDragging}
         centerOnInit
         onTransformed={(_, { scale }) => {
           setScale(scale);

@@ -1,7 +1,9 @@
 import { Active } from "@dnd-kit/core";
 import React, { PropsWithChildren } from "react";
 import { useDataTrackStore } from "../stores/useDataTrackStore";
-import { Text, tokens } from "@fluentui/react-components";
+import { Button, Text, tokens } from "@fluentui/react-components";
+import { ReOrderDotsVerticalRegular } from "@fluentui/react-icons";
+import { useSortable } from "@dnd-kit/sortable";
 
 interface ElementProps {
   id: string;
@@ -19,7 +21,16 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
   isOver,
   wrapperRef,
 }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    isDragging,
+    transform,
+    transition,
+  } = useSortable({ id });
   const selectedId = useDataTrackStore((state) => state.selectedId);
+  const activeId = useDataTrackStore((state) => state.activeId);
   const style: React.CSSProperties = {
     ...styles,
     padding: active
@@ -34,6 +45,12 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
       : "2px solid transparent",
     borderRadius: 2,
     position: "relative",
+    ...(isDragging
+      ? {
+          transform: `translate(${transform?.x}px, ${transform?.y}px)`,
+          transition,
+        }
+      : {}),
   };
 
   return (
@@ -43,7 +60,10 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
         useDataTrackStore.setState({ selectedId: id });
       }}
       id={id}
-      ref={wrapperRef}
+      ref={(ref) => {
+        wrapperRef && wrapperRef(ref);
+        setNodeRef(ref);
+      }}
       style={style}
       onMouseOver={(e) => {
         e.stopPropagation();
@@ -59,8 +79,18 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
         const div = e.target as HTMLDivElement;
         div.classList.remove("dropable-container-hover");
       }}>
-      {(isOver || selectedId === id) && (
+      {(isOver || selectedId === id || activeId === id) && (
         <div className="selected-element-info">
+          {(selectedId === id || activeId === id) && id !== "container" && (
+            <Button
+              {...listeners}
+              {...attributes}
+              style={{ cursor: "grab" }}
+              size="small"
+              appearance="primary"
+              icon={<ReOrderDotsVerticalRegular fontSize="16px" />}
+            />
+          )}
           <Text size={200}>#{id}</Text>
         </div>
       )}

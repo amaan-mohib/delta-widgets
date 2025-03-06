@@ -7,6 +7,7 @@ export interface IUseDataTrackStore {
   activeId: string | null,
   selectedId: string | null,
   isSaving: boolean;
+  isDragging: boolean;
 }
 
 export const useDataTrackStore = create<IUseDataTrackStore>((set, get) => ({
@@ -18,4 +19,5 @@ export const useDataTrackStore = create<IUseDataTrackStore>((set, get) => ({
   activeId: null,
   selectedId: null,
   isSaving: false,
+  isDragging: false
 }));
