@@ -51,6 +51,8 @@
   align-items: center;
   justify-content: center;
   gap: 5px;
+  text-shadow: none;
+  text-align: left;
 }
 .selected-element-info > span {
   white-space: nowrap;

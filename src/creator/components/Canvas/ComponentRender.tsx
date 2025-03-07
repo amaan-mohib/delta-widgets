@@ -12,7 +12,7 @@ interface ComponentRenderProps {
 }
 
 const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
-  if (component.type === "container") {
+  if (component.type === "container" || component.type === "container-grid") {
     return (
       <Dropable id={component.id} styles={component.styles}>
         {component.children && component.children.length > 0 && (

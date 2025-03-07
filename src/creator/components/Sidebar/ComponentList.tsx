@@ -1,5 +1,9 @@
 import { Card, makeStyles } from "@fluentui/react-components";
-import { Square24Regular, TextField24Regular } from "@fluentui/react-icons";
+import {
+  LayoutCellFour24Regular,
+  Square24Regular,
+  TextField24Regular,
+} from "@fluentui/react-icons";
 import React, { ReactNode } from "react";
 import Draggable from "../Draggable";
 import { DragOverlay } from "@dnd-kit/core";
@@ -27,6 +31,25 @@ export const components: {
       styles: {
         display: "flex",
         flex: 1,
+        background: "transparent",
+        padding: 5,
+        width: "100%",
+      },
+      children: [],
+    }),
+  },
+  {
+    name: "Grid",
+    type: "container-grid",
+    key: "grid-container",
+    icon: <LayoutCellFour24Regular />,
+    data: () => ({
+      id: `container-grid-${nanoid(4)}`,
+      type: "container-grid",
+      styles: {
+        display: "grid",
+        flex: 1,
+        gridTemplateColumns: "repeat(2, 1fr)",
         background: "transparent",
         padding: 5,
         width: "100%",

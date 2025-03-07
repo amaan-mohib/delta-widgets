@@ -20,6 +20,7 @@ import {
 import React from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { useManifestStore } from "../../stores/useManifestStore";
+import { ColorPickerPopup } from "./ColorPickerPopup";
 
 interface ContainerPropertiesProps {}
 
@@ -85,6 +86,29 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
                   </Tooltip>
                 </ToolbarRadioGroup>
               </Toolbar>
+            </Field>
+          </AccordionPanel>
+        </AccordionItem>
+      </Accordion>
+      <Accordion collapsible defaultOpenItems={["size"]}>
+        <AccordionItem value="size">
+          <AccordionHeader expandIconPosition="end">Background</AccordionHeader>
+          <AccordionPanel className={styles.panel}>
+            <Field orientation="horizontal" label="Color">
+              <ColorPickerPopup
+                color={
+                  elementMap[selectedId].styles.backgroundColor || "transparent"
+                }
+                setColor={(color) => {
+                  useManifestStore
+                    .getState()
+                    .updateElementProperties(selectedId, {
+                      styles: {
+                        backgroundColor: color,
+                      },
+                    });
+                }}
+              />
             </Field>
           </AccordionPanel>
         </AccordionItem>

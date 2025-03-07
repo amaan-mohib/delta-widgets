@@ -3,14 +3,19 @@ import {
   AccordionHeader,
   AccordionItem,
   AccordionPanel,
+  Button,
+  Checkbox,
   Divider,
   Field,
   Input,
   makeStyles,
+  SpinButton,
   Text,
+  tokens,
   Toolbar,
   ToolbarRadioButton,
   ToolbarRadioGroup,
+  ToolbarToggleButton,
   Tooltip,
   typographyStyles,
 } from "@fluentui/react-components";
@@ -19,10 +24,16 @@ import {
   TextAlignJustifyRegular,
   TextAlignLeftRegular,
   TextAlignRightRegular,
+  TextBoldRegular,
+  TextItalicRegular,
+  TextUnderlineRegular,
 } from "@fluentui/react-icons";
-import React from "react";
+import React, { useMemo } from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { useManifestStore } from "../../stores/useManifestStore";
+import { MathFormulaRegular } from "@fluentui/react-icons/fonts";
+import { spinButtonOnChange } from "../../utils";
+import { ColorPickerPopup } from "./ColorPickerPopup";
 
 interface TextPropertiesProps {}
 
@@ -45,6 +56,11 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
 
   if (!selectedId || !elementMap[selectedId]) return null;
 
+  const textStyles = useMemo(
+    () => elementMap[selectedId].styles,
+    [elementMap[selectedId].styles]
+  );
+
   return (
     <div>
       <div className={styles.padding}>
@@ -56,25 +72,36 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
           <AccordionHeader expandIconPosition="end">Properties</AccordionHeader>
           <AccordionPanel className={styles.panel}>
             <Field orientation="horizontal" label="Text">
-              <Input
-                style={{ width: "170px" }}
-                placeholder="Enter text"
-                onChange={(_, { value }) => {
-                  useManifestStore
-                    .getState()
-                    .updateElementProperties(selectedId, {
-                      data: { text: value || "" },
-                    });
-                }}
-                value={elementMap[selectedId].data?.text || ""}
-              />
+              <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
+                <Input
+                  style={{ width: "140px" }}
+                  placeholder="Enter text"
+                  onChange={(_, { value }) => {
+                    useManifestStore
+                      .getState()
+                      .updateElementProperties(selectedId, {
+                        data: { text: value || "" },
+                      });
+                  }}
+                  value={elementMap[selectedId].data?.text || ""}
+                />
+                <Tooltip
+                  content="Expression"
+                  relationship="label"
+                  positioning={"above-end"}
+                  withArrow>
+                  <Button
+                    size="small"
+                    appearance="outline"
+                    icon={<MathFormulaRegular style={{ fontSize: "16px" }} />}
+                  />
+                </Tooltip>
+              </div>
             </Field>
             <Field orientation="horizontal" label="Alignment">
               <Toolbar
                 checkedValues={{
-                  textAlign: [
-                    elementMap[selectedId].styles.textAlign || "left",
-                  ],
+                  textAlign: [textStyles.textAlign || "left"],
                 }}
                 onCheckedValueChange={(_, { name, checkedItems }) => {
                   useManifestStore
@@ -118,6 +145,109 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
                   </Tooltip>
                 </ToolbarRadioGroup>
               </Toolbar>
+            </Field>
+            <Field orientation="horizontal" label="Formatting">
+              <Toolbar
+                checkedValues={{
+                  fontWeight: [String(textStyles.fontWeight || "normal")],
+                  fontStyle: [String(textStyles.fontStyle || "normal")],
+                  textDecoration: [
+                    String(textStyles.textDecoration || "normal"),
+                  ],
+                }}
+                onCheckedValueChange={(_, { name, checkedItems }) => {
+                  useManifestStore
+                    .getState()
+                    .updateElementProperties(selectedId, {
+                      styles: { [name]: checkedItems[1] },
+                    });
+                }}>
+                <Tooltip content="Bold" relationship="label" withArrow>
+                  <ToolbarToggleButton
+                    name="fontWeight"
+                    appearance="subtle"
+                    value="bold"
+                    icon={<TextBoldRegular />}
+                  />
+                </Tooltip>
+                <Tooltip content="Italic" relationship="label" withArrow>
+                  <ToolbarToggleButton
+                    name="fontStyle"
+                    appearance="subtle"
+                    value="italic"
+                    icon={<TextItalicRegular />}
+                  />
+                </Tooltip>
+                <Tooltip content="Underline" relationship="label" withArrow>
+                  <ToolbarToggleButton
+                    name="textDecoration"
+                    appearance="subtle"
+                    value="underline"
+                    icon={<TextUnderlineRegular />}
+                  />
+                </Tooltip>
+              </Toolbar>
+            </Field>
+            <Field orientation="horizontal" label="Size (px)">
+              <SpinButton
+                value={parseInt(String(textStyles.fontSize || 16), 10)}
+                onChange={(event, data) => {
+                  spinButtonOnChange(
+                    event,
+                    data,
+                    (value) => {
+                      useManifestStore
+                        .getState()
+                        .updateElementProperties(selectedId, {
+                          styles: {
+                            fontSize: `${value}px`,
+                            lineHeight: `${value + 4}px`,
+                          },
+                        });
+                    },
+                    16
+                  );
+                }}
+              />
+            </Field>
+            <Field orientation="horizontal" label="Shadow">
+              <Checkbox
+                checked={
+                  textStyles.textShadow && textStyles.textShadow !== "none"
+                }
+                onChange={(_, { checked }) => {
+                  useManifestStore
+                    .getState()
+                    .updateElementProperties(selectedId, {
+                      styles: {
+                        textShadow: checked ? "1px 1px black" : "none",
+                      },
+                    });
+                }}
+              />
+            </Field>
+            <Field orientation="horizontal" label="Color">
+              <ColorPickerPopup
+                color={
+                  textStyles.color ||
+                  window
+                    .getComputedStyle(
+                      document.querySelector(".fui-FluentProvider")!
+                    )
+                    .getPropertyValue(
+                      tokens.colorNeutralForeground1.replace(/var\(|\)/g, "")
+                    )
+                }
+                setColor={(color) => {
+                  useManifestStore
+                    .getState()
+                    .updateElementProperties(selectedId, {
+                      styles: {
+                        color,
+                      },
+                    });
+                }}
+              />
             </Field>
           </AccordionPanel>
         </AccordionItem>

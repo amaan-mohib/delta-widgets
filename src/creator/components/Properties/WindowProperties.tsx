@@ -12,6 +12,7 @@ import {
 } from "@fluentui/react-components";
 import React from "react";
 import { useManifestStore } from "../../stores/useManifestStore";
+import { spinButtonOnChange } from "../../utils";
 
 interface WindowPropertiesProps {}
 
@@ -46,30 +47,34 @@ const WindowProperties: React.FC<WindowPropertiesProps> = () => {
             <Field orientation="horizontal" label="Width (px)">
               <SpinButton
                 value={dimensions.width}
-                onChange={(event, { value }) => {
-                  useManifestStore
-                    .getState()
-                    .updateWidgetDimensions(
-                      Number(
-                        value || (event.target as HTMLInputElement).value || 400
-                      ),
-                      dimensions.height
-                    );
+                onChange={(event, data) => {
+                  spinButtonOnChange(
+                    event,
+                    data,
+                    (value) => {
+                      useManifestStore
+                        .getState()
+                        .updateWidgetDimensions(value, dimensions.height);
+                    },
+                    400
+                  );
                 }}
               />
             </Field>
             <Field orientation="horizontal" label="Height (px)">
               <SpinButton
                 value={dimensions.height}
-                onChange={(event, { value }) => {
-                  useManifestStore
-                    .getState()
-                    .updateWidgetDimensions(
-                      dimensions.width,
-                      Number(
-                        value || (event.target as HTMLInputElement).value || 400
-                      )
-                    );
+                onChange={(event, data) => {
+                  spinButtonOnChange(
+                    event,
+                    data,
+                    (value) => {
+                      useManifestStore
+                        .getState()
+                        .updateWidgetDimensions(value, dimensions.width);
+                    },
+                    400
+                  );
                 }}
               />
             </Field>
