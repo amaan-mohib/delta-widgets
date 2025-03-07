@@ -10,6 +10,8 @@ import {
 import { useManifestStore } from "../stores/useManifestStore";
 import { useCallback, useRef, useState } from "react";
 import {
+  ArrowRedoRegular,
+  ArrowUndoRegular,
   CheckmarkRegular,
   DeleteRegular,
   DismissRegular,
@@ -30,6 +32,8 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
   const isSaving = useDataTrackStore((state) => state.isSaving);
   const selectedId = useDataTrackStore((state) => state.selectedId);
   const elementMap = useManifestStore((state) => state.elementMap);
+  const undoStack = useManifestStore((state) => state.undoStack);
+  const redoStack = useManifestStore((state) => state.redoStack);
 
   const onSubmit = useCallback(async (key: string, label: string) => {
     if (key in (window.__INITIAL_STATE__?.existingKeys || {})) {
@@ -92,6 +96,24 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
                   .finally(() => {
                     useDataTrackStore.setState({ isSaving: false });
                   });
+            }}
+          />
+        </Tooltip>
+        <Tooltip content="Undo" relationship="label">
+          <ToolbarButton
+            disabled={undoStack.length === 0}
+            icon={<ArrowUndoRegular />}
+            onClick={() => {
+              useManifestStore.getState().undo();
+            }}
+          />
+        </Tooltip>
+        <Tooltip content="Redo" relationship="label">
+          <ToolbarButton
+            disabled={redoStack.length === 0}
+            icon={<ArrowRedoRegular />}
+            onClick={() => {
+              useManifestStore.getState().redo();
             }}
           />
         </Tooltip>

@@ -26,6 +26,7 @@ export interface IManifestStore {
   redoStack: { timestamp: string, data: IWidget }[];
   undo: () => void;
   redo: () => void;
+  isUndoRedo: boolean;
 }
 
 export const useManifestStore = create<IManifestStore>()(subscribeWithSelector((set, get) => ({
@@ -138,26 +139,26 @@ export const useManifestStore = create<IManifestStore>()(subscribeWithSelector((
   undoStack: [],
   redoStack: [],
   undo() {
+    const currentState = get().manifest;
     const undoStack = get().undoStack.slice();
     const redoStack = get().redoStack.slice();
     const undo = undoStack.pop();
-    if (undo) {
-      redoStack.push(undo);
-      set({ manifest: undo.data, redoStack: redoStack.slice(), undoStack: undoStack.slice() });
+    if (undo && currentState) {
+      redoStack.push({ timestamp: new Date().toISOString(), data: cloneObject(currentState) });
+      set({ manifest: undo.data, redoStack: redoStack.slice(), undoStack: undoStack.slice(), isUndoRedo: true });
     }
   },
   redo() {
+    const currentState = get().manifest;
     const undoStack = get().undoStack.slice();
     const redoStack = get().redoStack.slice();
-    const undo = undoStack[undoStack.length - 1];
-    const redo = undoStack.pop();
-    if (redo && new Date(redo.timestamp) <= new Date(undo.timestamp)) {
-      set({ redoStack: [] });
-    } else if (redo) {
-      redoStack.pop();
-      set({ manifest: undo.data, redoStack: redoStack.slice(), undoStack: undoStack.slice() });
+    const redo = redoStack.pop();
+    if (redo && currentState) {
+      undoStack.push({ timestamp: new Date().toISOString(), data: cloneObject(currentState) });
+      set({ manifest: redo.data, redoStack: redoStack.slice(), undoStack: undoStack.slice(), isUndoRedo: true });
     }
   },
+  isUndoRedo: false,
 })));
 
 function mapElementPaths(
@@ -190,19 +191,28 @@ useManifestStore.subscribe((state) => state.manifest?.elements, (elements) => {
 
 const debouncedUpdate = debounce((manifest: IWidget) => {
   useDataTrackStore.setState({ isSaving: true });
-  const undoStack = useManifestStore.getState().undoStack.slice();
-  undoStack.push({ timestamp: new Date().toISOString(), data: cloneObject(manifest) });
-  while (undoStack.length > 50) {
-    undoStack.shift();
-  }
-  useManifestStore.setState({ undoStack });
-
   updateManifest(manifest).catch(console.error).finally(() => {
-    useDataTrackStore.setState({ isSaving: false });
+    useDataTrackStore.setState({ isSaving: false, });
   });
 }, 500);
 
-useManifestStore.subscribe(state => state.manifest, manifest => {
+const debouncedHistory = debounce((prevManifest: IWidget) => {
+  if (!useManifestStore.getState().isUndoRedo) {
+    const undoStack = useManifestStore.getState().undoStack.slice();
+    undoStack.push({ timestamp: new Date().toISOString(), data: cloneObject(prevManifest) });
+    while (undoStack.length > 50) {
+      undoStack.shift();
+    }
+    useManifestStore.setState({ undoStack, redoStack: [], });
+  }
+  useManifestStore.setState({ isUndoRedo: false });
+}, 700, { leading: true, trailing: false })
+
+useManifestStore.subscribe(state => state.manifest, (manifest) => {
   if (!manifest) return;
   debouncedUpdate(manifest);
+});
+useManifestStore.subscribe(state => state.manifest, (_, prevManifest) => {
+  if (!prevManifest) return;
+  debouncedHistory(prevManifest)
 });
