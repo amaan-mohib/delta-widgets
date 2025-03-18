@@ -66,20 +66,15 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
               <SpinButton
                 value={parseInt(String(gridStyles.padding || 0), 10)}
                 onChange={(event, data) => {
-                  spinButtonOnChange(
-                    event,
-                    data,
-                    (value) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          styles: {
-                            padding: `${value}px`,
-                          },
-                        });
-                    },
-                    16
-                  );
+                  spinButtonOnChange(event, data, (value) => {
+                    useManifestStore
+                      .getState()
+                      .updateElementProperties(selectedId, {
+                        styles: {
+                          padding: `${value}px`,
+                        },
+                      });
+                  });
                 }}
               />
             </Field>
@@ -87,20 +82,15 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
               <SpinButton
                 value={parseInt(String(gridStyles.gap || 0), 10)}
                 onChange={(event, data) => {
-                  spinButtonOnChange(
-                    event,
-                    data,
-                    (value) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          styles: {
-                            gap: `${value}px`,
-                          },
-                        });
-                    },
-                    16
-                  );
+                  spinButtonOnChange(event, data, (value) => {
+                    useManifestStore
+                      .getState()
+                      .updateElementProperties(selectedId, {
+                        styles: {
+                          gap: `${value}px`,
+                        },
+                      });
+                  });
                 }}
               />
             </Field>
@@ -118,9 +108,6 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
                     event,
                     data,
                     (value) => {
-                      if (value === 0) {
-                        value = 1;
-                      }
                       useManifestStore
                         .getState()
                         .updateElementProperties(selectedId, {
@@ -129,7 +116,7 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
                           },
                         });
                     },
-                    16
+                    1
                   );
                 }}
               />

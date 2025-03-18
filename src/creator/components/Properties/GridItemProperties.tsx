@@ -54,23 +54,18 @@ const GridItemProperties: React.FC<GridItemPropertiesProps> = ({
             value={parseInt(String(gridItemStyles?.rowSpan || 1), 10) || 0}
             min={1}
             onChange={(event, data) => {
-              spinButtonOnChange(
-                event,
-                data,
-                (value) => {
-                  useManifestStore
-                    .getState()
-                    .updateElementProperties(selectedId, {
-                      styles: {
-                        gridItem: {
-                          ...(gridItemStyles || {}),
-                          rowSpan: value,
-                        },
+              spinButtonOnChange(event, data, (value) => {
+                useManifestStore
+                  .getState()
+                  .updateElementProperties(selectedId, {
+                    styles: {
+                      gridItem: {
+                        ...(gridItemStyles || {}),
+                        rowSpan: value,
                       },
-                    });
-                },
-                16
-              );
+                    },
+                  });
+              });
             }}
           />
         </Field>
@@ -79,23 +74,18 @@ const GridItemProperties: React.FC<GridItemPropertiesProps> = ({
             value={parseInt(String(gridItemStyles?.columnSpan || 1), 10) || 0}
             min={1}
             onChange={(event, data) => {
-              spinButtonOnChange(
-                event,
-                data,
-                (value) => {
-                  useManifestStore
-                    .getState()
-                    .updateElementProperties(selectedId, {
-                      styles: {
-                        gridItem: {
-                          ...(gridItemStyles || {}),
-                          columnSpan: value,
-                        },
+              spinButtonOnChange(event, data, (value) => {
+                useManifestStore
+                  .getState()
+                  .updateElementProperties(selectedId, {
+                    styles: {
+                      gridItem: {
+                        ...(gridItemStyles || {}),
+                        columnSpan: value,
                       },
-                    });
-                },
-                16
-              );
+                    },
+                  });
+              });
             }}
           />
         </Field>

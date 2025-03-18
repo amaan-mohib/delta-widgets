@@ -80,25 +80,21 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
           <AccordionPanel className={styles.panel}>
             <Field orientation="horizontal" label="Padding (px)">
               <SpinButton
+                min={0}
                 value={parseInt(
                   String(elementMap[selectedId].styles.padding || 0),
                   10
                 )}
                 onChange={(event, data) => {
-                  spinButtonOnChange(
-                    event,
-                    data,
-                    (value) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          styles: {
-                            padding: `${value}px`,
-                          },
-                        });
-                    },
-                    16
-                  );
+                  spinButtonOnChange(event, data, (value) => {
+                    useManifestStore
+                      .getState()
+                      .updateElementProperties(selectedId, {
+                        styles: {
+                          padding: `${value}px`,
+                        },
+                      });
+                  });
                 }}
               />
             </Field>
@@ -300,25 +296,21 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
             </Field>
             <Field orientation="horizontal" label="Gap (px)">
               <SpinButton
+                min={0}
                 value={parseInt(
                   String(elementMap[selectedId].styles.gap || 0),
                   10
                 )}
                 onChange={(event, data) => {
-                  spinButtonOnChange(
-                    event,
-                    data,
-                    (value) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          styles: {
-                            gap: `${value}px`,
-                          },
-                        });
-                    },
-                    16
-                  );
+                  spinButtonOnChange(event, data, (value) => {
+                    useManifestStore
+                      .getState()
+                      .updateElementProperties(selectedId, {
+                        styles: {
+                          gap: `${value}px`,
+                        },
+                      });
+                  });
                 }}
               />
             </Field>
