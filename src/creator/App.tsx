@@ -166,15 +166,15 @@ const App: React.FC<AppProps> = () => {
           useDataTrackStore.setState({ activeId: null, isDragging: false });
           return;
         }
-        if (!e.over?.id.toString().startsWith("container")) {
-          useDataTrackStore.setState({ activeId: null, isDragging: false });
-          return;
-        }
+
         if (e.over?.id) {
           if (e.active.data.current?.sortable && e.active.id !== e.over.id) {
             useManifestStore
               .getState()
               .moveElement(e.active.id.toString(), e.over.id.toString());
+          } else if (!e.over?.id.toString().startsWith("container")) {
+            useDataTrackStore.setState({ activeId: null, isDragging: false });
+            return;
           } else if (e.active.data.current) {
             const { type } = e.active.data.current as { type: string };
             const element = componentTypeToDataMap[type]

@@ -7,7 +7,6 @@ import debounce from "lodash.debounce";
 import { updateManifest } from "../../main/utils/widgets";
 import { useDataTrackStore } from "./useDataTrackStore";
 import { arrayMove } from "@dnd-kit/sortable";
-import { CSSProperties } from "react";
 
 const cloneObject = <T>(obj: T) => {
   return JSON.parse(JSON.stringify(obj)) as T;

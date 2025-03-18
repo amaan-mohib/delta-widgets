@@ -33,9 +33,10 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
   const activeId = useDataTrackStore((state) => state.activeId);
   const style: React.CSSProperties = {
     ...styles,
-    padding: activeId
-      ? `calc(${styles?.padding || "0px"} + 5px)`
-      : styles?.padding,
+    padding:
+      activeId && id.startsWith("container")
+        ? `calc(${styles?.padding || "0px"} + 5px)`
+        : styles?.padding,
     outline: isOver
       ? `2px solid ${tokens.colorNeutralForeground2BrandHover}`
       : selectedId === id
