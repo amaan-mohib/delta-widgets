@@ -42,7 +42,9 @@ const WindowProperties: React.FC<WindowPropertiesProps> = () => {
       <Divider appearance="subtle" />
       <Accordion collapsible defaultOpenItems={["size"]}>
         <AccordionItem value="size">
-          <AccordionHeader expandIconPosition="end">Size</AccordionHeader>
+          <AccordionHeader expandIconPosition="end" size="large">
+            Size
+          </AccordionHeader>
           <AccordionPanel className={styles.panel}>
             <Field orientation="horizontal" label="Width (px)">
               <SpinButton

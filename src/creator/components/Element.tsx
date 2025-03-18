@@ -33,7 +33,7 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
   const activeId = useDataTrackStore((state) => state.activeId);
   const style: React.CSSProperties = {
     ...styles,
-    padding: active
+    padding: activeId
       ? `calc(${styles?.padding || "0px"} + 5px)`
       : styles?.padding,
     outline: isOver

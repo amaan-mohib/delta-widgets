@@ -17,7 +17,7 @@ export interface IManifestStore {
   manifest: IWidget | null;
   updateWidgetDimensions: (width: number, height: number) => void;
   updateManifest: (data: Partial<IWidget>) => void;
-  updateElementProperties: (id: string, { data, styles }: { data?: any, styles?: CSSProperties }) => void;
+  updateElementProperties: (id: string, { data, styles }: { data?: any, styles?: IWidgetElement["styles"] }) => void;
   addElements: (element: IWidgetElement, parentId: string) => void;
   removeElement: (id: string) => void;
   moveElement: (id: string, dropId: string) => void;

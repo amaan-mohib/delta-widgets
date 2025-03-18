@@ -34,6 +34,7 @@ export const components: {
         background: "transparent",
         padding: 5,
         width: "100%",
+        height: "100%",
       },
       children: [],
     }),
@@ -49,10 +50,14 @@ export const components: {
       styles: {
         display: "grid",
         flex: 1,
-        gridTemplateColumns: "repeat(2, 1fr)",
+        gridSize: {
+          rows: "auto",
+          columns: 2,
+        },
         background: "transparent",
         padding: 5,
         width: "100%",
+        height: "100%",
       },
       children: [],
     }),
@@ -65,7 +70,10 @@ export const components: {
     data: () => ({
       id: `text-${nanoid(4)}`,
       type: "text",
-      styles: {},
+      styles: {
+        fontSize: "16px",
+        lineHeight: "16px",
+      },
       data: { text: "Text" },
     }),
   },

@@ -34,6 +34,7 @@ import { useManifestStore } from "../../stores/useManifestStore";
 import { MathFormulaRegular } from "@fluentui/react-icons/fonts";
 import { spinButtonOnChange } from "../../utils";
 import { ColorPickerPopup } from "./ColorPickerPopup";
+import GridItemProperties from "./GridItemProperties";
 
 interface TextPropertiesProps {}
 
@@ -67,9 +68,11 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
         <Text className={styles.title}>Text</Text>
       </div>
       <Divider appearance="subtle" />
-      <Accordion collapsible defaultOpenItems={["size"]}>
+      <Accordion collapsible multiple defaultOpenItems={["size"]}>
         <AccordionItem value="size">
-          <AccordionHeader expandIconPosition="end">Properties</AccordionHeader>
+          <AccordionHeader expandIconPosition="end" size="large">
+            Properties
+          </AccordionHeader>
           <AccordionPanel className={styles.panel}>
             <Field orientation="horizontal" label="Text">
               <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
@@ -201,7 +204,7 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
                         .updateElementProperties(selectedId, {
                           styles: {
                             fontSize: `${value}px`,
-                            lineHeight: `${value + 4}px`,
+                            lineHeight: `${value}px`,
                           },
                         });
                     },
@@ -251,6 +254,10 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
             </Field>
           </AccordionPanel>
         </AccordionItem>
+        <GridItemProperties
+          selectedId={selectedId}
+          gridItemStyles={elementMap[selectedId].styles.gridItem}
+        />
       </Accordion>
     </div>
   );

@@ -89,7 +89,9 @@ function flatten(
 }
 
 export const DndTree = () => {
-  const manifestElements = useManifestStore((state) => state.manifest.elements);
+  const manifestElements = useManifestStore(
+    (state) => state.manifest?.elements || []
+  );
   const [items, setItems] = React.useState(flatten(manifestElements || []));
   const virtualTree = useHeadlessFlatTree_unstable(items, {
     defaultOpenItems: ["1"],

@@ -162,7 +162,14 @@ const App: React.FC<AppProps> = () => {
         });
       }}
       onDragEnd={(e) => {
-        if (e.active.id === "container") return;
+        if (e.active.id === "container") {
+          useDataTrackStore.setState({ activeId: null, isDragging: false });
+          return;
+        }
+        if (!e.over?.id.toString().startsWith("container")) {
+          useDataTrackStore.setState({ activeId: null, isDragging: false });
+          return;
+        }
         if (e.over?.id) {
           if (e.active.data.current?.sortable && e.active.id !== e.over.id) {
             useManifestStore

@@ -5,6 +5,7 @@ import { useManifestStore } from "../../stores/useManifestStore";
 import WindowProperties from "./WindowProperties";
 import ContainerProperties from "./ContainerProperties";
 import TextProperties from "./TextProperties";
+import GridProperties from "./GridProperties";
 
 interface PropertiesProps {}
 
@@ -28,6 +29,7 @@ const Properties: React.FC<PropertiesProps> = () => {
 
   const ElementProperties: React.FC = useMemo(() => {
     if (selectedElement?.type === "container") return ContainerProperties;
+    if (selectedElement?.type === "container-grid") return GridProperties;
     if (selectedElement?.type === "text") return TextProperties;
     return WindowProperties;
   }, [selectedElement]);
