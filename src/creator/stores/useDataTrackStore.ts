@@ -8,6 +8,8 @@ export interface IUseDataTrackStore {
   selectedId: string | null,
   isSaving: boolean;
   isDragging: boolean;
+  scale: number;
+  zoomDisabled: boolean;
 }
 
 export const useDataTrackStore = create<IUseDataTrackStore>((set, get) => ({
@@ -19,5 +21,7 @@ export const useDataTrackStore = create<IUseDataTrackStore>((set, get) => ({
   activeId: null,
   selectedId: null,
   isSaving: false,
-  isDragging: false
+  isDragging: false,
+  scale: 1,
+  zoomDisabled: false,
 }));

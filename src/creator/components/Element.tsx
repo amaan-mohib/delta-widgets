@@ -44,7 +44,7 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
       : active
       ? `2px dashed ${tokens.colorNeutralForeground2BrandHover}`
       : "2px solid transparent",
-    borderRadius: 2,
+    borderRadius: styles?.borderRadius || 2,
     position: "relative",
     ...(isDragging
       ? {
@@ -74,7 +74,20 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
             item.classList.remove("dropable-container-hover");
           });
         const div = e.target as HTMLDivElement;
-        if (div.id === id) div.classList.add("dropable-container-hover");
+        if (
+          div.id === id ||
+          div.id === `${id}-child` ||
+          div.classList.contains("react-resizable-image")
+        ) {
+          if (
+            div.id === `${id}-child` ||
+            div.classList.contains("react-resizable-image")
+          ) {
+            div.parentElement!.classList.add("dropable-container-hover");
+          } else {
+            div.classList.add("dropable-container-hover");
+          }
+        }
       }}
       onMouseLeave={(e) => {
         const div = e.target as HTMLDivElement;

@@ -131,8 +131,8 @@ const Canvas: React.FC<CanvasProps> = () => {
     (state) => state.manifest?.dimensions
   );
   const elements = useManifestStore((state) => state.manifest?.elements);
-  const [zoomDisabled, setZoomDisabled] = useState(false);
-  const [scale, setScale] = useState(1);
+  const zoomDisabled = useDataTrackStore((state) => state.zoomDisabled);
+  const scale = useDataTrackStore((state) => state.scale);
   const centerRef = useRef<HTMLDivElement>(null);
   const [wallpaper, setWallpaper] = useState("");
   const initialStateLoading = useDataTrackStore(
@@ -176,7 +176,7 @@ const Canvas: React.FC<CanvasProps> = () => {
         disabled={zoomDisabled || isDragging}
         centerOnInit
         onTransformed={(_, { scale }) => {
-          setScale(scale);
+          useDataTrackStore.setState({ scale });
         }}>
         <Controls
           scale={scale}
@@ -190,10 +190,10 @@ const Canvas: React.FC<CanvasProps> = () => {
             maxConstraints={[800, 600]}
             transformScale={scale}
             onResizeStart={() => {
-              setZoomDisabled(true);
+              useDataTrackStore.setState({ zoomDisabled: true });
             }}
             onResizeStop={() => {
-              setZoomDisabled(false);
+              useDataTrackStore.setState({ zoomDisabled: false });
               centerRef.current && centerRef.current.click();
             }}
             onResize={(_, { size }) => {

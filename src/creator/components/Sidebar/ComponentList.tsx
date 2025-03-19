@@ -1,5 +1,7 @@
 import { Card, makeStyles } from "@fluentui/react-components";
 import {
+  ButtonRegular,
+  Image24Regular,
   LayoutCellFour24Regular,
   Square24Regular,
   TextField24Regular,
@@ -10,6 +12,7 @@ import { DragOverlay } from "@dnd-kit/core";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { IWidgetElement } from "../../../types/manifest";
 import { nanoid } from "nanoid";
+import SliderIcon from "../icons/SliderIcon";
 
 interface ComponentListProps {}
 
@@ -75,6 +78,45 @@ export const components: {
         lineHeight: "16px",
       },
       data: { text: "Text" },
+    }),
+  },
+  {
+    name: "Image",
+    key: "image",
+    type: "image",
+    icon: <Image24Regular />,
+    data: () => ({
+      id: `image-${nanoid(4)}`,
+      type: "image",
+      styles: {
+        width: "100px",
+        height: "100px",
+      },
+      data: { src: "", alt: "image" },
+    }),
+  },
+  {
+    name: "Button",
+    key: "button",
+    type: "button",
+    icon: <ButtonRegular style={{ fontSize: "24px" }} />,
+    data: () => ({
+      id: `button-${nanoid(4)}`,
+      type: "button",
+      styles: {},
+      data: { text: "Button" },
+    }),
+  },
+  {
+    name: "Slider",
+    key: "slider",
+    type: "slider",
+    icon: <SliderIcon />,
+    data: () => ({
+      id: `slider-${nanoid(4)}`,
+      type: "slider",
+      styles: {},
+      data: { min: "0", max: "100", current: "10" },
     }),
   },
 ];

@@ -6,6 +6,9 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import ImageComponent from "./ImageComponent";
+import ButtonComponent from "./ButtonComponent";
+import SliderComponent from "./SliderComponent";
 
 interface ComponentRenderProps {
   component: IWidgetElement;
@@ -68,7 +71,44 @@ const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
         id={component.id}
         styles={getComponentStyles(component.styles)}
         disableDrop>
-        {component.data?.text || "Text"}
+        <div
+          id={`${component.id}-child`}
+          dangerouslySetInnerHTML={{
+            __html: component.data?.text || "Text",
+          }}></div>
+      </Dropable>
+    );
+  }
+  if (component.type === "image") {
+    return (
+      <Dropable
+        id={component.id}
+        styles={getComponentStyles({ gridItem: component.styles.gridItem })}
+        disableDrop>
+        <ImageComponent component={component} />
+      </Dropable>
+    );
+  }
+  if (component.type === "button") {
+    return (
+      <Dropable
+        id={component.id}
+        styles={getComponentStyles({
+          gridItem: component.styles.gridItem,
+          textAlign: component.styles.textAlign,
+        })}
+        disableDrop>
+        <ButtonComponent component={component} />
+      </Dropable>
+    );
+  }
+  if (component.type === "slider") {
+    return (
+      <Dropable
+        id={component.id}
+        styles={getComponentStyles({ gridItem: component.styles.gridItem })}
+        disableDrop>
+        <SliderComponent component={component} />
       </Dropable>
     );
   }
@@ -77,7 +117,7 @@ const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
       id={component.id}
       styles={getComponentStyles(component.styles)}
       disableDrop>
-      xyz
+      Invalid
     </Dropable>
   );
 };

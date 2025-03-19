@@ -98,6 +98,26 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
                 }}
               />
             </Field>
+            <Field orientation="horizontal" label="Roundness (px)">
+              <SpinButton
+                min={0}
+                value={parseInt(
+                  String(elementMap[selectedId].styles.borderRadius || 2),
+                  10
+                )}
+                onChange={(event, data) => {
+                  spinButtonOnChange(event, data, (value) => {
+                    useManifestStore
+                      .getState()
+                      .updateElementProperties(selectedId, {
+                        styles: {
+                          borderRadius: `${value}px`,
+                        },
+                      });
+                  });
+                }}
+              />
+            </Field>
           </AccordionPanel>
         </AccordionItem>
         <AccordionItem value="flex">
@@ -161,9 +181,9 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
                       value="flex-start"
                       icon={
                         isRow ? (
-                          <AlignStartHorizontalRegular />
-                        ) : (
                           <AlignStartVerticalRegular />
+                        ) : (
+                          <AlignStartHorizontalRegular />
                         )
                       }
                     />
@@ -189,9 +209,9 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
                       value="flex-end"
                       icon={
                         isRow ? (
-                          <AlignEndHorizontalRegular />
-                        ) : (
                           <AlignEndVerticalRegular />
+                        ) : (
+                          <AlignEndHorizontalRegular />
                         )
                       }
                     />

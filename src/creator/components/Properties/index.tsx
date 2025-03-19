@@ -6,6 +6,9 @@ import WindowProperties from "./WindowProperties";
 import ContainerProperties from "./ContainerProperties";
 import TextProperties from "./TextProperties";
 import GridProperties from "./GridProperties";
+import ButtonProperties from "./ButtonProperties";
+import ImageProperties from "./ImageProperties";
+import SliderProperties from "./SliderProperties";
 
 interface PropertiesProps {}
 
@@ -31,6 +34,9 @@ const Properties: React.FC<PropertiesProps> = () => {
     if (selectedElement?.type === "container") return ContainerProperties;
     if (selectedElement?.type === "container-grid") return GridProperties;
     if (selectedElement?.type === "text") return TextProperties;
+    if (selectedElement?.type === "button") return ButtonProperties;
+    if (selectedElement?.type === "image") return ImageProperties;
+    if (selectedElement?.type === "slider") return SliderProperties;
     return WindowProperties;
   }, [selectedElement]);
 

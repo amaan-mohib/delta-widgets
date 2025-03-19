@@ -4,7 +4,7 @@ export interface IWidgetElement {
   type: string,
   id: string,
   styles: CSSProperties & { gridSize?: { rows?: "auto" | number, columns?: "auto" | number }, gridItem?: { rowSpan?: number, columnSpan?: number } },
-  data?: any,
+  data?: Record<string, any>,
   children?: IWidgetElement[]
 }
 

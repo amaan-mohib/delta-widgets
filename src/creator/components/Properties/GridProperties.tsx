@@ -78,6 +78,26 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
                 }}
               />
             </Field>
+            <Field orientation="horizontal" label="Roundness (px)">
+              <SpinButton
+                min={0}
+                value={parseInt(
+                  String(elementMap[selectedId].styles.borderRadius || 2),
+                  10
+                )}
+                onChange={(event, data) => {
+                  spinButtonOnChange(event, data, (value) => {
+                    useManifestStore
+                      .getState()
+                      .updateElementProperties(selectedId, {
+                        styles: {
+                          borderRadius: `${value}px`,
+                        },
+                      });
+                  });
+                }}
+              />
+            </Field>
             <Field orientation="horizontal" label="Gap (px)">
               <SpinButton
                 value={parseInt(String(gridStyles.gap || 0), 10)}
