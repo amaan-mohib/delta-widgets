@@ -20,7 +20,7 @@ import {
 } from "@fluentui/react-icons";
 import { message } from "@tauri-apps/plugin-dialog";
 import { useDataTrackStore } from "../stores/useDataTrackStore";
-import { updateManifest } from "../../main/utils/widgets";
+import { createWidgetWindow, updateManifest } from "../../main/utils/widgets";
 
 interface ToolbarProps {}
 
@@ -135,7 +135,13 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
         )}
       </ToolbarGroup>
       <ToolbarGroup style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <Button size="small">Preview</Button>
+        <Button
+          size="small"
+          onClick={async () => {
+            await createWidgetWindow(manifest?.path || "", true);
+          }}>
+          Preview
+        </Button>
         <Button size="small" appearance="primary">
           Publish
         </Button>

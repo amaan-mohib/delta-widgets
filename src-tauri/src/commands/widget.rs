@@ -4,7 +4,8 @@ use std::{
     io::Read,
 };
 
-use tauri::Manager;
+use serde_json::Value;
+use tauri::{LogicalSize, Manager};
 
 #[tauri::command]
 pub async fn create_creator_window(
@@ -49,7 +50,7 @@ pub async fn create_creator_window(
                                 })
                                 .expect("Cannot read manifest")
                             {
-                                if let Some(key) = json.get("key").and_then(|v| v.as_str()) {
+                                if let Some(key) = json.get("key").and_then(Value::as_str) {
                                     existing_keys.insert(key.to_string(), None);
                                 }
                             }
@@ -90,13 +91,77 @@ pub async fn create_creator_window(
             tauri::WindowEvent::CloseRequested { .. } => {
                 webview.show().unwrap();
             }
-            // hack to keep widget unminimized
-            // tauri::WindowEvent::Resized(_) => {
-            //     if new_window.is_minimized().unwrap() {
-            //         new_window.unminimize().unwrap();
-            //     }
-            // }
             _ => {}
         };
     });
+}
+
+#[tauri::command]
+pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_preview: Option<bool>) {
+    let init_script: &str = &format!(
+        "window.__INITIAL_WIDGET_STATE__ = {{ manifestPath: {} }};",
+        path
+    );
+
+    let mut dimensions = LogicalSize {
+        height: 400.0,
+        width: 600.0,
+    };
+
+    let mut title = "Widget".to_string();
+
+    let clean_path = serde_json::from_str::<String>(&path).unwrap();
+    if let Ok(json) = fs::read_to_string(clean_path.as_str())
+        .and_then(|contents| Ok(serde_json::from_str::<serde_json::Value>(&contents)))
+        .expect("Cannot read manifest")
+    {
+        if let Some(label) = json.get("label") {
+            title = label.as_str().unwrap_or("Widget").to_string();
+        }
+        if let Some(json_dimensions) = json.get("dimensions") {
+            let width = json_dimensions
+                .get("width")
+                .and_then(Value::as_f64)
+                .unwrap_or(dimensions.width);
+            let height = json_dimensions
+                .get("height")
+                .and_then(Value::as_f64)
+                .unwrap_or(dimensions.height);
+            dimensions = LogicalSize { width, height };
+        }
+    }
+
+    let new_window = tauri::WebviewWindowBuilder::new(
+        &app,
+        "widget",
+        tauri::WebviewUrl::App("widget-index.html".into()),
+    )
+    .title("Widget")
+    .visible(false)
+    .transparent(true)
+    .resizable(false)
+    .decorations(false)
+    .shadow(false)
+    .initialization_script(init_script)
+    .build()
+    .unwrap();
+
+    new_window.set_size(dimensions).unwrap();
+    new_window.set_title(&title).unwrap();
+    new_window.show().unwrap();
+
+    if !is_preview.unwrap_or(false) {
+        new_window.set_always_on_bottom(true).unwrap();
+        new_window.clone().on_window_event(move |event| {
+            match event {
+                // hack to keep widget unminimized
+                tauri::WindowEvent::Resized(_) => {
+                    if new_window.is_minimized().unwrap() {
+                        new_window.unminimize().unwrap();
+                    }
+                }
+                _ => {}
+            };
+        });
+    }
 }

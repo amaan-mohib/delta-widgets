@@ -33,7 +33,8 @@ export default defineConfig(async () => ({
     rollupOptions: {
       input: {
         main: "index.html",
-        creator: "creator-index.html"
+        creator: "creator-index.html",
+        widget: "widget-index.html",
       }
     },
     minify: !process.env.TAURI_ENV_DEBUG ? true : false,

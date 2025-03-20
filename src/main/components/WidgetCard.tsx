@@ -17,7 +17,6 @@ import React from "react";
 import {
   createCreatorWindow,
   duplicateWidget,
-  IWidget,
   removeWidget,
 } from "../utils/widgets";
 import {
@@ -26,6 +25,7 @@ import {
   EditRegular,
   MoreHorizontal20Regular,
 } from "@fluentui/react-icons";
+import { IWidget } from "../../types/manifest";
 
 interface WidgetCardProps {
   widget: IWidget;

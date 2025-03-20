@@ -6,6 +6,9 @@ declare global {
       manifest: { path: string };
       wallpaper?: number[];
       existingKeys?: Record<string, null>;
+    },
+    __INITIAL_WIDGET_STATE__?: {
+      manifestPath: string;
     }
   }
 }

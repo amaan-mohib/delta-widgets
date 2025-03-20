@@ -1,0 +1,27 @@
+:root {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  -webkit-app-region: drag;
+}
+
+.no-drag,
+button,
+input {
+  -webkit-app-region: no-drag;
+}
+
+.fui-FluentProvider {
+  background-color: transparent !important;
+}
