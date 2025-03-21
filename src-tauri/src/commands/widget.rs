@@ -5,7 +5,7 @@ use std::{
 };
 
 use serde_json::Value;
-use tauri::{LogicalSize, Manager};
+use tauri::{LogicalSize, Manager, PhysicalSize};
 
 #[tauri::command]
 pub async fn create_creator_window(
@@ -151,6 +151,7 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
     new_window.show().unwrap();
 
     if !is_preview.unwrap_or(false) {
+        new_window.set_skip_taskbar(true).unwrap();
         new_window.set_always_on_bottom(true).unwrap();
         new_window.clone().on_window_event(move |event| {
             match event {
@@ -164,4 +165,79 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
             };
         });
     }
+}
+
+#[tauri::command]
+pub async fn create_url_widget_window(app: tauri::AppHandle, path: String) {
+    let mut dimensions = PhysicalSize {
+        height: 840.0,
+        width: 520.0,
+    };
+
+    let mut title = "Widget".to_string();
+    let mut url = "".to_string();
+
+    let clean_path = serde_json::from_str::<String>(&path).unwrap();
+    println!("{}", clean_path);
+    if let Ok(json) = fs::read_to_string(clean_path.as_str())
+        .and_then(|contents| Ok(serde_json::from_str::<serde_json::Value>(&contents)))
+        .expect("Cannot read manifest")
+    {
+        if let Some(label) = json.get("label") {
+            title = label.as_str().unwrap_or("Widget").to_string();
+        }
+        if let Some(json_dimensions) = json.get("dimensions") {
+            let width = json_dimensions
+                .get("width")
+                .and_then(Value::as_f64)
+                .unwrap_or(dimensions.width);
+            let height = json_dimensions
+                .get("height")
+                .and_then(Value::as_f64)
+                .unwrap_or(dimensions.height);
+            dimensions = PhysicalSize { width, height };
+        }
+        if let Some(app_url) = json.get("url") {
+            url = app_url.as_str().unwrap_or(&url).to_string();
+        }
+    }
+
+    let new_window =
+        tauri::WebviewWindowBuilder::new(&app, &title, tauri::WebviewUrl::App(url.into()))
+            .title(&title)
+            .visible(false)
+            .skip_taskbar(true)
+            .shadow(false)
+            .maximizable(false)
+            .minimizable(false)
+            .closable(false)
+            .build()
+            .unwrap();
+
+    new_window.set_size(dimensions).unwrap();
+    new_window.set_title(&title).unwrap();
+    new_window.show().unwrap();
+
+    new_window.set_always_on_bottom(true).unwrap();
+    new_window.clone().on_window_event(move |event| {
+        match event {
+            tauri::WindowEvent::Moved(position) => {
+                println!("{:?}", position);
+            }
+            // hack to keep widget unminimized
+            tauri::WindowEvent::Resized(size) => {
+                println!("{:?}", size);
+                if new_window.is_minimized().unwrap() {
+                    new_window.unminimize().unwrap();
+                }
+            }
+            _ => {}
+        };
+    });
+}
+
+#[tauri::command]
+pub async fn close_widget_window(app: tauri::AppHandle, label: String) {
+    let window = app.get_webview_window(&label).expect("window should exist");
+    window.close().unwrap();
 }

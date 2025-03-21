@@ -218,6 +218,17 @@ export const createWidgetWindow = async (manifestPath: string, isPreview?: boole
   });
 }
 
+export const createUrlWidgetWindow = async (manifestPath: string) => {
+  const pathWithJSON = await path.resolve(manifestPath, "manifest.json");
+  await invoke("create_url_widget_window", {
+    path: JSON.stringify(pathWithJSON),
+  });
+}
+
+export const closeWidgetWindow = async (label: string) => {
+  await invoke("close_widget_window", { label });
+}
+
 export const getManifestFromPath = async (manifestPath: string) => {
   if (!manifestPath.endsWith("manifest.json")) {
     manifestPath = await path.resolve(manifestPath, "manifest.json");

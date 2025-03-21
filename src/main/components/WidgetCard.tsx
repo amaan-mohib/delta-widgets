@@ -15,7 +15,9 @@ import {
 } from "@fluentui/react-components";
 import React from "react";
 import {
+  closeWidgetWindow,
   createCreatorWindow,
+  createUrlWidgetWindow,
   duplicateWidget,
   removeWidget,
 } from "../utils/widgets";
@@ -112,6 +114,15 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
             style={{ margin: 0 }}
             defaultChecked={widget.visible}
             indicator={{ className: styles.switch }}
+            onChange={async (_, { checked }) => {
+              if (checked) {
+                if (widget.url) {
+                  await createUrlWidgetWindow(widget.path);
+                }
+              } else {
+                await closeWidgetWindow(widget.label);
+              }
+            }}
           />
         )}
       </CardFooter>
