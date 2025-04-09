@@ -17,7 +17,7 @@ import React from "react";
 import {
   closeWidgetWindow,
   createCreatorWindow,
-  createUrlWidgetWindow,
+  createWidgetWindow,
   duplicateWidget,
   removeWidget,
 } from "../utils/widgets";
@@ -116,11 +116,11 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
             indicator={{ className: styles.switch }}
             onChange={async (_, { checked }) => {
               if (checked) {
-                if (widget.url) {
-                  await createUrlWidgetWindow(widget.path);
-                }
+                await createWidgetWindow(widget.path);
               } else {
-                await closeWidgetWindow(widget.label);
+                await closeWidgetWindow(
+                  widget.label.toLowerCase().replace(" ", "")
+                );
               }
             }}
           />

@@ -82,7 +82,7 @@ export const fileOrFolderPicker = async (directory: boolean, title?: string, ext
   return { path };
 }
 
-export const addWidget = async (type: "url" | "json" | "html", data: { url?: string, path?: string, manifest?: IWidget, label: string }, saves?: boolean) => {
+export const addWidget = async (type: IWidget["widgetType"] = "json", data: { url?: string, path?: string, manifest?: IWidget, label: string }, saves?: boolean) => {
   if (!data.label) {
     await message("Label is required", { title: "Label is required", kind: 'error' });
     return Promise.reject("Label is required");
@@ -125,7 +125,7 @@ export const addWidget = async (type: "url" | "json" | "html", data: { url?: str
     };
   }
 
-  await writeTextFile(await path.resolve(widgetsDir, key, "manifest.json"), JSON.stringify({ ...manifest, path: undefined }, null, 2));
+  await writeTextFile(await path.resolve(widgetsDir, key, "manifest.json"), JSON.stringify({ ...manifest, widgetType: type, path: undefined }, null, 2));
   return Promise.resolve();
 }
 
@@ -133,11 +133,7 @@ export const duplicateWidget = async (widget: IWidget, saves?: boolean) => {
   const copyLabel = `${widget.label}-${nanoid(4)}`;
   const copyKey = copyLabel.toLowerCase();
   addWidget(
-    widget.url
-      ? "url"
-      : widget.file
-        ? "html"
-        : "json",
+    widget.widgetType,
     {
       label: copyLabel,
       manifest: {
@@ -181,6 +177,7 @@ export const defaultManifest: Omit<IWidget, 'path'> = {
     width: 400,
     height: 300,
   },
+  widgetType: "json",
 };
 
 export const createCreatorWindow = async (manifestPath?: string) => {
@@ -215,13 +212,6 @@ export const createWidgetWindow = async (manifestPath: string, isPreview?: boole
   await invoke("create_widget_window", {
     path: JSON.stringify(pathWithJSON),
     isPreview,
-  });
-}
-
-export const createUrlWidgetWindow = async (manifestPath: string) => {
-  const pathWithJSON = await path.resolve(manifestPath, "manifest.json");
-  await invoke("create_url_widget_window", {
-    path: JSON.stringify(pathWithJSON),
   });
 }
 

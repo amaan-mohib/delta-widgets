@@ -17,8 +17,9 @@ export interface IWidget {
   position?: { x: number, y: number },
   visible?: boolean,
   elements?: IWidgetElement[],
-  file?: string,
   url?: string,
+  file?: string,
+  widgetType?: "url" | "html" | "json",
 }
 
 export interface IWindowMovedPayload {

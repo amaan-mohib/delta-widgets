@@ -97,15 +97,37 @@ pub async fn create_creator_window(
     });
 }
 
-#[derive(Clone, Serialize)]
+#[derive(serde::Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum WidgetType {
+    Default,
+    Url,
+    Html,
+}
+#[derive(serde::Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
+struct WidgetManifest {
+    label: Option<String>,
+    dimensions: Option<PhysicalSize<f64>>,
+    position: Option<PhysicalPosition<f64>>,
+    url: Option<String>,
+    file: Option<String>,
+    visible: Option<bool>,
+    #[serde(default = "default_widget_type")]
+    widget_type: WidgetType,
+}
+
+fn default_widget_type() -> WidgetType {
+    WidgetType::Default
+}
+
+#[derive(Clone, Serialize)]
 struct PositionPayload<'a> {
     path: &'a str,
     position: &'a PhysicalPosition<i32>,
 }
 
 #[derive(Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
 struct SizePayload<'a> {
     path: &'a str,
     size: &'a PhysicalSize<u32>,
@@ -113,158 +135,105 @@ struct SizePayload<'a> {
 
 #[tauri::command]
 pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_preview: Option<bool>) {
-    let init_script: &str = &format!(
-        "window.__INITIAL_WIDGET_STATE__ = {{ manifestPath: {} }};",
-        path
-    );
+    let clean_path = serde_json::from_str::<String>(&path).unwrap();
+    let manifest_content = fs::read_to_string(clean_path.as_str()).expect("Cannot read manifest");
+    let manifest: WidgetManifest =
+        serde_json::from_str(&manifest_content).expect("invalid manifest");
 
-    let mut dimensions = LogicalSize {
-        height: 400.0,
-        width: 600.0,
+    let title = manifest.label.unwrap_or_else(|| "Widget".to_string());
+    let position = manifest
+        .position
+        .map(|p| PhysicalPosition {
+            x: p.x as i32,
+            y: p.y as i32,
+        })
+        .unwrap_or(PhysicalPosition { x: 30, y: 30 });
+
+    let url = match manifest.widget_type {
+        WidgetType::Url => manifest.url.unwrap_or_else(|| "".to_string()),
+        WidgetType::Html => manifest.file.unwrap_or_else(|| "index.html".to_string()),
+        _ => "widget-index.html".into(),
+    };
+    let label = match manifest.widget_type {
+        WidgetType::Default => "widget".into(),
+        _ => title.to_lowercase().replace(' ', ""),
     };
 
-    let mut title = "Widget".to_string();
+    let mut window_builder =
+        tauri::WebviewWindowBuilder::new(&app, label, tauri::WebviewUrl::App(url.into()));
+    window_builder = window_builder.title(&title).visible(false);
 
-    let clean_path = serde_json::from_str::<String>(&path).unwrap();
-
-    if let Ok(json) = fs::read_to_string(clean_path.as_str())
-        .and_then(|contents| Ok(serde_json::from_str::<serde_json::Value>(&contents)))
-        .expect("Cannot read manifest")
-    {
-        if let Some(label) = json.get("label") {
-            title = label.as_str().unwrap_or("Widget").to_string();
+    match manifest.widget_type {
+        WidgetType::Default => {
+            let init_script: &str = &format!(
+                "window.__INITIAL_WIDGET_STATE__ = {{ manifestPath: {} }};",
+                path
+            );
+            window_builder = window_builder
+                .transparent(true)
+                .resizable(false)
+                .decorations(false)
+                .shadow(false)
+                .initialization_script(init_script);
         }
-        if let Some(json_dimensions) = json.get("dimensions") {
-            let width = json_dimensions
-                .get("width")
-                .and_then(Value::as_f64)
-                .unwrap_or(dimensions.width);
-            let height = json_dimensions
-                .get("height")
-                .and_then(Value::as_f64)
-                .unwrap_or(dimensions.height);
-            dimensions = LogicalSize { width, height };
+        WidgetType::Url => {
+            window_builder = window_builder
+                .skip_taskbar(true)
+                .shadow(false)
+                .maximizable(false)
+                .minimizable(false)
+                .closable(false)
+        }
+        WidgetType::Html => {
+            window_builder = window_builder
+                .transparent(true)
+                .decorations(false)
+                .shadow(false)
         }
     }
 
-    let new_window = tauri::WebviewWindowBuilder::new(
-        &app,
-        "widget",
-        tauri::WebviewUrl::App("widget-index.html".into()),
-    )
-    .title("Widget")
-    .visible(false)
-    .transparent(true)
-    .resizable(false)
-    .decorations(false)
-    .shadow(false)
-    .initialization_script(init_script)
-    .build()
-    .unwrap();
+    let new_window = window_builder.build().unwrap();
 
-    new_window.set_size(dimensions).unwrap();
-    new_window.set_title(&title).unwrap();
+    new_window.set_position(position).unwrap();
+
+    if manifest.widget_type == WidgetType::Default || manifest.widget_type == WidgetType::Html {
+        let dimensions = manifest
+            .dimensions
+            .map(|d| LogicalSize {
+                height: d.height as u32,
+                width: d.width as u32,
+            })
+            .unwrap_or(LogicalSize {
+                width: 600,
+                height: 400,
+            });
+        new_window.set_size(dimensions).unwrap();
+    } else if manifest.widget_type == WidgetType::Url {
+        let dimensions = manifest
+            .dimensions
+            .map(|d| PhysicalSize {
+                height: d.height as u32,
+                width: d.width as u32,
+            })
+            .unwrap_or(PhysicalSize {
+                width: 520,
+                height: 840,
+            });
+        new_window.set_size(dimensions).unwrap();
+    }
     new_window.show().unwrap();
-
     if !is_preview.unwrap_or(false) {
         new_window.set_skip_taskbar(true).unwrap();
         new_window.set_always_on_bottom(true).unwrap();
-        new_window.clone().on_window_event(move |event| {
-            match event {
-                // hack to keep widget unminimized
-                tauri::WindowEvent::Moved(position) => {
-                    let _ = app.emit(
-                        "position-moved",
-                        PositionPayload {
-                            path: &clean_path,
-                            position,
-                        },
-                    );
-                }
-                // hack to keep widget unminimized
-                tauri::WindowEvent::Resized(size) => {
-                    let _ = app.emit(
-                        "resized",
-                        SizePayload {
-                            path: &clean_path,
-                            size,
-                        },
-                    );
-                    if new_window.is_minimized().unwrap() {
-                        new_window.unminimize().unwrap();
-                    }
-                }
-                _ => {}
-            };
-        });
+        attach_window_events(new_window.clone(), app, clean_path);
     }
 }
 
-#[tauri::command]
-pub async fn create_url_widget_window(app: tauri::AppHandle, path: String) {
-    let mut dimensions = PhysicalSize {
-        height: 840.0,
-        width: 520.0,
-    };
-    let mut position = PhysicalPosition { x: 30.0, y: 30.0 };
-
-    let mut title = "Widget".to_string();
-    let mut url = "".to_string();
-
-    let clean_path = serde_json::from_str::<String>(&path).unwrap();
-
-    if let Ok(json) = fs::read_to_string(clean_path.as_str())
-        .and_then(|contents| Ok(serde_json::from_str::<serde_json::Value>(&contents)))
-        .expect("Cannot read manifest")
-    {
-        if let Some(label) = json.get("label") {
-            title = label.as_str().unwrap_or("Widget").to_string();
-        }
-        if let Some(json_dimensions) = json.get("dimensions") {
-            let width = json_dimensions
-                .get("width")
-                .and_then(Value::as_f64)
-                .unwrap_or(dimensions.width);
-            let height = json_dimensions
-                .get("height")
-                .and_then(Value::as_f64)
-                .unwrap_or(dimensions.height);
-            dimensions = PhysicalSize { width, height };
-        }
-        if let Some(json_position) = json.get("position") {
-            let x = json_position
-                .get("x")
-                .and_then(Value::as_f64)
-                .unwrap_or(position.x);
-            let y = json_position
-                .get("y")
-                .and_then(Value::as_f64)
-                .unwrap_or(position.y);
-            position = PhysicalPosition { x, y };
-        }
-        if let Some(app_url) = json.get("url") {
-            url = app_url.as_str().unwrap_or(&url).to_string();
-        }
-    }
-
-    let new_window =
-        tauri::WebviewWindowBuilder::new(&app, &title, tauri::WebviewUrl::App(url.into()))
-            .title(&title)
-            .visible(false)
-            .skip_taskbar(true)
-            .shadow(false)
-            .maximizable(false)
-            .minimizable(false)
-            .closable(false)
-            .build()
-            .unwrap();
-
-    new_window.set_size(dimensions).unwrap();
-    new_window.set_position(position).unwrap();
-    new_window.set_title(&title).unwrap();
-    new_window.show().unwrap();
-
-    new_window.set_always_on_bottom(true).unwrap();
+fn attach_window_events(
+    new_window: tauri::WebviewWindow,
+    app: tauri::AppHandle,
+    clean_path: String,
+) {
     new_window.clone().on_window_event(move |event| {
         match event {
             tauri::WindowEvent::Moved(position) => {
@@ -276,7 +245,6 @@ pub async fn create_url_widget_window(app: tauri::AppHandle, path: String) {
                     },
                 );
             }
-            // hack to keep widget unminimized
             tauri::WindowEvent::Resized(size) => {
                 let _ = app.emit(
                     "resized",
@@ -285,6 +253,7 @@ pub async fn create_url_widget_window(app: tauri::AppHandle, path: String) {
                         size,
                     },
                 );
+                // hack to keep widget unminimized
                 if new_window.is_minimized().unwrap() {
                     new_window.unminimize().unwrap();
                 }
