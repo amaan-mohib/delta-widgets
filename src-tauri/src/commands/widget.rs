@@ -4,8 +4,9 @@ use std::{
     io::Read,
 };
 
+use serde::Serialize;
 use serde_json::Value;
-use tauri::{LogicalSize, Manager, PhysicalSize};
+use tauri::{Emitter, LogicalSize, Manager, PhysicalPosition, PhysicalSize};
 
 #[tauri::command]
 pub async fn create_creator_window(
@@ -96,6 +97,20 @@ pub async fn create_creator_window(
     });
 }
 
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct PositionPayload<'a> {
+    path: &'a str,
+    position: &'a PhysicalPosition<i32>,
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SizePayload<'a> {
+    path: &'a str,
+    size: &'a PhysicalSize<u32>,
+}
+
 #[tauri::command]
 pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_preview: Option<bool>) {
     let init_script: &str = &format!(
@@ -111,6 +126,7 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
     let mut title = "Widget".to_string();
 
     let clean_path = serde_json::from_str::<String>(&path).unwrap();
+
     if let Ok(json) = fs::read_to_string(clean_path.as_str())
         .and_then(|contents| Ok(serde_json::from_str::<serde_json::Value>(&contents)))
         .expect("Cannot read manifest")
@@ -156,7 +172,24 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
         new_window.clone().on_window_event(move |event| {
             match event {
                 // hack to keep widget unminimized
-                tauri::WindowEvent::Resized(_) => {
+                tauri::WindowEvent::Moved(position) => {
+                    let _ = app.emit(
+                        "position-moved",
+                        PositionPayload {
+                            path: &clean_path,
+                            position,
+                        },
+                    );
+                }
+                // hack to keep widget unminimized
+                tauri::WindowEvent::Resized(size) => {
+                    let _ = app.emit(
+                        "resized",
+                        SizePayload {
+                            path: &clean_path,
+                            size,
+                        },
+                    );
                     if new_window.is_minimized().unwrap() {
                         new_window.unminimize().unwrap();
                     }
@@ -173,12 +206,13 @@ pub async fn create_url_widget_window(app: tauri::AppHandle, path: String) {
         height: 840.0,
         width: 520.0,
     };
+    let mut position = PhysicalPosition { x: 30.0, y: 30.0 };
 
     let mut title = "Widget".to_string();
     let mut url = "".to_string();
 
     let clean_path = serde_json::from_str::<String>(&path).unwrap();
-    println!("{}", clean_path);
+
     if let Ok(json) = fs::read_to_string(clean_path.as_str())
         .and_then(|contents| Ok(serde_json::from_str::<serde_json::Value>(&contents)))
         .expect("Cannot read manifest")
@@ -196,6 +230,17 @@ pub async fn create_url_widget_window(app: tauri::AppHandle, path: String) {
                 .and_then(Value::as_f64)
                 .unwrap_or(dimensions.height);
             dimensions = PhysicalSize { width, height };
+        }
+        if let Some(json_position) = json.get("position") {
+            let x = json_position
+                .get("x")
+                .and_then(Value::as_f64)
+                .unwrap_or(position.x);
+            let y = json_position
+                .get("y")
+                .and_then(Value::as_f64)
+                .unwrap_or(position.y);
+            position = PhysicalPosition { x, y };
         }
         if let Some(app_url) = json.get("url") {
             url = app_url.as_str().unwrap_or(&url).to_string();
@@ -215,6 +260,7 @@ pub async fn create_url_widget_window(app: tauri::AppHandle, path: String) {
             .unwrap();
 
     new_window.set_size(dimensions).unwrap();
+    new_window.set_position(position).unwrap();
     new_window.set_title(&title).unwrap();
     new_window.show().unwrap();
 
@@ -222,11 +268,23 @@ pub async fn create_url_widget_window(app: tauri::AppHandle, path: String) {
     new_window.clone().on_window_event(move |event| {
         match event {
             tauri::WindowEvent::Moved(position) => {
-                println!("{:?}", position);
+                let _ = app.emit(
+                    "position-moved",
+                    PositionPayload {
+                        path: &clean_path,
+                        position,
+                    },
+                );
             }
             // hack to keep widget unminimized
             tauri::WindowEvent::Resized(size) => {
-                println!("{:?}", size);
+                let _ = app.emit(
+                    "resized",
+                    SizePayload {
+                        path: &clean_path,
+                        size,
+                    },
+                );
                 if new_window.is_minimized().unwrap() {
                     new_window.unminimize().unwrap();
                 }

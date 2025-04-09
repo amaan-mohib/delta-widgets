@@ -29,7 +29,12 @@ import {
 import { UnwatchFn } from "@tauri-apps/plugin-fs";
 import AddWidgetDialog, { IDialogState } from "./components/AddWidgetDialog";
 import WidgetCard from "./components/WidgetCard";
-import { IWidget } from "../types/manifest";
+import {
+  IWidget,
+  IWindowMovedPayload,
+  IWindowResizedPayload,
+} from "../types/manifest";
+import { listen, UnlistenFn } from "@tauri-apps/api/event";
 
 const useStyles = makeStyles({
   container: {
@@ -122,15 +127,33 @@ function App() {
   useEffect(() => {
     getAndSetWidgets();
     getAndSetSavedWidgets();
-    // let unsub: UnlistenFn;
-    // (async () => {
-    //   unsub = await listen("media_updated", () => {
-    //     console.log("media updated");
-    //   });
-    // })();
-    // return () => {
-    //   unsub && unsub();
-    // };
+  }, []);
+
+  useEffect(() => {
+    let unsub: UnlistenFn;
+    (async () => {
+      unsub = await listen<IWindowMovedPayload>(
+        "position-moved",
+        ({ payload }) => {
+          console.log("position updated", payload);
+        }
+      );
+    })();
+    return () => {
+      unsub && unsub();
+    };
+  }, []);
+
+  useEffect(() => {
+    let unsub: UnlistenFn;
+    (async () => {
+      unsub = await listen<IWindowResizedPayload>("resized", ({ payload }) => {
+        console.log("resized", payload);
+      });
+    })();
+    return () => {
+      unsub && unsub();
+    };
   }, []);
 
   // async function greet() {

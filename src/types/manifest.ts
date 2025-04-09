@@ -20,3 +20,19 @@ export interface IWidget {
   file?: string,
   url?: string,
 }
+
+export interface IWindowMovedPayload {
+  path: string;
+  position: {
+    x: number;
+    y: number;
+  }
+};
+
+export interface IWindowResizedPayload {
+  path: string;
+  size: {
+    height: number;
+    width: number;
+  }
+};
