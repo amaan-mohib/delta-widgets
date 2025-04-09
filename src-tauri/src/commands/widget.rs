@@ -100,7 +100,7 @@ pub async fn create_creator_window(
 #[derive(serde::Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum WidgetType {
-    Default,
+    Json,
     Url,
     Html,
 }
@@ -118,7 +118,7 @@ struct WidgetManifest {
 }
 
 fn default_widget_type() -> WidgetType {
-    WidgetType::Default
+    WidgetType::Json
 }
 
 #[derive(Clone, Serialize)]
@@ -155,7 +155,7 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
         _ => "widget-index.html".into(),
     };
     let label = match manifest.widget_type {
-        WidgetType::Default => "widget".into(),
+        WidgetType::Json => "widget".into(),
         _ => title.to_lowercase().replace(' ', ""),
     };
 
@@ -164,7 +164,7 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
     window_builder = window_builder.title(&title).visible(false);
 
     match manifest.widget_type {
-        WidgetType::Default => {
+        WidgetType::Json => {
             let init_script: &str = &format!(
                 "window.__INITIAL_WIDGET_STATE__ = {{ manifestPath: {} }};",
                 path
@@ -196,7 +196,7 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
 
     new_window.set_position(position).unwrap();
 
-    if manifest.widget_type == WidgetType::Default || manifest.widget_type == WidgetType::Html {
+    if manifest.widget_type == WidgetType::Json || manifest.widget_type == WidgetType::Html {
         let dimensions = manifest
             .dimensions
             .map(|d| LogicalSize {
