@@ -1,40 +1,13 @@
-import {
-  Accordion,
-  AccordionHeader,
-  AccordionItem,
-  AccordionPanel,
-  Button,
-  Divider,
-  Field,
-  Input,
-  makeStyles,
-  Select,
-  Text,
-  Tooltip,
-  typographyStyles,
-} from "@fluentui/react-components";
+import { Button, Input, Select, Tooltip } from "@fluentui/react-components";
 import React, { useMemo } from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { useManifestStore } from "../../stores/useManifestStore";
 import { MathFormulaRegular } from "@fluentui/react-icons/fonts";
-import GridItemProperties from "./GridItemProperties";
+import Panel from "./Panel";
 
 interface SliderPropertiesProps {}
 
-const useStyles = makeStyles({
-  padding: {
-    padding: "10px 12px",
-  },
-  title: typographyStyles.subtitle2,
-  panel: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "12px",
-  },
-});
-
 const SliderProperties: React.FC<SliderPropertiesProps> = () => {
-  const styles = useStyles();
   const selectedId = useDataTrackStore((state) => state.selectedId);
   const elementMap = useManifestStore((state) => state.elementMap);
 
@@ -46,120 +19,125 @@ const SliderProperties: React.FC<SliderPropertiesProps> = () => {
   );
 
   return (
-    <div>
-      <div className={styles.padding}>
-        <Text className={styles.title}>Slider</Text>
-      </div>
-      <Divider appearance="subtle" />
-      <Accordion collapsible multiple defaultOpenItems={["size"]}>
-        <AccordionItem value="size">
-          <AccordionHeader expandIconPosition="end" size="large">
-            Properties
-          </AccordionHeader>
-          <AccordionPanel className={styles.panel}>
-            <Field orientation="horizontal" label="Minimum">
-              <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
-                <Input
-                  style={{ width: "140px" }}
-                  placeholder="Enter minimum"
+    <Panel
+      title="Slider"
+      items={[
+        {
+          label: "Properties",
+          value: "properties",
+          fields: [
+            {
+              label: "Minimum",
+              control: (
+                <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
+                  <Input
+                    style={{ width: "140px" }}
+                    placeholder="Enter minimum"
+                    onChange={(_, { value }) => {
+                      useManifestStore
+                        .getState()
+                        .updateElementProperties(selectedId, {
+                          data: { min: value || "0" },
+                        });
+                    }}
+                    value={sliderData?.min || "0"}
+                  />
+                  <Tooltip
+                    content="Expression"
+                    relationship="label"
+                    positioning={"above-end"}
+                    withArrow>
+                    <Button
+                      size="small"
+                      appearance="outline"
+                      icon={<MathFormulaRegular style={{ fontSize: "16px" }} />}
+                    />
+                  </Tooltip>
+                </div>
+              ),
+            },
+            {
+              label: "Maximum",
+              control: (
+                <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
+                  <Input
+                    style={{ width: "140px" }}
+                    placeholder="Enter maximum"
+                    onChange={(_, { value }) => {
+                      useManifestStore
+                        .getState()
+                        .updateElementProperties(selectedId, {
+                          data: { max: value || "100" },
+                        });
+                    }}
+                    value={sliderData?.max || "100"}
+                  />
+                  <Tooltip
+                    content="Expression"
+                    relationship="label"
+                    positioning={"above-end"}
+                    withArrow>
+                    <Button
+                      size="small"
+                      appearance="outline"
+                      icon={<MathFormulaRegular style={{ fontSize: "16px" }} />}
+                    />
+                  </Tooltip>
+                </div>
+              ),
+            },
+            {
+              label: "Current",
+              control: (
+                <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
+                  <Input
+                    style={{ width: "140px" }}
+                    placeholder="Enter current"
+                    onChange={(_, { value }) => {
+                      useManifestStore
+                        .getState()
+                        .updateElementProperties(selectedId, {
+                          data: { current: value || "0" },
+                        });
+                    }}
+                    value={sliderData?.current || "0"}
+                  />
+                  <Tooltip
+                    content="Expression"
+                    relationship="label"
+                    positioning={"above-end"}
+                    withArrow>
+                    <Button
+                      size="small"
+                      appearance="outline"
+                      icon={<MathFormulaRegular style={{ fontSize: "16px" }} />}
+                    />
+                  </Tooltip>
+                </div>
+              ),
+            },
+            {
+              label: "Size",
+              control: (
+                <Select
+                  value={sliderData?.size || "medium"}
                   onChange={(_, { value }) => {
                     useManifestStore
                       .getState()
                       .updateElementProperties(selectedId, {
-                        data: { min: value || "0" },
+                        data: { size: value || "medium" },
                       });
-                  }}
-                  value={sliderData?.min || "0"}
-                />
-                <Tooltip
-                  content="Expression"
-                  relationship="label"
-                  positioning={"above-end"}
-                  withArrow>
-                  <Button
-                    size="small"
-                    appearance="outline"
-                    icon={<MathFormulaRegular style={{ fontSize: "16px" }} />}
-                  />
-                </Tooltip>
-              </div>
-            </Field>
-            <Field orientation="horizontal" label="Maximum">
-              <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
-                <Input
-                  style={{ width: "140px" }}
-                  placeholder="Enter maximum"
-                  onChange={(_, { value }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        data: { max: value || "100" },
-                      });
-                  }}
-                  value={sliderData?.max || "100"}
-                />
-                <Tooltip
-                  content="Expression"
-                  relationship="label"
-                  positioning={"above-end"}
-                  withArrow>
-                  <Button
-                    size="small"
-                    appearance="outline"
-                    icon={<MathFormulaRegular style={{ fontSize: "16px" }} />}
-                  />
-                </Tooltip>
-              </div>
-            </Field>
-            <Field orientation="horizontal" label="Current">
-              <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
-                <Input
-                  style={{ width: "140px" }}
-                  placeholder="Enter current"
-                  onChange={(_, { value }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        data: { current: value || "0" },
-                      });
-                  }}
-                  value={sliderData?.current || "0"}
-                />
-                <Tooltip
-                  content="Expression"
-                  relationship="label"
-                  positioning={"above-end"}
-                  withArrow>
-                  <Button
-                    size="small"
-                    appearance="outline"
-                    icon={<MathFormulaRegular style={{ fontSize: "16px" }} />}
-                  />
-                </Tooltip>
-              </div>
-            </Field>
-            <Field orientation="horizontal" label="Size">
-              <Select
-                value={sliderData?.size || "medium"}
-                onChange={(_, { value }) => {
-                  useManifestStore
-                    .getState()
-                    .updateElementProperties(selectedId, {
-                      data: { size: value || "medium" },
-                    });
-                }}>
-                <option value="small">Small</option>
-                <option value="medium">Medium</option>
-              </Select>
-            </Field>
-          </AccordionPanel>
-        </AccordionItem>
-        <GridItemProperties
-          selectedId={selectedId}
-          gridItemStyles={elementMap[selectedId].styles.gridItem}
-        />
-      </Accordion>
-    </div>
+                  }}>
+                  <option value="small">Small</option>
+                  <option value="medium">Medium</option>
+                </Select>
+              ),
+            },
+          ],
+        },
+      ]}
+      selectedId={selectedId}
+    />
   );
 };
 

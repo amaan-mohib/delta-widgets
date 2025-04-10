@@ -28,6 +28,7 @@
     "nanoid": "^5.1.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-quill": "^2.0.0",
     "react-resizable": "^3.0.5",
     "react-zoom-pan-pinch": "^3.7.0",
     "zustand": "^5.0.3"

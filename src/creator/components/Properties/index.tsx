@@ -30,21 +30,26 @@ const Properties: React.FC<PropertiesProps> = () => {
     return elementMap[selectedId];
   }, [selectedId]);
 
-  const ElementProperties: React.FC = useMemo(() => {
-    if (selectedElement?.type === "container") return ContainerProperties;
-    if (selectedElement?.type === "container-grid") return GridProperties;
-    if (selectedElement?.type === "text") return TextProperties;
-    if (selectedElement?.type === "button") return ButtonProperties;
-    if (selectedElement?.type === "image") return ImageProperties;
-    if (selectedElement?.type === "slider") return SliderProperties;
-    return WindowProperties;
+  const elementProperties = useMemo(() => {
+    switch (selectedElement?.type) {
+      case "container":
+        return <ContainerProperties />;
+      case "container-grid":
+        return <GridProperties />;
+      case "text":
+        return <TextProperties />;
+      case "button":
+        return <ButtonProperties />;
+      case "image":
+        return <ImageProperties />;
+      case "slider":
+        return <SliderProperties />;
+      default:
+        return <WindowProperties />;
+    }
   }, [selectedElement]);
 
-  return (
-    <div className={styles.container}>
-      <ElementProperties />
-    </div>
-  );
+  return <div className={styles.container}>{elementProperties}</div>;
 };
 
 export default Properties;

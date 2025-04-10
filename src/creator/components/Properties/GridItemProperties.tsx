@@ -10,11 +10,9 @@ import {
 import React, { useMemo } from "react";
 import { spinButtonOnChange } from "../../utils";
 import { useManifestStore } from "../../stores/useManifestStore";
-import { IWidgetElement } from "../../../types/manifest";
 
 interface GridItemPropertiesProps {
   selectedId: string;
-  gridItemStyles: IWidgetElement["styles"]["gridItem"];
 }
 
 const useStyles = makeStyles({
@@ -31,10 +29,14 @@ const useStyles = makeStyles({
 
 const GridItemProperties: React.FC<GridItemPropertiesProps> = ({
   selectedId,
-  gridItemStyles,
 }) => {
   const styles = useStyles();
   const elementMap = useManifestStore((state) => state.elementMap);
+
+  const gridItemStyles = useMemo(
+    () => elementMap[selectedId].styles.gridItem,
+    [elementMap, selectedId]
+  );
 
   const isGridParent = useMemo(() => {
     const parentId = elementMap[selectedId].parentId;
