@@ -1,7 +1,5 @@
 import {
-  Button,
   Checkbox,
-  Input,
   SpinButton,
   tokens,
   Toolbar,
@@ -22,10 +20,10 @@ import {
 import React, { useMemo } from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { useManifestStore } from "../../stores/useManifestStore";
-import { MathFormulaRegular } from "@fluentui/react-icons/fonts";
 import { spinButtonOnChange } from "../../utils";
 import { ColorPickerPopup } from "./ColorPickerPopup";
 import Panel from "./Panel";
+import TemplateEditor from "../TemplateEditor";
 
 interface TextPropertiesProps {}
 
@@ -51,31 +49,17 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
             {
               label: "Text",
               control: (
-                <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
-                  <Input
-                    style={{ width: "140px" }}
-                    placeholder="Enter text"
-                    onChange={(_, { value }) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          data: { text: value || "" },
-                        });
-                    }}
-                    value={elementMap[selectedId].data?.text || ""}
-                  />
-                  <Tooltip
-                    content="Expression"
-                    relationship="label"
-                    positioning={"above-end"}
-                    withArrow>
-                    <Button
-                      size="small"
-                      appearance="outline"
-                      icon={<MathFormulaRegular style={{ fontSize: "16px" }} />}
-                    />
-                  </Tooltip>
-                </div>
+                <TemplateEditor
+                  value={elementMap[selectedId].data?.text}
+                  onChange={(value) => {
+                    useManifestStore
+                      .getState()
+                      .updateElementProperties(selectedId, {
+                        data: { text: value || "" },
+                      });
+                  }}
+                  isHtml
+                />
               ),
             },
             {

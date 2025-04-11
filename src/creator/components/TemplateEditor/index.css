@@ -1,0 +1,15 @@
+.minimal-editor {
+  .ql-toolbar {
+    display: none;
+  }
+  .ql-container {
+    border-top: 1px solid var(--colorNeutralStroke1) !important;
+    border-radius: var(--borderRadiusMedium);
+  }
+}
+.ql-toolbar {
+  border-color: var(--colorNeutralStroke1) !important;
+}
+.ql-container {
+  border: 1px solid var(--colorNeutralStroke1) !important;
+}
