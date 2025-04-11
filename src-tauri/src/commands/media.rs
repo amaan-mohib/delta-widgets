@@ -313,7 +313,6 @@ async fn attach_session_manager_listeners() -> Result<MediaSessionManager, ()> {
 pub async fn get_media() -> CommandResult<Vec<MediaInfo>> {
     let session_manager = attach_session_manager_listeners().await.unwrap();
     let sessions = session_manager.GetSessions().unwrap();
-    let current_session = session_manager.GetCurrentSession().unwrap();
     let session_iterator = sessions.into_iter().collect::<Vec<MediaSession>>();
     let mut players: Vec<MediaInfo> = vec![];
     let mut tasks = vec![];
@@ -324,6 +323,7 @@ pub async fn get_media() -> CommandResult<Vec<MediaInfo>> {
             Ok(id) => id.to_string(),
             Err(_) => "Unkown".to_string(),
         };
+        let current_session = session_manager.GetCurrentSession().unwrap();
         let is_current_session = current_session.SourceAppUserModelId()?.to_string() == player_id;
         attach_session_listeners(player_id.clone(), session.clone());
 

@@ -4,6 +4,7 @@ import { getManifestFromPath } from "../main/utils/widgets";
 
 import "./index.css";
 import Element from "./components/Element";
+import useFetcher from "./useFetcher";
 
 interface AppProps {}
 
@@ -16,6 +17,8 @@ const App: React.FC<AppProps> = () => {
   } = useDataTrackStore();
 
   const elements = useMemo(() => manifest?.elements || [], [manifest]);
+
+  useFetcher(elements);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
