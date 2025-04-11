@@ -11,12 +11,17 @@ import {
   DialogTrigger,
   InfoLabel,
   Input,
+  SearchBox,
   Textarea,
   Tooltip,
   useRestoreFocusTarget,
 } from "@fluentui/react-components";
-import { ChevronRightRegular, MathFormulaRegular } from "@fluentui/react-icons";
-import React, { useEffect, useState } from "react";
+import {
+  ArrowLeftRegular,
+  ChevronRightRegular,
+  MathFormulaRegular,
+} from "@fluentui/react-icons";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "./index.css";
@@ -54,33 +59,33 @@ const templateCategories = [
       {
         id: "time-24",
         label: "24h Time",
-        value: "{{date:HH:mm}}",
+        value: "{{time:HH:mm}}",
         description: "Time in 24-hour format (HH:mm)",
       },
       {
         id: "datetime",
         label: "Date & Time",
-        value: "{{date:MM/DD/YYYY hh:mm A}}",
+        value: "{{datetime:MM/DD/YYYY hh:mm A}}",
         description: "Date and time combined",
       },
     ],
   },
   {
-    id: "user",
-    name: "User Data",
+    id: "media",
+    name: "Media",
     // icon: Users,
     templates: [
       {
         id: "name",
-        label: "Full Name",
-        value: "{{user.name}}",
-        description: "User's full name",
+        label: "Media Title",
+        value: "{{media:title}}",
+        description: "Title of the playing media",
       },
       {
-        id: "first-name",
-        label: "First Name",
-        value: "{{user.firstName}}",
-        description: "User's first name",
+        id: "artist",
+        label: "Artist",
+        value: "{{media:artist}}",
+        description: "Artist of the playing media",
       },
       {
         id: "email",
@@ -242,24 +247,96 @@ const templateCategories = [
   },
 ];
 
+type TTemplate = (typeof templateCategories)[0]["templates"][0];
+
+const TemplateCard: React.FC<{
+  template: TTemplate;
+  onInsert: (template: TTemplate) => void;
+}> = ({ template, onInsert }) => {
+  return (
+    <Card
+      size="small"
+      key={template.id}
+      appearance="subtle"
+      onClick={() => {
+        onInsert(template);
+      }}>
+      <CardHeader
+        header={template.label}
+        action={
+          <Button appearance="transparent" size="small">
+            Insert
+          </Button>
+        }
+      />
+      <code>{template.value}</code>
+      <p>{template.description}</p>
+    </Card>
+  );
+};
+
 interface TemplateEditorProps {
   value?: string;
   onChange: (value: string) => void;
   isHtml?: boolean;
+  placeholder?: string;
 }
 
 const TemplateEditor: React.FC<TemplateEditorProps> = ({
   value: initialValue,
   onChange,
   isHtml,
+  placeholder,
 }) => {
   const [value, setValue] = useState(initialValue || "");
   const [open, setOpen] = useState(false);
   const restoreFocusTargetAttribute = useRestoreFocusTarget();
+  const [selectedCategory, setSelectedCategory] = useState<
+    (typeof templateCategories)[0] | null
+  >(null);
+  const [search, setSearch] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const quillRef = useRef<ReactQuill>(null);
+  const [selection, setSelection] = useState(0);
 
   useEffect(() => {
     setValue(initialValue || "");
   }, [open, initialValue]);
+
+  const filteredTemplates = useMemo(() => {
+    return templateCategories.flatMap((category) =>
+      category.templates.filter(
+        (template) =>
+          template.label.toLowerCase().includes(search.toLowerCase()) ||
+          template.value.toLowerCase().includes(search.toLowerCase()) ||
+          template.description.toLowerCase().includes(search.toLowerCase())
+      )
+    );
+  }, [search]);
+
+  const insertTemplate = (template: string) => {
+    if (quillRef.current && isHtml) {
+      const length = quillRef.current.editor?.scroll.length() || 0;
+      quillRef.current.editor?.insertText(selection || length - 1, template);
+    }
+    if (textareaRef.current && !isHtml) {
+      const start = textareaRef.current.selectionStart;
+      const end = textareaRef.current.selectionEnd;
+      const newContent =
+        value.substring(0, start) + template + value.substring(end);
+
+      setValue(newContent);
+
+      // Set cursor position after the inserted template
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          const newPosition = start + template.length;
+          textareaRef.current.setSelectionRange(newPosition, newPosition);
+        }
+      }, 0);
+    }
+  };
 
   return (
     <>
@@ -269,14 +346,14 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
             className="minimal-editor"
             modules={{ toolbar: [] }}
             style={{ width: "140px" }}
-            placeholder="Enter text"
+            placeholder={placeholder || "Enter text"}
             onChange={onChange}
             value={open ? initialValue : value}
           />
         ) : (
           <Input
             style={{ width: "140px" }}
-            placeholder="Enter text"
+            placeholder={placeholder || "Enter text"}
             onChange={(_, { value }) => {
               onChange(value);
             }}
@@ -300,27 +377,36 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
       <Dialog open={open} onOpenChange={(_, data) => setOpen(data.open)}>
         <DialogSurface style={{ minWidth: "60vw" }}>
           <DialogBody>
-            <DialogTitle>Expression Editor</DialogTitle>
+            <InfoLabel
+              style={{ display: "flex", gap: 10 }}
+              label={<DialogTitle>Expression Editor</DialogTitle>}
+              info="Template variables will be replaced with actual values when rendered">
+              Content
+            </InfoLabel>
             <DialogContent style={{ padding: "1rem 0" }}>
               <div style={{ display: "flex", gap: "1rem" }}>
                 <div
                   style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                  <InfoLabel info="Template variables will be replaced with actual values when rendered">
-                    Content
-                  </InfoLabel>
-                  <div style={{ marginTop: "1rem", flex: 1, display: "flex" }}>
+                  <div style={{ flex: 1, display: "flex" }}>
                     {isHtml ? (
                       <ReactQuill
+                        ref={quillRef}
+                        onChangeSelection={(selection) => {
+                          if (selection?.index) {
+                            setSelection(selection?.index || 0);
+                          }
+                        }}
                         className="full-editor"
-                        style={{ flex: 1, height: "90%" }}
-                        placeholder="Enter text"
-                        onChange={(value) => setValue(value)}
+                        style={{ flex: 1, height: "92%" }}
+                        placeholder={placeholder || "Enter text"}
+                        onChange={setValue}
                         value={value}
                       />
                     ) : (
                       <Textarea
+                        ref={textareaRef}
                         style={{ width: "100%" }}
-                        placeholder="Enter text"
+                        placeholder={placeholder || "Enter text"}
                         onChange={(_, { value }) => {
                           setValue(value);
                         }}
@@ -329,27 +415,74 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
                     )}
                   </div>
                 </div>
-                <div style={{ minWidth: 300 }}>
-                  <Card appearance="outline">
-                    <CardHeader header="Template categories" />
-                    <div style={{ height: 400, overflow: "auto" }}>
-                      {templateCategories.map((category) => (
-                        <Card
-                          size="small"
-                          key={category.id}
-                          appearance="subtle"
-                          onClick={() => {}}>
-                          <CardHeader
-                            header={category.name}
-                            action={
-                              <Button
-                                appearance="transparent"
-                                icon={<ChevronRightRegular />}
-                              />
-                            }
+                <div style={{ width: 300 }}>
+                  <SearchBox
+                    value={search}
+                    onChange={(_, { value }) => setSearch(value)}
+                    placeholder="Search templates"
+                    style={{ width: "100%" }}
+                  />
+                  <Card appearance="outline" style={{ marginTop: "1rem" }}>
+                    <CardHeader
+                      style={{ height: 24 }}
+                      image={
+                        selectedCategory && !search ? (
+                          <Button
+                            size="small"
+                            onClick={() => setSelectedCategory(null)}
+                            icon={<ArrowLeftRegular />}
+                            appearance="transparent"
                           />
-                        </Card>
-                      ))}
+                        ) : null
+                      }
+                      header={
+                        search
+                          ? "Search results"
+                          : selectedCategory
+                          ? selectedCategory.name
+                          : "Template categories"
+                      }
+                    />
+                    <div style={{ height: 400, overflow: "auto" }}>
+                      {search
+                        ? filteredTemplates.map((template) => (
+                            <TemplateCard
+                              key={template.id}
+                              onInsert={(template) => {
+                                insertTemplate(template.value);
+                              }}
+                              template={template}
+                            />
+                          ))
+                        : selectedCategory
+                        ? selectedCategory.templates.map((template) => (
+                            <TemplateCard
+                              key={template.id}
+                              onInsert={(template) => {
+                                insertTemplate(template.value);
+                              }}
+                              template={template}
+                            />
+                          ))
+                        : templateCategories.map((category) => (
+                            <Card
+                              size="small"
+                              key={category.id}
+                              appearance="subtle"
+                              onClick={() => {
+                                setSelectedCategory(category);
+                              }}>
+                              <CardHeader
+                                header={category.name}
+                                action={
+                                  <Button
+                                    appearance="transparent"
+                                    icon={<ChevronRightRegular />}
+                                  />
+                                }
+                              />
+                            </Card>
+                          ))}
                     </div>
                   </Card>
                 </div>

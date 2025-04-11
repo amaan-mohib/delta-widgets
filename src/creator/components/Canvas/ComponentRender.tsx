@@ -9,6 +9,7 @@ import {
 import ImageComponent from "./ImageComponent";
 import ButtonComponent from "./ButtonComponent";
 import SliderComponent from "./SliderComponent";
+import { parseDynamicText } from "../../utils";
 
 interface ComponentRenderProps {
   component: IWidgetElement;
@@ -74,7 +75,7 @@ const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
         <div
           id={`${component.id}-child`}
           dangerouslySetInnerHTML={{
-            __html: component.data?.text || "Text",
+            __html: parseDynamicText(component.data?.text || "Text"),
           }}></div>
       </Dropable>
     );

@@ -1,9 +1,9 @@
-import { Button, Input, Select, Tooltip } from "@fluentui/react-components";
+import { Select } from "@fluentui/react-components";
 import React, { useMemo } from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { useManifestStore } from "../../stores/useManifestStore";
-import { MathFormulaRegular } from "@fluentui/react-icons/fonts";
 import Panel from "./Panel";
+import TemplateEditor from "../TemplateEditor";
 
 interface SliderPropertiesProps {}
 
@@ -29,91 +29,49 @@ const SliderProperties: React.FC<SliderPropertiesProps> = () => {
             {
               label: "Minimum",
               control: (
-                <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
-                  <Input
-                    style={{ width: "140px" }}
-                    placeholder="Enter minimum"
-                    onChange={(_, { value }) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          data: { min: value || "0" },
-                        });
-                    }}
-                    value={sliderData?.min || "0"}
-                  />
-                  <Tooltip
-                    content="Expression"
-                    relationship="label"
-                    positioning={"above-end"}
-                    withArrow>
-                    <Button
-                      size="small"
-                      appearance="outline"
-                      icon={<MathFormulaRegular style={{ fontSize: "16px" }} />}
-                    />
-                  </Tooltip>
-                </div>
+                <TemplateEditor
+                  value={sliderData?.min || "0"}
+                  onChange={(value) => {
+                    useManifestStore
+                      .getState()
+                      .updateElementProperties(selectedId, {
+                        data: { min: value || "" },
+                      });
+                  }}
+                  placeholder="Enter minimum"
+                />
               ),
             },
             {
               label: "Maximum",
               control: (
-                <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
-                  <Input
-                    style={{ width: "140px" }}
-                    placeholder="Enter maximum"
-                    onChange={(_, { value }) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          data: { max: value || "100" },
-                        });
-                    }}
-                    value={sliderData?.max || "100"}
-                  />
-                  <Tooltip
-                    content="Expression"
-                    relationship="label"
-                    positioning={"above-end"}
-                    withArrow>
-                    <Button
-                      size="small"
-                      appearance="outline"
-                      icon={<MathFormulaRegular style={{ fontSize: "16px" }} />}
-                    />
-                  </Tooltip>
-                </div>
+                <TemplateEditor
+                  value={sliderData?.max || "0"}
+                  onChange={(value) => {
+                    useManifestStore
+                      .getState()
+                      .updateElementProperties(selectedId, {
+                        data: { max: value || "" },
+                      });
+                  }}
+                  placeholder="Enter maximum"
+                />
               ),
             },
             {
               label: "Current",
               control: (
-                <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
-                  <Input
-                    style={{ width: "140px" }}
-                    placeholder="Enter current"
-                    onChange={(_, { value }) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          data: { current: value || "0" },
-                        });
-                    }}
-                    value={sliderData?.current || "0"}
-                  />
-                  <Tooltip
-                    content="Expression"
-                    relationship="label"
-                    positioning={"above-end"}
-                    withArrow>
-                    <Button
-                      size="small"
-                      appearance="outline"
-                      icon={<MathFormulaRegular style={{ fontSize: "16px" }} />}
-                    />
-                  </Tooltip>
-                </div>
+                <TemplateEditor
+                  value={sliderData?.current || "0"}
+                  onChange={(value) => {
+                    useManifestStore
+                      .getState()
+                      .updateElementProperties(selectedId, {
+                        data: { current: value || "" },
+                      });
+                  }}
+                  placeholder="Enter current"
+                />
               ),
             },
             {

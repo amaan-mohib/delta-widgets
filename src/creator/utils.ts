@@ -10,3 +10,24 @@ export const spinButtonOnChange = (
     data.value || (event.target as HTMLInputElement).value || defaultValue || 0
   ))
 }
+
+const formatVariable = (key: string) => (format?: string): string => {
+  const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
+  return `${capitalizedKey}${format ? ` (${format})` : ""}`;
+};
+
+const textVariables: Record<string, (format?: string) => string> =
+  ['date', 'time', 'datetime', 'media', 'system', 'weather', 'misc', 'custom']
+    .reduce((acc, key) => ({
+      ...acc,
+      [key]: formatVariable(key)
+    }), {});
+
+export const parseDynamicText = (text: string) => {
+  return text.replace(/\{\{(\w+)(?::([^}]+))?\}\}/g, (match, key, formatStr) => {
+    if (textVariables[key]) {
+      return textVariables[key](formatStr);
+    }
+    return match;
+  });
+}

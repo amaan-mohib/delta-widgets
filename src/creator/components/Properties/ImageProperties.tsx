@@ -1,17 +1,10 @@
-import {
-  Button,
-  Checkbox,
-  Input,
-  Select,
-  SpinButton,
-  Tooltip,
-} from "@fluentui/react-components";
+import { Checkbox, Select, SpinButton } from "@fluentui/react-components";
 import React, { useMemo } from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { useManifestStore } from "../../stores/useManifestStore";
-import { MathFormulaRegular } from "@fluentui/react-icons/fonts";
 import { spinButtonOnChange } from "../../utils";
 import Panel from "./Panel";
+import TemplateEditor from "../TemplateEditor";
 
 interface ImagePropertiesProps {}
 
@@ -37,31 +30,17 @@ const ImageProperties: React.FC<ImagePropertiesProps> = () => {
             {
               label: "Source",
               control: (
-                <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
-                  <Input
-                    style={{ width: "140px" }}
-                    placeholder="Enter source"
-                    onChange={(_, { value }) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          data: { src: value || "" },
-                        });
-                    }}
-                    value={elementMap[selectedId].data?.src || ""}
-                  />
-                  <Tooltip
-                    content="Expression"
-                    relationship="label"
-                    positioning={"above-end"}
-                    withArrow>
-                    <Button
-                      size="small"
-                      appearance="outline"
-                      icon={<MathFormulaRegular style={{ fontSize: "16px" }} />}
-                    />
-                  </Tooltip>
-                </div>
+                <TemplateEditor
+                  value={elementMap[selectedId].data?.src}
+                  onChange={(value) => {
+                    useManifestStore
+                      .getState()
+                      .updateElementProperties(selectedId, {
+                        data: { src: value || "" },
+                      });
+                  }}
+                  placeholder="Enter source"
+                />
               ),
             },
             {
