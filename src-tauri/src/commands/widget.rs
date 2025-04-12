@@ -2,11 +2,13 @@ use std::{
     collections::HashMap,
     fs::{self, File},
     io::Read,
+    sync::Mutex,
+    time::Duration,
 };
 
-use serde::Serialize;
-use serde_json::Value;
+use serde_json::{json, Value};
 use tauri::{Emitter, LogicalSize, Manager, PhysicalPosition, PhysicalSize};
+use tokio::time::{sleep, Instant};
 
 #[tauri::command]
 pub async fn create_creator_window(
@@ -121,18 +123,6 @@ fn default_widget_type() -> WidgetType {
     WidgetType::Json
 }
 
-#[derive(Clone, Serialize)]
-struct PositionPayload<'a> {
-    path: &'a str,
-    position: &'a PhysicalPosition<i32>,
-}
-
-#[derive(Clone, Serialize)]
-struct SizePayload<'a> {
-    path: &'a str,
-    size: &'a PhysicalSize<u32>,
-}
-
 #[tauri::command]
 pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_preview: Option<bool>) {
     let clean_path = serde_json::from_str::<String>(&path).unwrap();
@@ -231,7 +221,7 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
     if !is_preview.unwrap_or(false) {
         new_window.set_skip_taskbar(true).unwrap();
         new_window.set_always_on_bottom(true).unwrap();
-        attach_window_events(new_window.clone(), app, clean_path);
+        attach_window_events(new_window.clone(), clean_path);
     } else {
         new_window.on_window_event(move |event| {
             match event {
@@ -244,30 +234,79 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
     }
 }
 
-fn attach_window_events(
-    new_window: tauri::WebviewWindow,
-    app: tauri::AppHandle,
-    clean_path: String,
-) {
+fn save_window_state(window: &tauri::WebviewWindow, config_path: String) {
+    if let (Ok(position), Ok(size)) = (window.inner_position(), window.inner_size()) {
+        // Try to read the existing config file
+        let config_content = match fs::read_to_string(&config_path) {
+            Ok(content) => content,
+            Err(_) => String::from("{}"),
+        };
+
+        // Parse the existing JSON
+        let mut config: Value = match serde_json::from_str(&config_content) {
+            Ok(json) => json,
+            Err(_) => json!({}),
+        };
+
+        // Update only the window position and size fields
+        if let Value::Object(ref mut map) = config {
+            map.insert(
+                String::from("position"),
+                json!({
+                    "x": position.x,
+                    "y": position.y
+                }),
+            );
+
+            map.insert(
+                String::from("size"),
+                json!({
+                    "width": size.width,
+                    "height": size.height
+                }),
+            );
+        }
+
+        // Write the updated JSON back to the file
+        if let Ok(json_string) = serde_json::to_string_pretty(&config) {
+            let _ = fs::write(&config_path, json_string);
+        }
+    }
+}
+
+fn attach_window_events(new_window: tauri::WebviewWindow, clean_path: String) {
+    let debounce_state = std::sync::Arc::new(Mutex::new(None::<Instant>));
     new_window.clone().on_window_event(move |event| {
         match event {
-            tauri::WindowEvent::Moved(position) => {
-                let _ = app.emit(
-                    "position-moved",
-                    PositionPayload {
-                        path: &clean_path,
-                        position,
-                    },
-                );
-            }
-            tauri::WindowEvent::Resized(size) => {
-                let _ = app.emit(
-                    "resized",
-                    SizePayload {
-                        path: &clean_path,
-                        size,
-                    },
-                );
+            tauri::WindowEvent::Moved(_) | tauri::WindowEvent::Resized(_) => {
+                let window_clone = new_window.clone();
+                let path = clean_path.clone();
+                let debounce = debounce_state.clone();
+                *debounce.lock().unwrap() = Some(Instant::now());
+                tauri::async_runtime::spawn(async move {
+                    // Wait for debounce period
+                    sleep(Duration::from_millis(500)).await;
+
+                    // Check if we should still save
+                    let should_save = {
+                        let mut state = debounce.lock().unwrap();
+                        if let Some(last_update) = *state {
+                            if last_update.elapsed() >= Duration::from_millis(500) {
+                                // Reset the state
+                                *state = None;
+                                true
+                            } else {
+                                false
+                            }
+                        } else {
+                            false
+                        }
+                    };
+
+                    if should_save {
+                        save_window_state(&window_clone, path);
+                    }
+                });
                 // hack to keep widget unminimized
                 if new_window.is_minimized().unwrap() {
                     new_window.unminimize().unwrap();
