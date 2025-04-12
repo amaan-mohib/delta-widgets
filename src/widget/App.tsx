@@ -5,6 +5,7 @@ import { getManifestFromPath } from "../main/utils/widgets";
 import "./index.css";
 import Element from "./components/Element";
 import useFetcher from "./useFetcher";
+import useVariableUpdater from "./useVariableUpdater";
 
 interface AppProps {}
 
@@ -19,6 +20,7 @@ const App: React.FC<AppProps> = () => {
   const elements = useMemo(() => manifest?.elements || [], [manifest]);
 
   useFetcher(elements);
+  useVariableUpdater();
 
   useEffect(() => {
     const timeout = setTimeout(() => {

@@ -8,7 +8,7 @@ import {
   Tooltip,
 } from "@fluentui/react-components";
 import { useManifestStore } from "../stores/useManifestStore";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowRedoRegular,
   ArrowUndoRegular,
@@ -20,7 +20,12 @@ import {
 } from "@fluentui/react-icons";
 import { message } from "@tauri-apps/plugin-dialog";
 import { useDataTrackStore } from "../stores/useDataTrackStore";
-import { createWidgetWindow, updateManifest } from "../../main/utils/widgets";
+import {
+  closeWidgetWindow,
+  createWidgetWindow,
+  updateManifest,
+} from "../../main/utils/widgets";
+import { listen, UnlistenFn } from "@tauri-apps/api/event";
 
 interface ToolbarProps {}
 
@@ -34,6 +39,23 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
   const elementMap = useManifestStore((state) => state.elementMap);
   const undoStack = useManifestStore((state) => state.undoStack);
   const redoStack = useManifestStore((state) => state.redoStack);
+  const [isPreviewing, setIsPreviewing] = useState(false);
+
+  useEffect(() => {
+    if (!manifest) return;
+    let unsub: UnlistenFn;
+    (async () => {
+      unsub = await listen<string>("widget-close", ({ payload }) => {
+        const path = manifest.path;
+        if (path && payload.startsWith(path)) {
+          setIsPreviewing(false);
+        }
+      });
+    })();
+    return () => {
+      unsub && unsub();
+    };
+  }, [manifest]);
 
   const onSubmit = useCallback(async (key: string, label: string) => {
     if (key in (window.__INITIAL_STATE__?.existingKeys || {})) {
@@ -54,6 +76,7 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
         {!editName ? (
           <Tooltip content="Project name" relationship="label">
             <Button
+              disabled={isSaving || isPreviewing}
               size="small"
               appearance="secondary"
               icon={<EditRegular />}
@@ -138,9 +161,16 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
         <Button
           size="small"
           onClick={async () => {
-            await createWidgetWindow(manifest?.path || "", true);
+            if (isPreviewing) {
+              await closeWidgetWindow(
+                `widget-preview-${projectName?.toLowerCase().replace(/ /g, "")}`
+              );
+            } else {
+              await createWidgetWindow(manifest?.path || "", true);
+              setIsPreviewing(true);
+            }
           }}>
-          Preview
+          {isPreviewing ? "Close preview" : "Preview"}
         </Button>
         <Button size="small" appearance="primary">
           Publish

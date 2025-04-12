@@ -1,11 +1,12 @@
 import { create } from "zustand";
 
 export interface IUseDataTrackStore {
-  initialStateLoading: boolean,
-  initialStateLoadCounter: number,
-  incrementInitialStateLoadCounter: () => void,
-  activeId: string | null,
-  selectedId: string | null,
+  initialStateLoading: boolean;
+  initialStateLoadCounter: number;
+  incrementInitialStateLoadCounter: () => void;
+  activeId: string | null;
+  selectedId: string | null;
+  hoveredId: string | null;
   isSaving: boolean;
   isDragging: boolean;
   scale: number;
@@ -20,6 +21,7 @@ export const useDataTrackStore = create<IUseDataTrackStore>((set, get) => ({
   },
   activeId: null,
   selectedId: null,
+  hoveredId: null,
   isSaving: false,
   isDragging: false,
   scale: 1,

@@ -18,8 +18,11 @@ import {
 } from "@fluentui/react-components";
 import {
   ArrowLeftRegular,
+  Braces20Regular,
+  CalendarDate20Regular,
   ChevronRightRegular,
   MathFormulaRegular,
+  Play20Regular,
 } from "@fluentui/react-icons";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactQuill from "react-quill";
@@ -30,13 +33,13 @@ const templateCategories = [
   {
     id: "date",
     name: "Date & Time",
-    // icon: Calendar,
+    icon: <CalendarDate20Regular />,
     templates: [
       {
         id: "date",
         label: "Date",
         value: "{{date}}",
-        description: "Current date (MM/DD/YYYY)",
+        description: "Current date (YYYY/MM/DD)",
       },
       {
         id: "date-short",
@@ -53,7 +56,13 @@ const templateCategories = [
       {
         id: "time",
         label: "Time",
-        value: "{{date:hh:mm A}}",
+        value: "{{time}}",
+        description: "Time in 12-hour format (default) (hh:mm AM/PM)",
+      },
+      {
+        id: "time-12",
+        label: "12h Time",
+        value: "{{time:hh:mm aa}}",
         description: "Time in 12-hour format (hh:mm AM/PM)",
       },
       {
@@ -64,8 +73,14 @@ const templateCategories = [
       },
       {
         id: "datetime",
+        label: "Date & Time (default)",
+        value: "{{datetime}}",
+        description: "Date and time combined",
+      },
+      {
+        id: "datetime2",
         label: "Date & Time",
-        value: "{{datetime:MM/DD/YYYY hh:mm A}}",
+        value: "{{datetime:MMMM d yyyy, h:mm aa}}",
         description: "Date and time combined",
       },
     ],
@@ -73,7 +88,7 @@ const templateCategories = [
   {
     id: "media",
     name: "Media",
-    // icon: Users,
+    icon: <Play20Regular />,
     templates: [
       {
         id: "name",
@@ -88,10 +103,52 @@ const templateCategories = [
         description: "Artist of the playing media",
       },
       {
-        id: "email",
-        label: "Email",
-        value: "{{user.email}}",
-        description: "User's email address",
+        id: "thumbnail",
+        label: "Thumbnail",
+        value: "{{media:thumbnail}}",
+        description: "Thumbnail of the playing media",
+      },
+      {
+        id: "status",
+        label: "Media Status",
+        value: "{{media:status}}",
+        description: "Status of the current media",
+      },
+      {
+        id: "player",
+        label: "Media Player",
+        value: "{{media:player}}",
+        description: "Application currently playing the media",
+      },
+      {
+        id: "player_icon",
+        label: "Media Player Icon",
+        value: "{{media:player_icon}}",
+        description: "Icon of the Application playing the media",
+      },
+      {
+        id: "position",
+        label: "Position",
+        value: "{{media:position}}",
+        description: "Current timeline position of the playing media",
+      },
+      {
+        id: "duration",
+        label: "Duration",
+        value: "{{media:duration}}",
+        description: "Current timeline duration of the playing media",
+      },
+      {
+        id: "position_text",
+        label: "Position (Formatted)",
+        value: "{{media:position_text}}",
+        description: "Formatted current timeline position of the playing media",
+      },
+      {
+        id: "duration_text",
+        label: "Duration (Formatted)",
+        value: "{{media:duration_text}}",
+        description: "Formatted current timeline duration of the playing media",
       },
     ],
   },
@@ -146,84 +203,9 @@ const templateCategories = [
     ],
   },
   {
-    id: "math",
-    name: "Math",
-    // icon: Hash,
-    templates: [
-      {
-        id: "sum",
-        label: "Sum",
-        value: "{{sum:a,b}}",
-        description: "Sum of values",
-      },
-      {
-        id: "multiply",
-        label: "Multiply",
-        value: "{{multiply:a,b}}",
-        description: "Multiply values",
-      },
-      {
-        id: "round",
-        label: "Round",
-        value: "{{round:number}}",
-        description: "Round to nearest integer",
-      },
-    ],
-  },
-  {
-    id: "conditional",
-    name: "Conditional",
-    // icon: Zap,
-    templates: [
-      {
-        id: "if",
-        label: "If Statement",
-        value: "{{if:condition,then,else}}",
-        description: "Conditional logic",
-      },
-      {
-        id: "switch",
-        label: "Switch",
-        value: "{{switch:value,case1,result1,...}}",
-        description: "Switch statement",
-      },
-      {
-        id: "exists",
-        label: "Exists",
-        value: "{{exists:value,then,else}}",
-        description: "Check if value exists",
-      },
-    ],
-  },
-  {
-    id: "arrays",
-    name: "Arrays",
-    // icon: Hash,
-    templates: [
-      {
-        id: "join",
-        label: "Join",
-        value: "{{join:array,separator}}",
-        description: "Join array elements",
-      },
-      {
-        id: "first",
-        label: "First",
-        value: "{{first:array}}",
-        description: "First element of array",
-      },
-      {
-        id: "last",
-        label: "Last",
-        value: "{{last:array}}",
-        description: "Last element of array",
-      },
-    ],
-  },
-  {
     id: "custom",
     name: "Custom Fields",
-    // icon: Hash,
+    icon: <Braces20Regular />,
     templates: [
       {
         id: "custom1",
@@ -301,9 +283,11 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   useEffect(() => {
     setValue(initialValue || "");
-  }, [open, initialValue]);
+  }, [initialValue]);
 
   const filteredTemplates = useMemo(() => {
+    if (!search) return [];
+
     return templateCategories.flatMap((category) =>
       category.templates.filter(
         (template) =>
@@ -348,16 +332,19 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
             style={{ width: "140px" }}
             placeholder={placeholder || "Enter text"}
             onChange={onChange}
-            value={open ? initialValue : value}
+            value={initialValue}
           />
         ) : (
           <Input
+            autoCorrect="off"
+            autoComplete="off"
+            spellCheck="false"
             style={{ width: "140px" }}
             placeholder={placeholder || "Enter text"}
             onChange={(_, { value }) => {
               onChange(value);
             }}
-            value={open ? initialValue : value}
+            value={initialValue}
           />
         )}
         <Tooltip
@@ -404,6 +391,9 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
                       />
                     ) : (
                       <Textarea
+                        autoCorrect="off"
+                        autoComplete="off"
+                        spellCheck="false"
                         ref={textareaRef}
                         style={{ width: "100%" }}
                         placeholder={placeholder || "Enter text"}
@@ -473,6 +463,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
                                 setSelectedCategory(category);
                               }}>
                               <CardHeader
+                                image={category.icon}
                                 header={category.name}
                                 action={
                                   <Button

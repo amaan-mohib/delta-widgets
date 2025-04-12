@@ -3,6 +3,7 @@ import ImageComponent from "./ImageComponent";
 import SliderComponent from "./SliderComponent";
 import { IWidgetElement } from "../../types/manifest";
 import ButtonComponent from "./ButtonComponent";
+import TextComponent from "./TextComponent";
 
 interface ElementProps {
   component: IWidgetElement;
@@ -59,11 +60,7 @@ const Element: React.FC<ElementProps> = ({ component }) => {
   if (component.type === "text") {
     return (
       <div id={component.id} style={getComponentStyles(component.styles)}>
-        <div
-          id={`${component.id}-child`}
-          dangerouslySetInnerHTML={{
-            __html: component.data?.text || "Text",
-          }}></div>
+        <TextComponent component={component} />
       </div>
     );
   }

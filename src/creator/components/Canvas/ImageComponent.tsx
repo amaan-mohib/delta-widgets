@@ -43,9 +43,10 @@ const ImageComponent: React.FC<ImageComponentProps> = ({ component }) => {
       draggableOpts={{ grid: [1, 1] }}>
       <Image
         id={`${component.id}-child`}
-        src={parseDynamicText(
-          component.data?.src || "https://placehold.co/400x400?text=No+Image"
-        )}
+        src={
+          parseDynamicText(component.data?.src) ||
+          "https://placehold.co/400x400?text=No+Image"
+        }
         alt={component.data?.alt}
         fit={component.data?.fit || "cover"}
         shape={component.data?.shape || "square"}

@@ -154,10 +154,16 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
         WidgetType::Html => manifest.file.unwrap_or_else(|| "index.html".to_string()),
         _ => "widget-index.html".into(),
     };
-    let label = match manifest.widget_type {
-        WidgetType::Json => "widget".into(),
-        _ => title.to_lowercase().replace(' ', ""),
-    };
+    let label = format!(
+        "{}{}{}",
+        "widget-",
+        if is_preview.unwrap_or(false) {
+            "preview-"
+        } else {
+            ""
+        },
+        title.to_lowercase().replace(' ', "")
+    );
 
     let mut window_builder =
         tauri::WebviewWindowBuilder::new(&app, label, tauri::WebviewUrl::App(url.into()));
@@ -226,6 +232,15 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
         new_window.set_skip_taskbar(true).unwrap();
         new_window.set_always_on_bottom(true).unwrap();
         attach_window_events(new_window.clone(), app, clean_path);
+    } else {
+        new_window.on_window_event(move |event| {
+            match event {
+                tauri::WindowEvent::CloseRequested { .. } | tauri::WindowEvent::Destroyed => {
+                    let _ = app.emit_to("creator", "widget-close", clean_path.clone());
+                }
+                _ => {}
+            };
+        });
     }
 }
 

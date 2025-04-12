@@ -1,12 +1,21 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Image } from "@fluentui/react-components";
 import { IWidgetElement } from "../../types/manifest";
+import { useDynamicTextStore } from "../stores/useVariableStore";
+import { parseDynamicText } from "../utils";
 
 interface ImageComponentProps {
   component: IWidgetElement;
 }
 
 const ImageComponent: React.FC<ImageComponentProps> = ({ component }) => {
+  const textVariables = useDynamicTextStore();
+  const src = useMemo(
+    () =>
+      parseDynamicText(component.data?.src, textVariables) ||
+      "https://placehold.co/400x400?text=No+Image",
+    [textVariables]
+  );
   return (
     <div
       style={{
@@ -15,9 +24,7 @@ const ImageComponent: React.FC<ImageComponentProps> = ({ component }) => {
       }}>
       <Image
         id={`${component.id}-child`}
-        src={
-          component.data?.src || "https://placehold.co/400x400?text=No+Image"
-        }
+        src={src}
         alt={component.data?.alt}
         fit={component.data?.fit || "cover"}
         shape={component.data?.shape || "square"}

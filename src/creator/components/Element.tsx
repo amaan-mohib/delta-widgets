@@ -1,7 +1,7 @@
 import { Active } from "@dnd-kit/core";
 import React, { PropsWithChildren } from "react";
 import { useDataTrackStore } from "../stores/useDataTrackStore";
-import { Button, Text, tokens } from "@fluentui/react-components";
+import { Text, tokens } from "@fluentui/react-components";
 import { ReOrderDotsVerticalRegular } from "@fluentui/react-icons";
 import { useSortable } from "@dnd-kit/sortable";
 
@@ -31,6 +31,7 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
   } = useSortable({ id });
   const selectedId = useDataTrackStore((state) => state.selectedId);
   const activeId = useDataTrackStore((state) => state.activeId);
+  const hoveredId = useDataTrackStore((state) => state.hoveredId);
   const style: React.CSSProperties = {
     ...styles,
     padding:
@@ -54,8 +55,16 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
       : {}),
   };
 
+  const handleMouseEnter = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>
+  ) => {
+    e.stopPropagation();
+    useDataTrackStore.setState({ hoveredId: id });
+  };
+
   return (
     <div
+      className={hoveredId === id ? "dropable-container-hover" : ""}
       onClick={(e) => {
         e.stopPropagation();
         useDataTrackStore.setState({ selectedId: id });
@@ -67,43 +76,22 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
       }}
       style={style}
       onMouseOver={(e) => {
-        e.stopPropagation();
-        document
-          .querySelectorAll(".dropable-container-hover")
-          .forEach((item) => {
-            item.classList.remove("dropable-container-hover");
-          });
-        const div = e.target as HTMLDivElement;
-        if (
-          div.id === id ||
-          div.id === `${id}-child` ||
-          div.classList.contains("react-resizable-image")
-        ) {
-          if (
-            div.id === `${id}-child` ||
-            div.classList.contains("react-resizable-image")
-          ) {
-            div.parentElement!.classList.add("dropable-container-hover");
-          } else {
-            div.classList.add("dropable-container-hover");
-          }
-        }
-      }}
-      onMouseLeave={(e) => {
-        const div = e.target as HTMLDivElement;
-        div.classList.remove("dropable-container-hover");
+        handleMouseEnter(e);
       }}>
       {(isOver || selectedId === id || activeId === id) && (
         <div className="selected-element-info">
           {(selectedId === id || activeId === id) && id !== "container" && (
-            <Button
+            <div
               {...listeners}
               {...attributes}
-              style={{ cursor: "grab" }}
-              size="small"
-              appearance="primary"
-              icon={<ReOrderDotsVerticalRegular fontSize="16px" />}
-            />
+              style={{
+                cursor: "grab",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}>
+              <ReOrderDotsVerticalRegular fontSize="16px" />
+            </div>
           )}
           <Text size={200}>#{id}</Text>
         </div>

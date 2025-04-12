@@ -119,7 +119,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
                 await createWidgetWindow(widget.path);
               } else {
                 await closeWidgetWindow(
-                  widget.label.toLowerCase().replace(" ", "")
+                  widget.label.toLowerCase().replace(/ /g, "")
                 );
               }
             }}

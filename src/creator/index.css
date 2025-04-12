@@ -36,15 +36,17 @@
   cursor: se-resize;
 }
 .dropable-container-hover {
-  outline: 2px solid var(--colorNeutralForeground2BrandHover) !important;
+  &:hover {
+    outline: 2px solid var(--colorNeutralForeground2BrandHover) !important;
+  }
 }
 .selected-element-info {
   position: absolute;
-  left: 0;
+  left: -1px;
   top: 0;
   transform: translateY(-100%);
   background: var(--colorNeutralForeground2BrandPressed);
-  padding: 2px 7px;
+  padding: 3px 7px;
   color: white;
   white-space: nowrap;
   display: flex;

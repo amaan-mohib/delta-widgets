@@ -14,3 +14,5 @@ export const useVariableStore = create<IVariableStore>(() => ({
   currentMedia: null,
   selectedMediaPlayer: null,
 }));
+
+export const useDynamicTextStore = create<Record<string, (format?: string) => string>>(() => ({}));
