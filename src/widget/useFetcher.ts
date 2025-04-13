@@ -91,13 +91,17 @@ function useFetcher(elements: IWidgetElement[]) {
   useEffect(() => {
     if (!dynamicVariables.has("system")) return;
 
+    (async () => {
+      try {
+        const data = await invoke<ISystemInformation>("get_system_info");
+        useVariableStore.setState({ systemInfo: data });
+      } catch (error) {
+        console.log(error);
+      }
+    })();
+
     const timeout = setTimeout(() => {
-      invoke<ISystemInformation>("get_system_info")
-        .then((data) => {
-          useVariableStore.setState({ systemInfo: data });
-          setSystemInfoCounter((prev) => prev + 1);
-        })
-        .catch(console.log);
+      setSystemInfoCounter((prev) => prev + 1);
     }, 60_000);
 
     return () => {
