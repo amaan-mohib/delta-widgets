@@ -2,7 +2,7 @@
 name = "widgets"
 version = "0.1.0"
 description = "A Tauri App"
-authors = ["you"]
+authors = ["amaan-mohib"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -29,6 +29,7 @@ windows = { version = "0.59.0", features = ["Media_Control", "Storage_Streams", 
 tauri-plugin-fs = { version = "2", features = ["watch"] }
 tauri-plugin-dialog = "2"
 wallpaper = "3.2.0"
+tauri-plugin-system-info = "2.0.9"
 
 [profile.release]
 opt-level = 'z'     # Optimize for size

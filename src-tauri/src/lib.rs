@@ -1,11 +1,8 @@
+mod commands;
+
+use commands::{media, system, widget};
 use std::sync::OnceLock;
-
 use tauri::{AppHandle, Emitter};
-
-#[path = "commands/media.rs"]
-mod media;
-#[path = "commands/widget.rs"]
-mod widget;
 
 static GLOBAL_APP_HANDLE: OnceLock<AppHandle> = OnceLock::new();
 
@@ -15,25 +12,20 @@ pub fn emit_global_event(event: &str) {
     }
 }
 
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-async fn greet(name: &str) -> Result<String, ()> {
-    Ok(format!("Hello, {}! You've been greeted from Rust!", name))
-}
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_system_info::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
-            greet,
             media::get_media,
             media::media_action,
             widget::create_creator_window,
             widget::create_widget_window,
             widget::close_widget_window,
+            system::get_system_info,
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application")

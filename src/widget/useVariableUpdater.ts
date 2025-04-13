@@ -8,7 +8,7 @@ import { Buffer } from "buffer";
 import { formatDuration } from "./utils";
 
 const useVariableUpdater = () => {
-  const { currentDate, currentMedia } = useVariableStore();
+  const { currentDate, currentMedia, systemInfo } = useVariableStore();
 
   useEffect(() => {
     useDynamicTextStore.setState({
@@ -129,6 +129,37 @@ const useVariableUpdater = () => {
       },
     });
   }, [currentMedia]);
+
+  useEffect(() => {
+    if (!systemInfo || Object.keys(systemInfo).length === 0) return;
+
+    useDynamicTextStore.setState({
+      system: (formatStr?: string) => {
+        switch (formatStr) {
+          case "hostname":
+            return systemInfo.hostname || "NA";
+          case "os":
+            return (
+              [systemInfo.os_name || "", systemInfo.os_version || ""]
+                .filter(Boolean)
+                .join(" ") || "NA"
+            );
+          case "os_version":
+            return systemInfo.os_version || "NA";
+          case "kernel":
+            return systemInfo.kernel_version || "NA";
+          case "cpu":
+            return JSON.stringify(systemInfo.cpu || "NA");
+          case "battery":
+            return JSON.stringify(systemInfo.batteries || []);
+          case "disk":
+            return JSON.stringify(systemInfo.disks || []);
+          default:
+            return "NA";
+        }
+      },
+    });
+  }, [systemInfo]);
 };
 
 export default useVariableUpdater;

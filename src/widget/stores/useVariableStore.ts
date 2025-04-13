@@ -1,11 +1,12 @@
 import { create } from "zustand";
-import { IMedia } from "../types/variables";
+import { IMedia, ISystemInformation } from "../types/variables";
 
 export interface IVariableStore {
   currentDate: Date;
   media: IMedia[];
   currentMedia: IMedia | null;
   selectedMediaPlayer: string | null;
+  systemInfo: Partial<ISystemInformation>;
 }
 
 export const useVariableStore = create<IVariableStore>(() => ({
@@ -13,6 +14,9 @@ export const useVariableStore = create<IVariableStore>(() => ({
   media: [],
   currentMedia: null,
   selectedMediaPlayer: null,
+  systemInfo: {},
 }));
 
-export const useDynamicTextStore = create<Record<string, (format?: string) => string>>(() => ({}));
+export const useDynamicTextStore = create<
+  Record<string, (format?: string) => string>
+>(() => ({}));

@@ -16,6 +16,7 @@
     "core:window:default",
     "core:window:allow-show",
     "core:window:allow-set-always-on-bottom",
-    "core:window:allow-set-always-on-top"
+    "core:window:allow-set-always-on-top",
+    "system-info:allow-all"
   ]
 }

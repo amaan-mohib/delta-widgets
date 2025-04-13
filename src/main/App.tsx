@@ -30,6 +30,7 @@ import { UnwatchFn } from "@tauri-apps/plugin-fs";
 import AddWidgetDialog, { IDialogState } from "./components/AddWidgetDialog";
 import WidgetCard from "./components/WidgetCard";
 import { IWidget } from "../types/manifest";
+import { invoke } from "@tauri-apps/api/core";
 
 const useStyles = makeStyles({
   container: {
@@ -122,6 +123,9 @@ function App() {
   useEffect(() => {
     getAndSetWidgets();
     getAndSetSavedWidgets();
+    invoke("get_system_info").then((data) => {
+      console.log(data);
+    });
   }, []);
 
   // async function greet() {
