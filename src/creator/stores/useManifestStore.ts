@@ -95,41 +95,55 @@ export const useManifestStore = create<IManifestStore>()(
       set({ manifest: newManifest });
     },
     moveElement(id, dropId) {
-      const oldManifest = get().manifest;
-      const elementMap = get().elementMap;
+      const { manifest: oldManifest, elementMap } = get();
       if (!oldManifest || !elementMap[id] || !elementMap[dropId]) return;
+
       const manifest = cloneObject(oldManifest);
+
+      // Get source element details
       const {
-        index: activeIndex,
-        parentPath: activeParentPath,
-        parentId: activeParentId,
+        index: sourceIndex,
+        parentPath: sourceParentPath,
+        parentId: sourceParentId,
       } = elementMap[id];
+
+      // Get target element details
       const {
-        index: overIndex,
-        path: overPath,
-        parentPath: overParentPath,
+        index: targetIndex,
+        path: targetPath,
+        parentPath: targetParentPath,
       } = elementMap[dropId];
 
-      if (activeParentPath === overParentPath) {
+      // Case 1: Moving within the same parent
+      if (sourceParentPath === targetParentPath) {
+        const reorderedElements = arrayMove(
+          lodashGet(manifest, `elements${sourceParentPath}`) || [],
+          sourceIndex,
+          targetIndex
+        );
+
         const newManifest = lodashSet(
           manifest,
-          `elements${overParentPath}`,
-          arrayMove(
-            lodashGet(manifest, `elements${overParentPath}`) || [],
-            activeIndex,
-            overIndex
-          )
+          `elements${sourceParentPath}`,
+          reorderedElements
         );
 
         set({ manifest: newManifest });
-      } else if (activeParentId !== dropId) {
-        const updatedOverPath = `elements${
+        return;
+      }
+
+      // Case 2: Moving between different parents
+      if (sourceParentId !== dropId) {
+        // Determine the target path based on whether dropping into a container
+        const targetInsertPath = `elements${
           dropId.startsWith("container")
-            ? `${overPath}.children`
-            : overParentPath
+            ? `${targetPath}.children`
+            : targetParentPath
         }`;
-        const overItems = (lodashGet(manifest, updatedOverPath) || []) as any[];
-        overItems.splice(overIndex + 1, 0, {
+
+        // Insert element at new location
+        const targetItems: any[] = lodashGet(manifest, targetInsertPath) || [];
+        targetItems.splice(targetIndex + 1, 0, {
           ...elementMap[id],
           parentId: undefined,
           parentPath: undefined,
@@ -137,15 +151,13 @@ export const useManifestStore = create<IManifestStore>()(
           path: undefined,
         });
 
-        const isOverAndActiveInheritSameParent = overItems.findIndex(
-          (item) => item.id === activeParentId
+        // Handle special case where target and source share inheritance
+        const inheritanceIndex = targetItems.findIndex(
+          (item) => item.id === sourceParentId
         );
-        if (isOverAndActiveInheritSameParent !== -1) {
-          const newOverItems = overItems.map((item, index) => {
-            if (
-              index === isOverAndActiveInheritSameParent &&
-              item.id.startsWith("container")
-            ) {
+        if (inheritanceIndex !== -1) {
+          const updatedItems = targetItems.map((item, index) => {
+            if (index === inheritanceIndex && item.id.startsWith("container")) {
               return {
                 ...item,
                 children: item.children.filter((child: any) => child.id !== id),
@@ -153,28 +165,31 @@ export const useManifestStore = create<IManifestStore>()(
             }
             return item;
           });
-          const newManifest2 = lodashSet(
-            manifest,
-            updatedOverPath,
-            newOverItems
-          );
 
-          set({ manifest: newManifest2 });
+          set({
+            manifest: lodashSet(manifest, targetInsertPath, updatedItems),
+          });
           return;
         }
 
-        const newManifest2 = lodashSet(manifest, updatedOverPath, overItems);
-        const filteredActiveData = (
-          lodashGet(newManifest2, `elements${activeParentPath}`) || []
-        ).filter((item: any) => item.id !== id);
-
-        const newManifest = lodashSet(
-          newManifest2,
-          `elements${activeParentPath}`,
-          filteredActiveData
+        // Update both source and target locations
+        const manifestWithNewTarget = lodashSet(
+          manifest,
+          targetInsertPath,
+          targetItems
         );
 
-        set({ manifest: newManifest });
+        const sourceItems = (
+          lodashGet(manifestWithNewTarget, `elements${sourceParentPath}`) || []
+        ).filter((item: any) => item.id !== id);
+
+        const finalManifest = lodashSet(
+          manifestWithNewTarget,
+          `elements${sourceParentPath}`,
+          sourceItems
+        );
+
+        set({ manifest: finalManifest });
       }
     },
     updateElementProperties(id, { data, styles }) {
