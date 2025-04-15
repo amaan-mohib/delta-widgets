@@ -103,13 +103,43 @@ const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
       </Dropable>
     );
   }
-  if (component.type === "slider") {
+  if (component.type === "slider" || component.type === "media-slider") {
     return (
       <Dropable
         id={component.id}
         styles={getComponentStyles({ gridItem: component.styles.gridItem })}
         disableDrop>
         <SliderComponent component={component} />
+      </Dropable>
+    );
+  }
+  if (
+    component.type === "toggle-play" ||
+    component.type === "media-next" ||
+    component.type === "media-prev"
+  ) {
+    return (
+      <Dropable
+        id={component.id}
+        styles={getComponentStyles({
+          gridItem: component.styles.gridItem,
+          textAlign: component.styles.textAlign,
+        })}
+        disableDrop>
+        <ButtonComponent
+          component={{
+            ...component,
+            data: {
+              ...(component.data || {}),
+              icon:
+                component.type === "toggle-play"
+                  ? "PlayRegular"
+                  : component.type === "media-next"
+                  ? "NextRegular"
+                  : "PreviousRegular",
+            },
+          }}
+        />
       </Dropable>
     );
   }

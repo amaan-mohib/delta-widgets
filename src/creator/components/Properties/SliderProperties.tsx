@@ -5,9 +5,13 @@ import { useManifestStore } from "../../stores/useManifestStore";
 import Panel from "./Panel";
 import TemplateEditor from "../TemplateEditor";
 
-interface SliderPropertiesProps {}
+interface SliderPropertiesProps {
+  disableDynamic?: boolean;
+}
 
-const SliderProperties: React.FC<SliderPropertiesProps> = () => {
+const SliderProperties: React.FC<SliderPropertiesProps> = ({
+  disableDynamic,
+}) => {
   const selectedId = useDataTrackStore((state) => state.selectedId);
   const elementMap = useManifestStore((state) => state.elementMap);
 
@@ -30,6 +34,7 @@ const SliderProperties: React.FC<SliderPropertiesProps> = () => {
               label: "Minimum",
               control: (
                 <TemplateEditor
+                  disabled={disableDynamic}
                   value={sliderData?.min || "0"}
                   onChange={(value) => {
                     useManifestStore
@@ -46,6 +51,7 @@ const SliderProperties: React.FC<SliderPropertiesProps> = () => {
               label: "Maximum",
               control: (
                 <TemplateEditor
+                  disabled={disableDynamic}
                   value={sliderData?.max || "0"}
                   onChange={(value) => {
                     useManifestStore
@@ -62,6 +68,7 @@ const SliderProperties: React.FC<SliderPropertiesProps> = () => {
               label: "Current",
               control: (
                 <TemplateEditor
+                  disabled={disableDynamic}
                   value={sliderData?.current || "0"}
                   onChange={(value) => {
                     useManifestStore

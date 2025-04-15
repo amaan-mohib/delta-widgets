@@ -476,6 +476,16 @@ pub async fn media_action(
                         }
                     };
                 }
+                if action == "toggle".to_string() {
+                    match session.TryTogglePlayPauseAsync().unwrap().await {
+                        Ok(_) => {
+                            println!("toggled for {}", player_id.clone());
+                        }
+                        Err(err) => {
+                            println!("{:?}", err);
+                        }
+                    };
+                }
                 if action == "next".to_string() {
                     match session.TrySkipNextAsync().unwrap().await {
                         Ok(_) => {

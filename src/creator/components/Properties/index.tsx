@@ -40,10 +40,16 @@ const Properties: React.FC<PropertiesProps> = () => {
         return <TextProperties />;
       case "button":
         return <ButtonProperties />;
+      case "toggle-play":
+      case "media-next":
+      case "media-prev":
+        return <ButtonProperties disableDynamic />;
       case "image":
         return <ImageProperties />;
       case "slider":
         return <SliderProperties />;
+      case "media-slider":
+        return <SliderProperties disableDynamic />;
       default:
         return <WindowProperties />;
     }

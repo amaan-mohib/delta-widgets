@@ -4,6 +4,10 @@ import SliderComponent from "./SliderComponent";
 import { IWidgetElement } from "../../types/manifest";
 import ButtonComponent from "./ButtonComponent";
 import TextComponent from "./TextComponent";
+import PlayButton from "./media-components/PlayButton";
+import NextButton from "./media-components/NextButton";
+import PrevButton from "./media-components/PrevButton";
+import MediaSlider from "./media-components/MediaSlider";
 
 interface ElementProps {
   component: IWidgetElement;
@@ -91,6 +95,51 @@ const Element: React.FC<ElementProps> = ({ component }) => {
         id={component.id}
         style={getComponentStyles({ gridItem: component.styles.gridItem })}>
         <SliderComponent component={component} />
+      </div>
+    );
+  }
+  if (component.type === "toggle-play") {
+    return (
+      <div
+        id={component.id}
+        style={getComponentStyles({
+          gridItem: component.styles.gridItem,
+          textAlign: component.styles.textAlign,
+        })}>
+        <PlayButton component={component} />
+      </div>
+    );
+  }
+  if (component.type === "media-next") {
+    return (
+      <div
+        id={component.id}
+        style={getComponentStyles({
+          gridItem: component.styles.gridItem,
+          textAlign: component.styles.textAlign,
+        })}>
+        <NextButton component={component} />
+      </div>
+    );
+  }
+  if (component.type === "media-prev") {
+    return (
+      <div
+        id={component.id}
+        style={getComponentStyles({
+          gridItem: component.styles.gridItem,
+          textAlign: component.styles.textAlign,
+        })}>
+        <PrevButton component={component} />
+      </div>
+    );
+  }
+  if (component.type === "media-slider") {
+    return (
+      <div
+        id={component.id}
+        style={getComponentStyles({ gridItem: component.styles.gridItem })}>
+        <MediaSlider component={component} />
       </div>
     );
   }

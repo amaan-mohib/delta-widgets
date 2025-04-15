@@ -9,6 +9,7 @@ const SliderComponent: React.FC<SliderComponentProps> = ({ component }) => {
   return (
     <Slider
       id={`${component.id}-child`}
+      style={{ width: "100%" }}
       onChange={(e) => e.stopPropagation()}
       value={parseInt(String(component.data?.current)) || 0}
       min={parseInt(String(component.data?.min)) || 0}

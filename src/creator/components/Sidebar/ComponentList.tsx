@@ -1,12 +1,22 @@
-import { Card, makeStyles } from "@fluentui/react-components";
 import {
-  ButtonRegular,
+  Accordion,
+  AccordionHeader,
+  AccordionItem,
+  AccordionPanel,
+  Card,
+  makeStyles,
+} from "@fluentui/react-components";
+import {
+  // ButtonRegular,
   Image24Regular,
   LayoutCellFour24Regular,
+  NextRegular,
+  PlayRegular,
+  PreviousRegular,
   Square24Regular,
   TextField24Regular,
 } from "@fluentui/react-icons";
-import React, { ReactNode } from "react";
+import React, { ReactNode, useMemo } from "react";
 import Draggable from "../Draggable";
 import { DragOverlay } from "@dnd-kit/core";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
@@ -21,6 +31,7 @@ export const components: {
   type: string;
   key: string;
   icon: ReactNode;
+  category?: "media" | "date";
   data: () => IWidgetElement;
 }[] = [
   {
@@ -95,28 +106,85 @@ export const components: {
       data: { src: "", alt: "image" },
     }),
   },
+  // {
+  //   name: "Button",
+  //   key: "button",
+  //   type: "button",
+  //   icon: <ButtonRegular style={{ fontSize: "24px" }} />,
+  //   data: () => ({
+  //     id: `button-${nanoid(4)}`,
+  //     type: "button",
+  //     styles: {},
+  //     data: { text: "Button" },
+  //   }),
+  // },
+  // {
+  //   name: "Slider",
+  //   key: "slider",
+  //   type: "slider",
+  //   icon: <SliderIcon />,
+  //   data: () => ({
+  //     id: `slider-${nanoid(4)}`,
+  //     type: "slider",
+  //     styles: {},
+  //     data: { min: "0", max: "100", current: "10" },
+  //   }),
+  // },
   {
-    name: "Button",
-    key: "button",
-    type: "button",
-    icon: <ButtonRegular style={{ fontSize: "24px" }} />,
+    name: "Previous",
+    key: "media-prev",
+    type: "media-prev",
+    category: "media",
+    icon: <PreviousRegular style={{ fontSize: "24px" }} />,
     data: () => ({
       id: `button-${nanoid(4)}`,
-      type: "button",
+      type: "media-prev",
       styles: {},
-      data: { text: "Button" },
+      data: {},
     }),
   },
   {
-    name: "Slider",
-    key: "slider",
-    type: "slider",
+    name: "Play/Pause",
+    key: "toggle-play",
+    type: "toggle-play",
+    category: "media",
+    icon: <PlayRegular style={{ fontSize: "24px" }} />,
+    data: () => ({
+      id: `button-${nanoid(4)}`,
+      type: "toggle-play",
+      styles: {},
+      data: {},
+    }),
+  },
+  {
+    name: "Next",
+    key: "media-next",
+    type: "media-next",
+    category: "media",
+    icon: <NextRegular style={{ fontSize: "24px" }} />,
+    data: () => ({
+      id: `button-${nanoid(4)}`,
+      type: "media-next",
+      styles: {},
+      data: {},
+    }),
+  },
+
+  {
+    name: "Timeline",
+    key: "timeline",
+    type: "media-slider",
+    category: "media",
     icon: <SliderIcon />,
     data: () => ({
       id: `slider-${nanoid(4)}`,
-      type: "slider",
+      type: "media-slider",
       styles: {},
-      data: { min: "0", max: "100", current: "10" },
+      data: {
+        min: "0",
+        max: "{{media:duration}}",
+        current: "{{media:position}}",
+      },
     }),
   },
 ];
@@ -131,7 +199,7 @@ const useStyles = makeStyles({
     display: "flex",
     flexWrap: "wrap",
     gap: "10px",
-    padding: "10px",
+    // padding: "10px",
   },
   chiclet: {
     display: "flex",
@@ -160,26 +228,58 @@ const ComponentItem: React.FC<{
   );
 };
 
+const categoryGroup = {
+  common: "Common",
+  media: "Media",
+  date: "Date",
+};
+
 const ComponentList: React.FC<ComponentListProps> = () => {
   const styles = useStyles();
   const draggingId = useDataTrackStore((state) => state.activeId);
+  const groupedComponents = useMemo(() => {
+    const grouped = components.reduce((acc, item) => {
+      const category = item.category || "common";
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(item);
+      return acc;
+    }, {} as Record<string, typeof components>);
+    return grouped;
+  }, []);
 
   return (
     <div>
-      <div className={styles.container}>
-        {components.map((item) => (
-          <Draggable
-            id={item.key}
-            key={item.key}
-            dragOverlay
-            data={{ type: item.type }}>
-            <ComponentItem item={item} />
-          </Draggable>
-        ))}
-        <DragOverlay dropAnimation={null}>
-          {draggingId ? <ComponentItem itemId={draggingId} /> : null}
-        </DragOverlay>
-      </div>
+      <Accordion
+        collapsible
+        multiple
+        defaultOpenItems={Object.keys(categoryGroup)}>
+        {Object.entries(categoryGroup).map(([key, group]) =>
+          groupedComponents[key] ? (
+            <AccordionItem key={key} value={key}>
+              <AccordionHeader>{group}</AccordionHeader>
+              <AccordionPanel>
+                <div className={styles.container}>
+                  {groupedComponents[key].map((item) => (
+                    <Draggable
+                      id={item.key}
+                      key={item.key}
+                      data={{ type: item.type }}>
+                      <ComponentItem item={item} />
+                    </Draggable>
+                  ))}
+                </div>
+              </AccordionPanel>
+            </AccordionItem>
+          ) : (
+            []
+          )
+        )}
+      </Accordion>
+      <DragOverlay dropAnimation={null}>
+        {draggingId ? <ComponentItem itemId={draggingId} /> : null}
+      </DragOverlay>
     </div>
   );
 };

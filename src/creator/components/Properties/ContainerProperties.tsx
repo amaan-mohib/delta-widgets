@@ -37,7 +37,7 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
   if (!selectedId || !elementMap[selectedId]) return null;
 
   const isRow = useMemo(
-    () => elementMap[selectedId].styles.flexDirection === "row",
+    () => (elementMap[selectedId].styles.flexDirection || "row") === "row",
     [elementMap, selectedId]
   );
 

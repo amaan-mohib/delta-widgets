@@ -43,6 +43,7 @@ const useStyles = makeStyles({
     flexDirection: "column",
   },
 });
+// https://github.com/microsoft/fluentui/blob/master/packages/react-components/theme-designer/src/utils/getBrandTokensFromPalette.ts
 
 const HEX_COLOR_REGEX = /^#?([0-9A-Fa-f]{0,8})$/;
 

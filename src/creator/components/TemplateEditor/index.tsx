@@ -262,6 +262,7 @@ interface TemplateEditorProps {
   onChange: (value: string) => void;
   isHtml?: boolean;
   placeholder?: string;
+  disabled?: boolean;
 }
 
 const TemplateEditor: React.FC<TemplateEditorProps> = ({
@@ -269,6 +270,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
   onChange,
   isHtml,
   placeholder,
+  disabled,
 }) => {
   const [value, setValue] = useState(initialValue || "");
   const [open, setOpen] = useState(false);
@@ -333,6 +335,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
             placeholder={placeholder || "Enter text"}
             onChange={onChange}
             value={initialValue}
+            readOnly={disabled}
           />
         ) : (
           <Input
@@ -345,6 +348,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
               onChange(value);
             }}
             value={initialValue}
+            disabled={disabled}
           />
         )}
         <Tooltip
@@ -388,6 +392,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
                         placeholder={placeholder || "Enter text"}
                         onChange={setValue}
                         value={value}
+                        readOnly={disabled}
                       />
                     ) : (
                       <Textarea
@@ -401,6 +406,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
                           setValue(value);
                         }}
                         value={value}
+                        disabled={disabled}
                       />
                     )}
                   </div>

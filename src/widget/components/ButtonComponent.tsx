@@ -4,6 +4,9 @@ import { IWidgetElement } from "../../types/manifest";
 
 interface ButtonComponentProps {
   component: IWidgetElement;
+  onClick?: (e: React.MouseEvent) => void;
+  disabled?: boolean;
+  loading?: boolean;
 }
 
 type IconProps = {
@@ -16,7 +19,12 @@ const DynamicIcon = ({ name }: IconProps) => {
   return <IconComponent />;
 };
 
-const ButtonComponent: React.FC<ButtonComponentProps> = ({ component }) => {
+const ButtonComponent: React.FC<ButtonComponentProps> = ({
+  component,
+  onClick,
+  disabled,
+  loading,
+}) => {
   return (
     <Button
       style={component.data?.full ? { width: "100%" } : {}}
@@ -32,7 +40,11 @@ const ButtonComponent: React.FC<ButtonComponentProps> = ({ component }) => {
       id={`${component.id}-child`}
       onClick={(e) => {
         e.stopPropagation();
-      }}>
+        if (onClick) {
+          onClick(e);
+        }
+      }}
+      disabled={disabled || loading}>
       {component.data?.text || null}
     </Button>
   );

@@ -20,9 +20,13 @@ import {
 import Panel from "./Panel";
 import TemplateEditor from "../TemplateEditor";
 
-interface ButtonPropertiesProps {}
+interface ButtonPropertiesProps {
+  disableDynamic?: boolean;
+}
 
-const ButtonProperties: React.FC<ButtonPropertiesProps> = () => {
+const ButtonProperties: React.FC<ButtonPropertiesProps> = ({
+  disableDynamic,
+}) => {
   const selectedId = useDataTrackStore((state) => state.selectedId);
   const elementMap = useManifestStore((state) => state.elementMap);
 
@@ -45,6 +49,7 @@ const ButtonProperties: React.FC<ButtonPropertiesProps> = () => {
               label: "Text",
               control: (
                 <TemplateEditor
+                  disabled={disableDynamic}
                   value={elementMap[selectedId].data?.text}
                   onChange={(value) => {
                     useManifestStore
@@ -202,6 +207,7 @@ const ButtonProperties: React.FC<ButtonPropertiesProps> = () => {
               control: (
                 <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
                   <Input
+                    disabled={disableDynamic}
                     style={{ width: "140px" }}
                     placeholder="Eg: ArrowClockwiseRegular"
                     onChange={(_, { value }) => {
