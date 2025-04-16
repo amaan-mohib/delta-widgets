@@ -1,5 +1,5 @@
 import { makeStyles } from "@fluentui/react-components";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { useManifestStore } from "../../stores/useManifestStore";
 import WindowProperties from "./WindowProperties";
@@ -26,10 +26,13 @@ const Properties: React.FC<PropertiesProps> = () => {
   const styles = useStyles();
   const selectedId = useDataTrackStore((state) => state.selectedId);
   const elementMap = useManifestStore((state) => state.elementMap);
-  const selectedElement = useMemo(() => {
-    if (!selectedId) return null;
-    return elementMap[selectedId];
-  }, [selectedId]);
+  const selectedElement = selectedId ? elementMap[selectedId] : null;
+
+  useEffect(() => {
+    if (!selectedElement && selectedId) {
+      useDataTrackStore.setState({ selectedId: null });
+    }
+  }, [selectedElement, selectedId]);
 
   const elementProperties = useMemo(() => {
     switch (selectedElement?.type) {
