@@ -10,6 +10,10 @@ interface MediaSliderProps {
 
 const MediaSlider: React.FC<MediaSliderProps> = ({ component }) => {
   const currentMedia = useVariableStore((state) => state.currentMedia);
+  const mediaList = useVariableStore((state) => state.media);
+  const isSelectedMediaCurrentSession =
+    mediaList.find((item) => item.is_current_session)?.player_id ===
+    currentMedia?.player_id;
 
   const onToggle = useCallback(
     async (value: number) => {
@@ -29,7 +33,7 @@ const MediaSlider: React.FC<MediaSliderProps> = ({ component }) => {
     <SliderComponent
       component={component}
       onChange={onToggle}
-      disabled={!currentMedia}
+      disabled={!currentMedia || !isSelectedMediaCurrentSession}
     />
   );
 };

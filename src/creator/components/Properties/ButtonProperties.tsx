@@ -1,22 +1,22 @@
 import {
-  Checkbox,
+  // Checkbox,
   InfoLabel,
   Input,
   Link,
   Select,
-  Toolbar,
-  ToolbarRadioButton,
-  ToolbarRadioGroup,
-  Tooltip,
+  // Toolbar,
+  // ToolbarRadioButton,
+  // ToolbarRadioGroup,
+  // Tooltip,
 } from "@fluentui/react-components";
 import React, { useMemo } from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { useManifestStore } from "../../stores/useManifestStore";
-import {
-  TextAlignCenterRegular,
-  TextAlignLeftRegular,
-  TextAlignRightRegular,
-} from "@fluentui/react-icons";
+// import {
+//   TextAlignCenterRegular,
+//   TextAlignLeftRegular,
+//   TextAlignRightRegular,
+// } from "@fluentui/react-icons";
 import Panel from "./Panel";
 import TemplateEditor from "../TemplateEditor";
 
@@ -117,68 +117,68 @@ const ButtonProperties: React.FC<ButtonPropertiesProps> = ({
                 </Select>
               ),
             },
-            {
-              label: "Full width",
-              control: (
-                <Checkbox
-                  checked={buttonData?.full && buttonData?.full !== "true"}
-                  onChange={(_, { checked }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        data: {
-                          full: checked || false,
-                        },
-                      });
-                  }}
-                />
-              ),
-            },
-            {
-              label: "Alignment",
-              control: (
-                <Toolbar
-                  checkedValues={{
-                    textAlign: [
-                      elementMap[selectedId].styles.textAlign || "left",
-                    ],
-                  }}
-                  onCheckedValueChange={(_, { name, checkedItems }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        styles: { [name]: checkedItems[0] },
-                      });
-                  }}>
-                  <ToolbarRadioGroup>
-                    <Tooltip content="Left" relationship="label" withArrow>
-                      <ToolbarRadioButton
-                        appearance="subtle"
-                        name="textAlign"
-                        value="left"
-                        icon={<TextAlignLeftRegular />}
-                      />
-                    </Tooltip>
-                    <Tooltip content="Center" relationship="label" withArrow>
-                      <ToolbarRadioButton
-                        name="textAlign"
-                        appearance="subtle"
-                        value="center"
-                        icon={<TextAlignCenterRegular />}
-                      />
-                    </Tooltip>
-                    <Tooltip content="Right" relationship="label" withArrow>
-                      <ToolbarRadioButton
-                        name="textAlign"
-                        appearance="subtle"
-                        value="right"
-                        icon={<TextAlignRightRegular />}
-                      />
-                    </Tooltip>
-                  </ToolbarRadioGroup>
-                </Toolbar>
-              ),
-            },
+            // {
+            //   label: "Full width",
+            //   control: (
+            //     <Checkbox
+            //       checked={buttonData?.full && buttonData?.full !== "true"}
+            //       onChange={(_, { checked }) => {
+            //         useManifestStore
+            //           .getState()
+            //           .updateElementProperties(selectedId, {
+            //             data: {
+            //               full: checked || false,
+            //             },
+            //           });
+            //       }}
+            //     />
+            //   ),
+            // },
+            // {
+            //   label: "Alignment",
+            //   control: (
+            //     <Toolbar
+            //       checkedValues={{
+            //         textAlign: [
+            //           elementMap[selectedId].styles.textAlign || "left",
+            //         ],
+            //       }}
+            //       onCheckedValueChange={(_, { name, checkedItems }) => {
+            //         useManifestStore
+            //           .getState()
+            //           .updateElementProperties(selectedId, {
+            //             styles: { [name]: checkedItems[0] },
+            //           });
+            //       }}>
+            //       <ToolbarRadioGroup>
+            //         <Tooltip content="Left" relationship="label" withArrow>
+            //           <ToolbarRadioButton
+            //             appearance="subtle"
+            //             name="textAlign"
+            //             value="left"
+            //             icon={<TextAlignLeftRegular />}
+            //           />
+            //         </Tooltip>
+            //         <Tooltip content="Center" relationship="label" withArrow>
+            //           <ToolbarRadioButton
+            //             name="textAlign"
+            //             appearance="subtle"
+            //             value="center"
+            //             icon={<TextAlignCenterRegular />}
+            //           />
+            //         </Tooltip>
+            //         <Tooltip content="Right" relationship="label" withArrow>
+            //           <ToolbarRadioButton
+            //             name="textAlign"
+            //             appearance="subtle"
+            //             value="right"
+            //             icon={<TextAlignRightRegular />}
+            //           />
+            //         </Tooltip>
+            //       </ToolbarRadioGroup>
+            //     </Toolbar>
+            //   ),
+            // },
           ],
         },
         {

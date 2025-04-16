@@ -11,6 +11,7 @@ import {
   Image24Regular,
   LayoutCellFour24Regular,
   NextRegular,
+  PlayCircle24Regular,
   PlayRegular,
   PreviousRegular,
   Square24Regular,
@@ -169,7 +170,6 @@ export const components: {
       data: {},
     }),
   },
-
   {
     name: "Timeline",
     key: "timeline",
@@ -179,6 +179,23 @@ export const components: {
     data: () => ({
       id: `slider-${nanoid(4)}`,
       type: "media-slider",
+      styles: {},
+      data: {
+        min: "0",
+        max: "{{media:duration}}",
+        current: "{{media:position}}",
+      },
+    }),
+  },
+  {
+    name: "Player",
+    key: "player-switch",
+    type: "media-select",
+    category: "media",
+    icon: <PlayCircle24Regular />,
+    data: () => ({
+      id: `select-${nanoid(4)}`,
+      type: "media-select",
       styles: {},
       data: {
         min: "0",

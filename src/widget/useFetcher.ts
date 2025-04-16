@@ -43,8 +43,12 @@ function useFetcher(elements: IWidgetElement[]) {
       invoke<IMedia[]>("get_media")
         .then((data) => {
           useVariableStore.setState({ media: data });
+          const selectedMedia = useVariableStore.getState().currentMedia;
           const currentMedia = data.find((media) => media.is_current_session);
-          if (currentMedia) {
+          const selectedMediaNotInList = !data.find(
+            (media) => media.player_id === selectedMedia?.player_id
+          );
+          if (currentMedia && (!selectedMedia || selectedMediaNotInList)) {
             useVariableStore.setState({ currentMedia });
           } else if (data.length > 0) {
             useVariableStore.setState({ currentMedia: data[0] });

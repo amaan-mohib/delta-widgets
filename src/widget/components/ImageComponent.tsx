@@ -30,6 +30,12 @@ const ImageComponent: React.FC<ImageComponentProps> = ({ component }) => {
         shape={component.data?.shape || "square"}
         shadow={component.data?.shadow || false}
         bordered={component.data?.bordered || false}
+        style={{
+          backgroundColor:
+            component.data?.src === "{{media:thumbnail}}"
+              ? "#e9e9e9"
+              : undefined,
+        }}
         block
       />
     </div>

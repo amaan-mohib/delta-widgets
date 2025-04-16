@@ -8,6 +8,7 @@ import PlayButton from "./media-components/PlayButton";
 import NextButton from "./media-components/NextButton";
 import PrevButton from "./media-components/PrevButton";
 import MediaSlider from "./media-components/MediaSlider";
+import MediaSelect from "./media-components/MediaSelect";
 
 interface ElementProps {
   component: IWidgetElement;
@@ -140,6 +141,15 @@ const Element: React.FC<ElementProps> = ({ component }) => {
         id={component.id}
         style={getComponentStyles({ gridItem: component.styles.gridItem })}>
         <MediaSlider component={component} />
+      </div>
+    );
+  }
+  if (component.type === "media-select") {
+    return (
+      <div
+        id={component.id}
+        style={getComponentStyles({ gridItem: component.styles.gridItem })}>
+        <MediaSelect component={component} />
       </div>
     );
   }

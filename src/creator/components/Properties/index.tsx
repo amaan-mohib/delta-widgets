@@ -43,6 +43,7 @@ const Properties: React.FC<PropertiesProps> = () => {
       case "toggle-play":
       case "media-next":
       case "media-prev":
+      case "media-select":
         return <ButtonProperties disableDynamic />;
       case "image":
         return <ImageProperties />;

@@ -53,10 +53,17 @@ const useVariableUpdater = () => {
           case "status":
             return currentMedia.playback_info.status || "NA";
           case "thumbnail":
-            return currentMedia.thumbnail && currentMedia.thumbnail.length > 0
-              ? `data:image/png;base64,${Buffer.from(
-                  currentMedia.thumbnail
-                ).toString("base64")}`
+            const thumbnail =
+              currentMedia.thumbnail.length > 0
+                ? currentMedia.thumbnail
+                : currentMedia.player.icon.length > 0
+                ? currentMedia.player.icon
+                : [];
+
+            return thumbnail.length > 0
+              ? `data:image/png;base64,${Buffer.from(thumbnail).toString(
+                  "base64"
+                )}`
               : "https://cdn.pixabay.com/photo/2017/03/13/04/25/play-button-2138735_1280.png";
           case "player_icon":
             return currentMedia.player.icon &&

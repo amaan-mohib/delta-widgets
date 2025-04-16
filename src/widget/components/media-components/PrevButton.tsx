@@ -10,7 +10,13 @@ interface PrevButtonProps {
 
 const PrevButton: React.FC<PrevButtonProps> = ({ component }) => {
   const currentMedia = useVariableStore((state) => state.currentMedia);
-  const prevEnabled = !!currentMedia?.playback_info.controls?.prev_enabled;
+  const mediaList = useVariableStore((state) => state.media);
+  const isSelectedMediaCurrentSession =
+    mediaList.find((item) => item.is_current_session)?.player_id ===
+    currentMedia?.player_id;
+  const prevEnabled =
+    !!currentMedia?.playback_info.controls?.prev_enabled &&
+    isSelectedMediaCurrentSession;
 
   const onClick = useCallback(async () => {
     if (!currentMedia) return;

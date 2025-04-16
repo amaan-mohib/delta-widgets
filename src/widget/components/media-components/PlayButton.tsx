@@ -9,9 +9,17 @@ interface PlayButtonProps {
 }
 
 const PlayButton: React.FC<PlayButtonProps> = ({ component }) => {
-  const currentMedia = useVariableStore((state) => state.currentMedia);
+  const selectedMedia = useVariableStore((state) => state.currentMedia);
+  const mediaList = useVariableStore((state) => state.media);
+  const currentMedia = mediaList.find((item) => item.is_current_session);
+
   const isPlaying = currentMedia?.playback_info.status === "playing";
-  const toggleEnabled = !!currentMedia?.playback_info.controls?.toggle_enabled;
+  const isSelectedMediaCurrentSession =
+    mediaList.find((item) => item.is_current_session)?.player_id ===
+    selectedMedia?.player_id;
+  const toggleEnabled =
+    !!currentMedia?.playback_info.controls?.toggle_enabled &&
+    isSelectedMediaCurrentSession;
 
   const onToggle = useCallback(async () => {
     if (!currentMedia) return;

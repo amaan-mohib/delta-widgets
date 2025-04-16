@@ -10,6 +10,7 @@ import ImageComponent from "./ImageComponent";
 import ButtonComponent from "./ButtonComponent";
 import SliderComponent from "./SliderComponent";
 import { parseDynamicText } from "../../utils";
+import MediaSelectComponent from "./MediaSelectComponent";
 
 interface ComponentRenderProps {
   component: IWidgetElement;
@@ -110,6 +111,16 @@ const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
         styles={getComponentStyles({ gridItem: component.styles.gridItem })}
         disableDrop>
         <SliderComponent component={component} />
+      </Dropable>
+    );
+  }
+  if (component.type === "media-select") {
+    return (
+      <Dropable
+        id={component.id}
+        styles={getComponentStyles({ gridItem: component.styles.gridItem })}
+        disableDrop>
+        <MediaSelectComponent component={component} />
       </Dropable>
     );
   }

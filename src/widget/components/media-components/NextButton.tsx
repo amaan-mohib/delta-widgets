@@ -10,7 +10,13 @@ interface NextButtonProps {
 
 const NextButton: React.FC<NextButtonProps> = ({ component }) => {
   const currentMedia = useVariableStore((state) => state.currentMedia);
-  const nextEnabled = !!currentMedia?.playback_info.controls?.next_enabled;
+  const mediaList = useVariableStore((state) => state.media);
+  const isSelectedMediaCurrentSession =
+    mediaList.find((item) => item.is_current_session)?.player_id ===
+    currentMedia?.player_id;
+  const nextEnabled =
+    !!currentMedia?.playback_info.controls?.next_enabled &&
+    isSelectedMediaCurrentSession;
 
   const onClick = useCallback(async () => {
     if (!currentMedia) return;
