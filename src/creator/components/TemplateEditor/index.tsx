@@ -209,31 +209,6 @@ const templateCategories = [
     ],
   },
   {
-    id: "formatting",
-    name: "Formatting",
-    // icon: Type,
-    templates: [
-      {
-        id: "uppercase",
-        label: "Uppercase",
-        value: "{{uppercase:text}}",
-        description: "Convert text to uppercase",
-      },
-      {
-        id: "lowercase",
-        label: "Lowercase",
-        value: "{{lowercase:text}}",
-        description: "Convert text to lowercase",
-      },
-      {
-        id: "capitalize",
-        label: "Capitalize",
-        value: "{{capitalize:text}}",
-        description: "Capitalize first letter",
-      },
-    ],
-  },
-  {
     id: "custom",
     name: "Custom Fields",
     icon: <Braces20Regular />,

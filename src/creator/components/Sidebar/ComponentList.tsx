@@ -7,15 +7,16 @@ import {
   makeStyles,
 } from "@fluentui/react-components";
 import {
+  Filmstrip24Regular,
   // ButtonRegular,
   Image24Regular,
   LayoutCellFour24Regular,
   NextRegular,
   PlayCircle24Regular,
-  PlayRegular,
   PreviousRegular,
   Square24Regular,
   TextField24Regular,
+  VideoPlayPauseRegular,
 } from "@fluentui/react-icons";
 import React, { ReactNode, useMemo } from "react";
 import Draggable from "../Draggable";
@@ -149,7 +150,7 @@ export const components: {
     key: "toggle-play",
     type: "toggle-play",
     category: "media",
-    icon: <PlayRegular style={{ fontSize: "24px" }} />,
+    icon: <VideoPlayPauseRegular style={{ fontSize: "24px" }} />,
     data: () => ({
       id: `button-${nanoid(4)}`,
       type: "toggle-play",
@@ -202,6 +203,22 @@ export const components: {
         max: "{{media:duration}}",
         current: "{{media:position}}",
       },
+    }),
+  },
+  {
+    name: "Thumbnail",
+    key: "media-image",
+    type: "image",
+    category: "media",
+    icon: <Filmstrip24Regular />,
+    data: () => ({
+      id: `image-${nanoid(4)}`,
+      type: "image",
+      styles: {
+        width: "100px",
+        height: "100px",
+      },
+      data: { src: "{{media:thumbnail}}", alt: "media thumbnail" },
     }),
   },
 ];
@@ -280,6 +297,7 @@ const ComponentList: React.FC<ComponentListProps> = () => {
                 <div className={styles.container}>
                   {groupedComponents[key].map((item) => (
                     <Draggable
+                      dragOverlay
                       id={item.key}
                       key={item.key}
                       data={{ type: item.type }}>
