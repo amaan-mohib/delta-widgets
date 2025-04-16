@@ -9,7 +9,7 @@ import {
   // ToolbarRadioGroup,
   // Tooltip,
 } from "@fluentui/react-components";
-import React, { useMemo } from "react";
+import React from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { useManifestStore } from "../../stores/useManifestStore";
 // import {
@@ -32,10 +32,7 @@ const ButtonProperties: React.FC<ButtonPropertiesProps> = ({
 
   if (!selectedId || !elementMap[selectedId]) return null;
 
-  const buttonData = useMemo(
-    () => elementMap[selectedId].data,
-    [elementMap[selectedId].data]
-  );
+  const buttonData = elementMap[selectedId]?.data;
 
   return (
     <Panel

@@ -33,10 +33,7 @@ const GridItemProperties: React.FC<GridItemPropertiesProps> = ({
   const styles = useStyles();
   const elementMap = useManifestStore((state) => state.elementMap);
 
-  const gridItemStyles = useMemo(
-    () => elementMap[selectedId].styles.gridItem,
-    [elementMap, selectedId]
-  );
+  const gridItemStyles = elementMap[selectedId].styles.gridItem;
 
   const isGridParent = useMemo(() => {
     const parentId = elementMap[selectedId].parentId;

@@ -21,7 +21,7 @@ import {
   LayoutColumnTwoRegular,
   LayoutRowTwoRegular,
 } from "@fluentui/react-icons";
-import React, { useMemo } from "react";
+import React from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { useManifestStore } from "../../stores/useManifestStore";
 import { ColorPickerPopup } from "./ColorPickerPopup";
@@ -36,10 +36,7 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
 
   if (!selectedId || !elementMap[selectedId]) return null;
 
-  const isRow = useMemo(
-    () => (elementMap[selectedId].styles.flexDirection || "row") === "row",
-    [elementMap, selectedId]
-  );
+  const isRow = elementMap[selectedId].styles.flexDirection || "row" === "row";
 
   return (
     <Panel

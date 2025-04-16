@@ -208,7 +208,7 @@ export const components: {
   {
     name: "Thumbnail",
     key: "media-image",
-    type: "image",
+    type: "media-image",
     category: "media",
     icon: <Filmstrip24Regular />,
     data: () => ({

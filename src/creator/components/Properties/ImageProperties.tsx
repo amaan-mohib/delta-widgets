@@ -1,5 +1,5 @@
 import { Checkbox, Select, SpinButton } from "@fluentui/react-components";
-import React, { useMemo } from "react";
+import React from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { useManifestStore } from "../../stores/useManifestStore";
 import { spinButtonOnChange } from "../../utils";
@@ -14,10 +14,7 @@ const ImageProperties: React.FC<ImagePropertiesProps> = () => {
 
   if (!selectedId || !elementMap[selectedId]) return null;
 
-  const imageData = useMemo(
-    () => elementMap[selectedId].data,
-    [elementMap[selectedId].data]
-  );
+  const imageData = elementMap[selectedId]?.data;
 
   return (
     <Panel

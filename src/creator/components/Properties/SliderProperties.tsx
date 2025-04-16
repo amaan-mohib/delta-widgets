@@ -1,5 +1,5 @@
 import { Select } from "@fluentui/react-components";
-import React, { useMemo } from "react";
+import React from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { useManifestStore } from "../../stores/useManifestStore";
 import Panel from "./Panel";
@@ -17,10 +17,7 @@ const SliderProperties: React.FC<SliderPropertiesProps> = ({
 
   if (!selectedId || !elementMap[selectedId]) return null;
 
-  const sliderData = useMemo(
-    () => elementMap[selectedId].data,
-    [elementMap[selectedId].data]
-  );
+  const sliderData = elementMap[selectedId].data;
 
   return (
     <Panel

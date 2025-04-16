@@ -1,6 +1,6 @@
 import { Button, SpinButton, Tooltip } from "@fluentui/react-components";
 import { ArrowClockwiseRegular } from "@fluentui/react-icons";
-import React, { useMemo } from "react";
+import React from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { useManifestStore } from "../../stores/useManifestStore";
 import { spinButtonOnChange } from "../../utils";
@@ -15,14 +15,8 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
 
   if (!selectedId || !elementMap[selectedId]) return null;
 
-  const gridStyles = useMemo(
-    () => elementMap[selectedId].styles,
-    [elementMap[selectedId].styles]
-  );
-  const gridSize = useMemo(
-    () => elementMap[selectedId].styles.gridSize,
-    [elementMap[selectedId].styles.gridSize]
-  );
+  const gridStyles = elementMap[selectedId].styles;
+  const gridSize = elementMap[selectedId].styles.gridSize;
 
   return (
     <Panel

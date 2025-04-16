@@ -17,7 +17,7 @@ import {
   TextItalicRegular,
   TextUnderlineRegular,
 } from "@fluentui/react-icons";
-import React, { useMemo } from "react";
+import React from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { useManifestStore } from "../../stores/useManifestStore";
 import { spinButtonOnChange } from "../../utils";
@@ -33,10 +33,7 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
 
   if (!selectedId || !elementMap[selectedId]) return null;
 
-  const textStyles = useMemo(
-    () => elementMap[selectedId].styles,
-    [elementMap[selectedId].styles]
-  );
+  const textStyles = elementMap[selectedId].styles;
 
   return (
     <Panel
