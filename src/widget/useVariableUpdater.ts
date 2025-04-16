@@ -155,6 +155,18 @@ const useVariableUpdater = () => {
             return systemInfo.os_version || "NA";
           case "kernel":
             return systemInfo.kernel_version || "NA";
+          case "cpu_model":
+            return systemInfo.cpu?.brand || "NA";
+          case "cpu_lcores":
+            return String(systemInfo.cpu?.count || 0);
+          case "cpu_usage":
+            return `${parseFloat(String(systemInfo.cpu?.usage || 0)).toFixed(
+              1
+            )}%`;
+          case "cpu_speed":
+            return `${parseFloat(
+              String((systemInfo.cpu?.speed || 0) / 1000)
+            ).toFixed(2)} Ghz`;
           case "cpu":
             return JSON.stringify(systemInfo.cpu || "NA");
           case "battery":

@@ -25,6 +25,7 @@ const useStyles = makeStyles({
     borderBottom: `1px solid ${tokens.colorNeutralStroke3}`,
     borderTop: `1px solid ${tokens.colorNeutralStroke3}`,
     padding: "0 3px",
+    height: "var(--toolbar-height)",
   },
 });
 interface AppProps {}

@@ -18,6 +18,7 @@ const useStyles = makeStyles({
     width: "var(--sidebar-width)",
     display: "flex",
     flexDirection: "column",
+    overflow: "hidden",
   },
 });
 

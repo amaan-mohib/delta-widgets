@@ -7,7 +7,7 @@ interface SidebarProps {}
 
 const useStyles = makeStyles({
   container: {
-    height: "100%",
+    height: "calc(100vh - var(--toolbar-height))",
     width: "var(--sidebar-width)",
     display: "flex",
     flexDirection: "column",
@@ -15,17 +15,17 @@ const useStyles = makeStyles({
 });
 
 type TTabKey = "components" | "templates" | "layers";
-const tabs: Record<TTabKey, React.FC> = {
-  components: ComponentList,
-  templates: () => <>templates</>,
-  layers: Layers,
+const tabs: Record<TTabKey, React.ReactNode> = {
+  components: <ComponentList />,
+  templates: <>templates</>,
+  layers: <Layers />,
 };
 
 const Sidebar: React.FC<SidebarProps> = () => {
   const styles = useStyles();
   const [selectedTab, setSelectedTab] = useState<TTabKey>("components");
 
-  const TabComponent: React.FC = useMemo(() => {
+  const tabComponent = useMemo(() => {
     return tabs[selectedTab];
   }, [selectedTab]);
 
@@ -40,9 +40,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
         <Tab value="templates">Templates</Tab>
         <Tab value="layers">Elements</Tab>
       </TabList>
-      <div style={{ height: "100%" }}>
-        <TabComponent />
-      </div>
+      <div style={{ flex: 1, overflow: "auto" }}>{tabComponent}</div>
     </div>
   );
 };

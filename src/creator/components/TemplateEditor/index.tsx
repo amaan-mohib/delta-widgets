@@ -21,6 +21,7 @@ import {
   Braces20Regular,
   CalendarDate20Regular,
   ChevronRightRegular,
+  Desktop20Regular,
   MathFormulaRegular,
   Play20Regular,
 } from "@fluentui/react-icons";
@@ -155,25 +156,55 @@ const templateCategories = [
   {
     id: "system",
     name: "System",
-    // icon: Hash,
+    icon: <Desktop20Regular />,
     templates: [
       {
-        id: "id",
-        label: "ID",
-        value: "{{id}}",
-        description: "Unique identifier",
+        id: "os",
+        label: "Operating System",
+        value: "{{system:os}}",
+        description: "Operating system name",
       },
       {
-        id: "counter",
-        label: "Counter",
-        value: "{{counter}}",
-        description: "Incremental counter",
+        id: "os_version",
+        label: "OS Version",
+        value: "{{system:os_version}}",
+        description: "Operating system version",
       },
       {
-        id: "random",
-        label: "Random",
-        value: "{{random}}",
-        description: "Random string",
+        id: "kernel",
+        label: "Kernel",
+        value: "{{system:kernel}}",
+        description: "Kernel version",
+      },
+      {
+        id: "hostname",
+        label: "Hostname",
+        value: "{{system:hostname}}",
+        description: "System hostname",
+      },
+      {
+        id: "cpu_model",
+        label: "CPU Model",
+        value: "{{system:cpu_model}}",
+        description: "CPU Model name",
+      },
+      {
+        id: "cpu_lcores",
+        label: "CPU Logical processors",
+        value: "{{system:cpu_lcores}}",
+        description: "CPU Logical processors count",
+      },
+      {
+        id: "cpu_usage",
+        label: "CPU Usage",
+        value: "{{system:cpu_usage}}",
+        description: "CPU Usage percentage",
+      },
+      {
+        id: "cpu_speed",
+        label: "CPU Speed",
+        value: "{{system:cpu_speed}}",
+        description: "CPU Average Speed (in GHz)",
       },
     ],
   },
@@ -362,6 +393,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
             size="small"
             appearance="outline"
             icon={<MathFormulaRegular style={{ fontSize: "16px" }} />}
+            disabled={disabled}
           />
         </Tooltip>
       </div>

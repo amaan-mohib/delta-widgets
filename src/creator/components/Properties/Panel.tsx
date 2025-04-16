@@ -45,12 +45,13 @@ const Panel: React.FC<PanelProps> = ({ title, items, selectedId }) => {
   const styles = useStyles();
 
   return (
-    <div>
+    <>
       <div className={styles.padding}>
         <Text className={styles.title}>{title}</Text>
       </div>
-      <Divider appearance="subtle" />
+      <Divider appearance="subtle" style={{ flex: "none" }} />
       <Accordion
+        style={{ overflow: "auto", flex: 1 }}
         collapsible
         multiple
         defaultOpenItems={items.map((item) => item.value)}>
@@ -73,7 +74,7 @@ const Panel: React.FC<PanelProps> = ({ title, items, selectedId }) => {
         ))}
         {selectedId && <GridItemProperties selectedId={selectedId} />}
       </Accordion>
-    </div>
+    </>
   );
 };
 
