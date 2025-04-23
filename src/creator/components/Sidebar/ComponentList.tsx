@@ -15,6 +15,7 @@ import {
   PlayCircle24Regular,
   PreviousRegular,
   Square24Regular,
+  Storage24Regular,
   TextField24Regular,
   VideoPlayPauseRegular,
 } from "@fluentui/react-icons";
@@ -33,7 +34,7 @@ export const components: {
   type: string;
   key: string;
   icon: ReactNode;
-  category?: "media" | "date";
+  category?: "media" | "date" | "system";
   data: () => IWidgetElement;
 }[] = [
   {
@@ -221,6 +222,26 @@ export const components: {
       data: { src: "{{media:thumbnail}}", alt: "media thumbnail" },
     }),
   },
+  {
+    name: "Disk",
+    key: "disk-usage",
+    type: "disk-usage",
+    category: "system",
+    icon: <Storage24Regular />,
+    data: () => ({
+      id: `disk-usage-${nanoid(4)}`,
+      type: "disk-usage",
+      data: {},
+      styles: {
+        display: "flex",
+        background: "transparent",
+        padding: 5,
+        flexDirection: "column",
+        width: "100%",
+        gap: "10px",
+      },
+    }),
+  },
 ];
 
 export const componentTypeToDataMap: Record<string, () => IWidgetElement> = {};
@@ -233,7 +254,6 @@ const useStyles = makeStyles({
     display: "flex",
     flexWrap: "wrap",
     gap: "10px",
-    // padding: "10px",
   },
   chiclet: {
     display: "flex",
@@ -266,6 +286,7 @@ const categoryGroup = {
   common: "Common",
   media: "Media",
   date: "Date",
+  system: "System",
 };
 
 const ComponentList: React.FC<ComponentListProps> = () => {

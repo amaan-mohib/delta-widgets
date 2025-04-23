@@ -9,6 +9,7 @@ import NextButton from "./media-components/NextButton";
 import PrevButton from "./media-components/PrevButton";
 import MediaSlider from "./media-components/MediaSlider";
 import MediaSelect from "./media-components/MediaSelect";
+import DiskComponent from "./DiskComponent";
 
 interface ElementProps {
   component: IWidgetElement;
@@ -150,6 +151,18 @@ const Element: React.FC<ElementProps> = ({ component }) => {
         id={component.id}
         style={getComponentStyles({ gridItem: component.styles.gridItem })}>
         <MediaSelect component={component} />
+      </div>
+    );
+  }
+  if (component.type === "disk-usage") {
+    return (
+      <div
+        id={component.id}
+        style={getComponentStyles({
+          ...component.styles,
+          gridItem: component.styles.gridItem,
+        })}>
+        <DiskComponent />
       </div>
     );
   }

@@ -11,6 +11,7 @@ import ButtonComponent from "./ButtonComponent";
 import SliderComponent from "./SliderComponent";
 import { parseDynamicText } from "../../utils";
 import MediaSelectComponent from "./MediaSelectComponent";
+import DiskComponent from "./DiskComponent";
 
 interface ComponentRenderProps {
   component: IWidgetElement;
@@ -151,6 +152,19 @@ const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
             },
           }}
         />
+      </Dropable>
+    );
+  }
+  if (component.type === "disk-usage") {
+    return (
+      <Dropable
+        id={component.id}
+        styles={getComponentStyles({
+          ...component.styles,
+          gridItem: component.styles.gridItem,
+        })}
+        disableDrop>
+        <DiskComponent />
       </Dropable>
     );
   }

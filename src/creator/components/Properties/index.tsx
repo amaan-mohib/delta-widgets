@@ -9,6 +9,7 @@ import GridProperties from "./GridProperties";
 import ButtonProperties from "./ButtonProperties";
 import ImageProperties from "./ImageProperties";
 import SliderProperties from "./SliderProperties";
+import DiskProperties from "./DiskProperties";
 
 interface PropertiesProps {}
 
@@ -55,6 +56,8 @@ const Properties: React.FC<PropertiesProps> = () => {
         return <SliderProperties />;
       case "media-slider":
         return <SliderProperties disableDynamic />;
+      case "disk-usage":
+        return <DiskProperties />;
       default:
         return <WindowProperties />;
     }

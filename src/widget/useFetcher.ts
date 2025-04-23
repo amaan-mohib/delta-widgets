@@ -8,9 +8,11 @@ import { useVariableStore } from "./stores/useVariableStore";
 
 const extractDynamicVariables = (
   elements: IWidgetElement[],
-  results = new Set<string>()
+  results = new Set<string>(),
+  typesSet = new Set<string>()
 ) => {
   elements.forEach((element) => {
+    typesSet.add(element.type);
     Object.values(element.data || {}).forEach((value) => {
       if (typeof value === "string") {
         const matches = [...value.matchAll(/\{\{([^}]+)\}\}/g)];
@@ -23,16 +25,17 @@ const extractDynamicVariables = (
       }
     });
     if (element.children) {
-      extractDynamicVariables(element.children, results);
+      extractDynamicVariables(element.children, results, typesSet);
     }
   });
-  return results;
+  return { dynamicVariables: results, typesSet };
 };
 
 function useFetcher(elements: IWidgetElement[]) {
-  const dynamicVariables = useMemo(() => extractDynamicVariables(elements), [
-    elements,
-  ]);
+  const { typesSet, dynamicVariables } = useMemo(
+    () => extractDynamicVariables(elements),
+    [elements]
+  );
   const [currentDate, setCurrentDate] = useState(new Date());
   const [systemInfoCounter, setSystemInfoCounter] = useState(0);
 
@@ -93,7 +96,7 @@ function useFetcher(elements: IWidgetElement[]) {
   }, [dynamicVariables, currentDate]);
 
   useEffect(() => {
-    if (!dynamicVariables.has("system")) return;
+    if (!dynamicVariables.has("system") && !typesSet.has("disk-usage")) return;
 
     (async () => {
       try {
@@ -111,7 +114,7 @@ function useFetcher(elements: IWidgetElement[]) {
     return () => {
       clearTimeout(timeout);
     };
-  }, [dynamicVariables, systemInfoCounter]);
+  }, [dynamicVariables, systemInfoCounter, typesSet]);
 }
 
 export default useFetcher;
