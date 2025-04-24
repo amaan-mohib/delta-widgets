@@ -10,6 +10,7 @@ import PrevButton from "./media-components/PrevButton";
 import MediaSlider from "./media-components/MediaSlider";
 import MediaSelect from "./media-components/MediaSelect";
 import DiskComponent from "./DiskComponent";
+import ProgressComponent from "./ProgressComponent";
 
 interface ElementProps {
   component: IWidgetElement;
@@ -163,6 +164,20 @@ const Element: React.FC<ElementProps> = ({ component }) => {
           gridItem: component.styles.gridItem,
         })}>
         <DiskComponent />
+      </div>
+    );
+  }
+  if (component.type === "progress") {
+    return (
+      <div
+        id={component.id}
+        style={getComponentStyles({
+          ...component.styles,
+          width: "100%",
+          minWidth: 150,
+          gridItem: component.styles.gridItem,
+        })}>
+        <ProgressComponent component={component} />
       </div>
     );
   }

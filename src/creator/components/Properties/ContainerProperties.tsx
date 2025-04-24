@@ -324,7 +324,7 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
               ),
             },
             {
-              label: "Width (%)",
+              label: "Flex (%)",
               control: (
                 <SpinButton
                   step={10}

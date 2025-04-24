@@ -42,7 +42,7 @@ const DiskComponent: React.FC<DiskComponentProps> = () => {
               {`${humanStorageSize(
                 disk.available_space,
                 true
-              )} / ${humanStorageSize(disk.total_space, true)}`}
+              )} free of ${humanStorageSize(disk.total_space, true)}`}
             </div>
           </div>
           <ProgressBar

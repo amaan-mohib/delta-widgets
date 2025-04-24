@@ -186,7 +186,7 @@ const Canvas: React.FC<CanvasProps> = () => {
         />
         <TransformComponent wrapperClass={styles.zoomWrapper}>
           <ResizableBox
-            minConstraints={[100, 100]}
+            minConstraints={[50, 50]}
             maxConstraints={[800, 600]}
             transformScale={scale}
             onResizeStart={() => {

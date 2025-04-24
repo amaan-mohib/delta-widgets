@@ -5,7 +5,7 @@ import {
 } from "./stores/useVariableStore";
 import { format } from "date-fns";
 import { Buffer } from "buffer";
-import { formatDuration } from "./utils";
+import { formatDuration, humanStorageSize } from "./utils";
 
 const useVariableUpdater = () => {
   const { currentDate, currentMedia, systemInfo } = useVariableStore();
@@ -140,6 +140,7 @@ const useVariableUpdater = () => {
   useEffect(() => {
     if (!systemInfo || Object.keys(systemInfo).length === 0) return;
 
+    const battery = systemInfo.batteries?.[0];
     useDynamicTextStore.setState({
       system: (formatStr?: string) => {
         switch (formatStr) {
@@ -167,12 +168,54 @@ const useVariableUpdater = () => {
             return `${parseFloat(
               String((systemInfo.cpu?.speed || 0) / 1000)
             ).toFixed(2)} Ghz`;
-          case "cpu":
-            return JSON.stringify(systemInfo.cpu || "NA");
-          case "battery":
-            return JSON.stringify(systemInfo.batteries || []);
-          case "disk":
-            return JSON.stringify(systemInfo.disks || []);
+          case "memory_total":
+            return humanStorageSize(systemInfo.total_memory || 0);
+          case "memory_used":
+            return humanStorageSize(systemInfo.used_memory || 0);
+          case "memory_available":
+            return humanStorageSize(
+              (systemInfo.total_memory || 0) - (systemInfo.used_memory || 0)
+            );
+          case "memory_total_bytes":
+            return String(systemInfo.total_memory || 0);
+          case "memory_used_bytes":
+            return String(systemInfo.used_memory || 0);
+          case "memory_available_bytes":
+            return String(
+              (systemInfo.total_memory || 0) - (systemInfo.used_memory || 0)
+            );
+          case "swap_total":
+            return humanStorageSize(systemInfo.total_swap || 0);
+          case "swap_used":
+            return humanStorageSize(systemInfo.used_swap || 0);
+          case "swap_available":
+            return humanStorageSize(
+              (systemInfo.total_swap || 0) - (systemInfo.used_swap || 0)
+            );
+          case "swap_total_bytes":
+            return String(systemInfo.total_swap || 0);
+          case "swap_used_bytes":
+            return String(systemInfo.used_swap || 0);
+          case "swap_available_bytes":
+            return String(
+              (systemInfo.total_swap || 0) - (systemInfo.used_swap || 0)
+            );
+          case "battery_model":
+            return battery?.model || "NA";
+          case "battery_vendor":
+            return battery?.vendor || "NA";
+          case "battery_health":
+            return parseFloat(
+              String((battery?.state_of_health || 0) * 100)
+            ).toFixed();
+          case "battery_charge":
+            return parseFloat(
+              String((battery?.state_of_charge || 0) * 100)
+            ).toFixed();
+          case "battery_cycles":
+            return String(battery?.cycle_count || 0);
+          case "battery_technology":
+            return battery?.technology || "NA";
           default:
             return "NA";
         }

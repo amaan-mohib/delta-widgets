@@ -12,6 +12,7 @@ import SliderComponent from "./SliderComponent";
 import { parseDynamicText } from "../../utils";
 import MediaSelectComponent from "./MediaSelectComponent";
 import DiskComponent from "./DiskComponent";
+import ProgressComponent from "./ProgressComponent";
 
 interface ComponentRenderProps {
   component: IWidgetElement;
@@ -165,6 +166,21 @@ const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
         })}
         disableDrop>
         <DiskComponent />
+      </Dropable>
+    );
+  }
+  if (component.type === "progress") {
+    return (
+      <Dropable
+        id={component.id}
+        styles={getComponentStyles({
+          width: "100%",
+          ...component.styles,
+          minWidth: 150,
+          gridItem: component.styles.gridItem,
+        })}
+        disableDrop>
+        <ProgressComponent component={component} />
       </Dropable>
     );
   }

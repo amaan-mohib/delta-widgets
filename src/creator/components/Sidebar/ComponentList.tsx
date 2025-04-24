@@ -12,6 +12,7 @@ import {
   Image24Regular,
   LayoutCellFour24Regular,
   NextRegular,
+  NumberSymbol24Regular,
   PlayCircle24Regular,
   PreviousRegular,
   Square24Regular,
@@ -107,6 +108,20 @@ export const components: {
         height: "100px",
       },
       data: { src: "", alt: "image" },
+    }),
+  },
+  {
+    name: "Progress",
+    key: "progress",
+    type: "progress",
+    icon: <NumberSymbol24Regular />,
+    data: () => ({
+      id: `progress-${nanoid(4)}`,
+      type: "progress",
+      styles: {
+        padding: 5,
+      },
+      data: { value: "0", maxValue: "100" },
     }),
   },
   // {

@@ -30,6 +30,7 @@ tauri-plugin-fs = { version = "2", features = ["watch"] }
 tauri-plugin-dialog = "2"
 wallpaper = "3.2.0"
 tauri-plugin-system-info = "2.0.9"
+sysinfo = { version = "0.34.2", features = ["network"] }
 
 [profile.release]
 opt-level = 'z'     # Optimize for size

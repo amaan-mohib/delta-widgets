@@ -100,7 +100,9 @@ function useFetcher(elements: IWidgetElement[]) {
 
     (async () => {
       try {
-        const data = await invoke<ISystemInformation>("get_system_info");
+        const data = await invoke<ISystemInformation>("get_system_info", {
+          hasNetwork: typesSet.has("network"),
+        });
         useVariableStore.setState({ systemInfo: data });
       } catch (error) {
         console.log(error);
@@ -109,7 +111,7 @@ function useFetcher(elements: IWidgetElement[]) {
 
     const timeout = setTimeout(() => {
       setSystemInfoCounter((prev) => prev + 1);
-    }, 60_000);
+    }, 5_000);
 
     return () => {
       clearTimeout(timeout);

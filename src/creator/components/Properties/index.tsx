@@ -10,6 +10,7 @@ import ButtonProperties from "./ButtonProperties";
 import ImageProperties from "./ImageProperties";
 import SliderProperties from "./SliderProperties";
 import DiskProperties from "./DiskProperties";
+import ProgressProperties from "./ProgressProperties";
 
 interface PropertiesProps {}
 
@@ -58,6 +59,8 @@ const Properties: React.FC<PropertiesProps> = () => {
         return <SliderProperties disableDynamic />;
       case "disk-usage":
         return <DiskProperties />;
+      case "progress":
+        return <ProgressProperties />;
       default:
         return <WindowProperties />;
     }

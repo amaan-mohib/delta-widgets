@@ -18,6 +18,7 @@ const useStyles = makeStyles({
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
+    gap: "10px",
   },
 });
 
@@ -31,14 +32,14 @@ const DiskComponent: React.FC<DiskComponentProps> = () => {
           <div>C:\</div>
           <div>93 GB free of 512 GB</div>
         </div>
-        <ProgressBar value={93 / 512} thickness="large" />
+        <ProgressBar value={(512 - 93) / 512} thickness="large" />
       </div>
       <div className={styles.container}>
         <div className={styles.label}>
           <div>D:\</div>
           <div>50 GB free of 512 GB</div>
         </div>
-        <ProgressBar value={50 / 512} thickness="large" />
+        <ProgressBar value={(512 - 50) / 512} thickness="large" />
       </div>
     </React.Fragment>
   );

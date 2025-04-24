@@ -83,6 +83,19 @@ interface Disk {
   total_space: number;
 }
 
+interface INetwork {
+  download_speed_bytes: number;
+  interface_name: string;
+  ip_address: string[];
+  ipv4_address: string;
+  ipv6_address: string;
+  packets_received: number;
+  packets_transmitted: number;
+  received_total: number;
+  transmitted_total: number;
+  upload_speed_bytes: number;
+}
+
 export interface ISystemInformation {
   batteries: Battery[];
   cpu: CpuSummary;
@@ -94,4 +107,7 @@ export interface ISystemInformation {
   os_version: string;
   total_memory: number;
   used_memory: number;
+  total_swap: number;
+  used_swap: number;
+  networks: INetwork[];
 }

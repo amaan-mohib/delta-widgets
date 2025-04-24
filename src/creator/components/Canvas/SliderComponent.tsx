@@ -11,9 +11,9 @@ const SliderComponent: React.FC<SliderComponentProps> = ({ component }) => {
       id={`${component.id}-child`}
       style={{ width: "100%" }}
       onChange={(e) => e.stopPropagation()}
-      value={parseInt(String(component.data?.current)) || 0}
-      min={parseInt(String(component.data?.min)) || 0}
-      max={parseInt(String(component.data?.max)) || 100}
+      value={parseFloat(String(component.data?.current)) || 0}
+      min={parseFloat(String(component.data?.min)) || 0}
+      max={parseFloat(String(component.data?.max)) || 100}
       size={component.data?.size || "medium"}
     />
   );
