@@ -23,6 +23,8 @@ const formatVariable = (key: string) => (format?: string): string => {
   const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
   return key === "media" && format === "thumbnail"
     ? "https://placehold.co/400x400?text=Thumbnail"
+    : key === "weather" && format === "icon"
+    ? "https://placehold.co/400x400?text=Weather"
     : `${capitalizedKey}${format ? ` (${format})` : ""}`;
 };
 

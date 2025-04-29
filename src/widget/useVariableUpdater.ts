@@ -5,10 +5,15 @@ import {
 } from "./stores/useVariableStore";
 import { format } from "date-fns";
 import { Buffer } from "buffer";
-import { formatDuration, humanStorageSize } from "./utils";
+import { formatDuration, humanStorageSize } from "./utils/utils";
 
 const useVariableUpdater = () => {
-  const { currentDate, currentMedia, systemInfo } = useVariableStore();
+  const {
+    currentDate,
+    currentMedia,
+    systemInfo,
+    weatherInfo,
+  } = useVariableStore();
 
   useEffect(() => {
     useDynamicTextStore.setState({
@@ -222,6 +227,51 @@ const useVariableUpdater = () => {
       },
     });
   }, [systemInfo]);
+
+  useEffect(() => {
+    if (!weatherInfo || Object.keys(weatherInfo).length === 0) return;
+
+    useDynamicTextStore.setState({
+      weather: (formatStr?: string) => {
+        switch (formatStr) {
+          case "city":
+            return weatherInfo.location?.name || "NA";
+          case "region":
+            return weatherInfo.location?.region || "NA";
+          case "country":
+            return weatherInfo.location?.country || "NA";
+          case "temperature_celsius":
+            return `${parseFloat(
+              String(weatherInfo.current?.temp_c || 0)
+            ).toFixed(1)}°C`;
+          case "temperature_fahrenheit":
+            return `${parseFloat(
+              String(weatherInfo.current?.temp_f || 0)
+            ).toFixed(1)}°F`;
+          case "humidity":
+            return `${parseFloat(
+              String(weatherInfo.current?.humidity || 0)
+            ).toFixed(1)}%`;
+          case "description":
+            return weatherInfo.current?.condition.text || "NA";
+          case "icon":
+            return weatherInfo.current?.condition.icon || "";
+          case "precip_mm":
+            return `${weatherInfo.current?.precip_mm}mm`;
+          case "precip_in":
+            return `${weatherInfo.current?.precip_in}in`;
+          case "pressure_mb":
+            return `${weatherInfo.current?.pressure_mb}mb`;
+          case "pressure_in":
+            return `${weatherInfo.current?.pressure_in}in`;
+          case "uv_index":
+            return `${weatherInfo.current?.uv || 0}`;
+          default:
+            return "NA";
+        }
+      },
+    });
+  }, [weatherInfo]);
 };
 
 export default useVariableUpdater;

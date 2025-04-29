@@ -1,5 +1,9 @@
 import { create } from "zustand";
-import { IMedia, ISystemInformation } from "../types/variables";
+import {
+  IMedia,
+  ISystemInformation,
+  WeatherResponse,
+} from "../types/variables";
 
 export interface IVariableStore {
   currentDate: Date;
@@ -7,6 +11,7 @@ export interface IVariableStore {
   currentMedia: IMedia | null;
   selectedMediaPlayer: string | null;
   systemInfo: Partial<ISystemInformation>;
+  weatherInfo: Partial<WeatherResponse>;
 }
 
 export const useVariableStore = create<IVariableStore>(() => ({
@@ -15,6 +20,7 @@ export const useVariableStore = create<IVariableStore>(() => ({
   currentMedia: null,
   selectedMediaPlayer: null,
   systemInfo: {},
+  weatherInfo: {},
 }));
 
 export const useDynamicTextStore = create<

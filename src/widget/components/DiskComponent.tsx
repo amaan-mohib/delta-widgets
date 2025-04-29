@@ -1,7 +1,7 @@
 import React from "react";
 import { makeStyles, ProgressBar } from "@fluentui/react-components";
 import { useVariableStore } from "../stores/useVariableStore";
-import { humanStorageSize } from "../utils";
+import { humanStorageSize } from "../utils/utils";
 
 interface DiskComponentProps {}
 

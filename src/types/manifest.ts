@@ -11,6 +11,11 @@ export interface IWidgetElement {
   children?: IWidgetElement[];
 }
 
+export type TCustomFields = Record<
+  string,
+  { key: string; label: string; value: string }
+>;
+
 export interface IWidget {
   key: string;
   label: string;
@@ -23,4 +28,5 @@ export interface IWidget {
   url?: string;
   file?: string;
   widgetType?: "url" | "html" | "json";
+  customFields?: TCustomFields;
 }

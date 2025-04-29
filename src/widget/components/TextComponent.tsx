@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { IWidgetElement } from "../../types/manifest";
 import { useDynamicTextStore } from "../stores/useVariableStore";
-import { parseDynamicText } from "../utils";
+import { parseDynamicText } from "../utils/utils";
 
 interface TextComponentProps {
   component: IWidgetElement;

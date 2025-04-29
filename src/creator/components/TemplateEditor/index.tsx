@@ -18,300 +18,23 @@ import {
 } from "@fluentui/react-components";
 import {
   ArrowLeftRegular,
-  Braces20Regular,
-  CalendarDate20Regular,
   ChevronRightRegular,
-  Desktop20Regular,
   MathFormulaRegular,
-  Play20Regular,
 } from "@fluentui/react-icons";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "./index.css";
-
-const templateCategories = [
-  {
-    id: "date",
-    name: "Date & Time",
-    icon: <CalendarDate20Regular />,
-    templates: [
-      {
-        id: "date",
-        label: "Date",
-        value: "{{date}}",
-        description: "Current date (YYYY/MM/DD)",
-      },
-      {
-        id: "date-short",
-        label: "Short Date",
-        value: "{{date:MM/DD}}",
-        description: "Short date format (MM/DD)",
-      },
-      {
-        id: "date-long",
-        label: "Long Date",
-        value: "{{date:MMMM D, YYYY}}",
-        description: "Long date format (Month Day, Year)",
-      },
-      {
-        id: "time",
-        label: "Time",
-        value: "{{time}}",
-        description: "Time in 12-hour format (default) (hh:mm AM/PM)",
-      },
-      {
-        id: "time-12",
-        label: "12h Time",
-        value: "{{time:hh:mm aa}}",
-        description: "Time in 12-hour format (hh:mm AM/PM)",
-      },
-      {
-        id: "time-24",
-        label: "24h Time",
-        value: "{{time:HH:mm}}",
-        description: "Time in 24-hour format (HH:mm)",
-      },
-      {
-        id: "datetime",
-        label: "Date & Time (default)",
-        value: "{{datetime}}",
-        description: "Date and time combined",
-      },
-      {
-        id: "datetime2",
-        label: "Date & Time",
-        value: "{{datetime:MMMM d yyyy, h:mm aa}}",
-        description: "Date and time combined",
-      },
-    ],
-  },
-  {
-    id: "media",
-    name: "Media",
-    icon: <Play20Regular />,
-    templates: [
-      {
-        id: "name",
-        label: "Media Title",
-        value: "{{media:title}}",
-        description: "Title of the playing media",
-      },
-      {
-        id: "artist",
-        label: "Artist",
-        value: "{{media:artist}}",
-        description: "Artist of the playing media",
-      },
-      {
-        id: "thumbnail",
-        label: "Thumbnail",
-        value: "{{media:thumbnail}}",
-        description: "Thumbnail of the playing media",
-      },
-      {
-        id: "status",
-        label: "Media Status",
-        value: "{{media:status}}",
-        description: "Status of the current media",
-      },
-      {
-        id: "player",
-        label: "Media Player",
-        value: "{{media:player}}",
-        description: "Application currently playing the media",
-      },
-      {
-        id: "player_icon",
-        label: "Media Player Icon",
-        value: "{{media:player_icon}}",
-        description: "Icon of the Application playing the media",
-      },
-      {
-        id: "position",
-        label: "Position",
-        value: "{{media:position}}",
-        description: "Current timeline position of the playing media",
-      },
-      {
-        id: "duration",
-        label: "Duration",
-        value: "{{media:duration}}",
-        description: "Current timeline duration of the playing media",
-      },
-      {
-        id: "position_text",
-        label: "Position (Formatted)",
-        value: "{{media:position_text}}",
-        description: "Formatted current timeline position of the playing media",
-      },
-      {
-        id: "duration_text",
-        label: "Duration (Formatted)",
-        value: "{{media:duration_text}}",
-        description: "Formatted current timeline duration of the playing media",
-      },
-    ],
-  },
-  {
-    id: "system",
-    name: "System",
-    icon: <Desktop20Regular />,
-    templates: [
-      {
-        id: "os",
-        label: "Operating System",
-        value: "{{system:os}}",
-        description: "Operating system name",
-      },
-      {
-        id: "os_version",
-        label: "OS Version",
-        value: "{{system:os_version}}",
-        description: "Operating system version",
-      },
-      {
-        id: "kernel",
-        label: "Kernel",
-        value: "{{system:kernel}}",
-        description: "Kernel version",
-      },
-      {
-        id: "hostname",
-        label: "Hostname",
-        value: "{{system:hostname}}",
-        description: "System hostname",
-      },
-      {
-        id: "cpu_model",
-        label: "CPU Model",
-        value: "{{system:cpu_model}}",
-        description: "CPU Model name",
-      },
-      {
-        id: "cpu_lcores",
-        label: "CPU Logical processors",
-        value: "{{system:cpu_lcores}}",
-        description: "CPU Logical processors count",
-      },
-      {
-        id: "cpu_usage",
-        label: "CPU Usage",
-        value: "{{system:cpu_usage}}",
-        description: "CPU Usage percentage",
-      },
-      {
-        id: "cpu_speed",
-        label: "CPU Speed",
-        value: "{{system:cpu_speed}}",
-        description: "CPU Average Speed (in GHz)",
-      },
-      {
-        id: "memory_total",
-        label: "Memory Total",
-        value: "{{system:memory_total}}",
-        description: "Total Memory (in human readable format)",
-      },
-      {
-        id: "memory_used",
-        label: "Memory Used",
-        value: "{{system:memory_used}}",
-        description: "Used Memory (in human readable format)",
-      },
-      {
-        id: "memory_available",
-        label: "Memory Available",
-        value: "{{system:memory_available}}",
-        description: "Available Memory (in human readable format)",
-      },
-      {
-        id: "memory_total_bytes",
-        label: "Memory Total (Bytes)",
-        value: "{{system:memory_total_bytes}}",
-        description: "Total Memory (in bytes)",
-      },
-      {
-        id: "memory_used_bytes",
-        label: "Memory Used (Bytes)",
-        value: "{{system:memory_used_bytes}}",
-        description: "Used Memory (in bytes)",
-      },
-      {
-        id: "memory_available_bytes",
-        label: "Memory Available (Bytes)",
-        value: "{{system:memory_available_bytes}}",
-        description: "Available Memory (in bytes)",
-      },
-      {
-        id: "battery_model",
-        label: "Battery Model",
-        value: "{{system:battery_model}}",
-        description: "Model of battery",
-      },
-      {
-        id: "battery_vendor",
-        label: "Battery Vendor",
-        value: "{{system:battery_vendor}}",
-        description: "Battery manufacturer/vendor",
-      },
-      {
-        id: "battery_health",
-        label: "Battery Health (%)",
-        value: "{{system:battery_health}}",
-        description: "Battery health percentage",
-      },
-      {
-        id: "battery_charge",
-        label: "Battery Charge (%)",
-        value: "{{system:battery_charge}}",
-        description: "Current battery charge percentage",
-      },
-      {
-        id: "battery_cycles",
-        label: "Battery Cycles",
-        value: "{{system:battery_cycles}}",
-        description: "Number of battery charge cycles",
-      },
-      {
-        id: "battery_technology",
-        label: "Battery Technology",
-        value: "{{system:battery_technology}}",
-        description: "Battery technology type",
-      },
-    ],
-  },
-  {
-    id: "custom",
-    name: "Custom Fields",
-    icon: <Braces20Regular />,
-    templates: [
-      {
-        id: "custom1",
-        label: "Custom Field 1",
-        value: "{{custom.field1}}",
-        description: "Custom field 1",
-      },
-      {
-        id: "custom2",
-        label: "Custom Field 2",
-        value: "{{custom.field2}}",
-        description: "Custom field 2",
-      },
-      {
-        id: "custom3",
-        label: "Custom Field 3",
-        value: "{{custom.field3}}",
-        description: "Custom field 3",
-      },
-    ],
-  },
-];
-
-type TTemplate = (typeof templateCategories)[0]["templates"][0];
+import getTemplateCategories, {
+  ITemplate,
+  ITemplateCategory,
+} from "./categories";
+import { useManifestStore } from "../../stores/useManifestStore";
+import { IWidget } from "../../../types/manifest";
 
 const TemplateCard: React.FC<{
-  template: TTemplate;
-  onInsert: (template: TTemplate) => void;
+  template: ITemplate;
+  onInsert: (template: ITemplate) => void;
 }> = ({ template, onInsert }) => {
   return (
     <Card
@@ -353,13 +76,19 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const [value, setValue] = useState(initialValue || "");
   const [open, setOpen] = useState(false);
   const restoreFocusTargetAttribute = useRestoreFocusTarget();
-  const [selectedCategory, setSelectedCategory] = useState<
-    (typeof templateCategories)[0] | null
-  >(null);
+  const [selectedCategory, setSelectedCategory] =
+    useState<ITemplateCategory | null>(null);
   const [search, setSearch] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const quillRef = useRef<ReactQuill>(null);
   const [selection, setSelection] = useState(0);
+  const { customFields = {} } = useManifestStore(
+    (state) => state.manifest || ({} as IWidget)
+  );
+  const templateCategories = useMemo(
+    () => getTemplateCategories(customFields),
+    [customFields]
+  );
 
   useEffect(() => {
     setValue(initialValue || "");

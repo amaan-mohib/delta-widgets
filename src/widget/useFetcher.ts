@@ -1,10 +1,11 @@
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import { useEffect, useMemo, useState } from "react";
-import { IWidgetElement } from "../types/manifest";
+import { IWidgetElement, TCustomFields } from "../types/manifest";
 import { invoke } from "@tauri-apps/api/core";
 import debounce from "lodash.debounce";
 import { IMedia, ISystemInformation } from "./types/variables";
 import { useVariableStore } from "./stores/useVariableStore";
+import { getCityFromIp, getWeather } from "./utils/weather";
 
 const extractDynamicVariables = (
   elements: IWidgetElement[],
@@ -31,13 +32,14 @@ const extractDynamicVariables = (
   return { dynamicVariables: results, typesSet };
 };
 
-function useFetcher(elements: IWidgetElement[]) {
+function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
   const { typesSet, dynamicVariables } = useMemo(
     () => extractDynamicVariables(elements),
     [elements]
   );
   const [currentDate, setCurrentDate] = useState(new Date());
   const [systemInfoCounter, setSystemInfoCounter] = useState(0);
+  const [weatherCounter, setWeatherCounter] = useState(0);
 
   useEffect(() => {
     if (!dynamicVariables.has("media")) return;
@@ -117,6 +119,31 @@ function useFetcher(elements: IWidgetElement[]) {
       clearTimeout(timeout);
     };
   }, [dynamicVariables, systemInfoCounter, typesSet]);
+
+  useEffect(() => {
+    if (!dynamicVariables.has("weather")) return;
+
+    (async () => {
+      try {
+        let city = customFields?.weatherCity?.value;
+        if (!city) {
+          city = await getCityFromIp();
+        }
+        const data = await getWeather(city);
+        useVariableStore.setState({ weatherInfo: data });
+      } catch (error) {
+        console.log(error);
+      }
+    })();
+
+    const timeout = setTimeout(() => {
+      setWeatherCounter((prev) => prev + 1);
+    }, 60 * 60 * 1000);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [dynamicVariables, weatherCounter, typesSet]);
 }
 
 export default useFetcher;

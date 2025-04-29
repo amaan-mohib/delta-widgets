@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { ProgressBar } from "@fluentui/react-components";
 import { IWidgetElement } from "../../types/manifest";
 import { useDynamicTextStore } from "../stores/useVariableStore";
-import { parseDynamicText } from "../utils";
+import { parseDynamicText } from "../utils/utils";
 
 interface ProgressComponentProps {
   component: IWidgetElement;

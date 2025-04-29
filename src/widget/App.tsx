@@ -19,7 +19,7 @@ const App: React.FC<AppProps> = () => {
 
   const elements = useMemo(() => manifest?.elements || [], [manifest]);
 
-  useFetcher(elements);
+  useFetcher(elements, manifest?.customFields || {});
   useVariableUpdater();
 
   useEffect(() => {

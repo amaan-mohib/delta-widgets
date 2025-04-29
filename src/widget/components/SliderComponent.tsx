@@ -2,7 +2,7 @@ import { Slider } from "@fluentui/react-components";
 import { IWidgetElement } from "../../types/manifest";
 import { useDynamicTextStore } from "../stores/useVariableStore";
 import { useEffect, useMemo, useState } from "react";
-import { parseDynamicText } from "../utils";
+import { parseDynamicText } from "../utils/utils";
 
 interface SliderComponentProps {
   component: IWidgetElement;
