@@ -28,6 +28,7 @@ import {
 } from "../../main/utils/widgets";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import CustomFieldsView from "./CustomFieldsView";
+import { useShallow } from "zustand/shallow";
 
 interface ToolbarProps {}
 
@@ -38,9 +39,9 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
   const nameInputRef = useRef<HTMLInputElement>(null);
   const isSaving = useDataTrackStore((state) => state.isSaving);
   const selectedId = useDataTrackStore((state) => state.selectedId);
-  const elementMap = useManifestStore((state) => state.elementMap);
-  const undoStack = useManifestStore((state) => state.undoStack);
-  const redoStack = useManifestStore((state) => state.redoStack);
+  const [elementMap, undoStack, redoStack] = useManifestStore(
+    useShallow((state) => [state.elementMap, state.undoStack, state.redoStack])
+  );
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isCustomFieldsOpen, setIsCustomFieldsOpen] = useState(false);
 

@@ -11,7 +11,7 @@ import "./index.css";
 import Sidebar from "./components/Sidebar";
 import Canvas from "./components/Canvas";
 import { makeStyles, Spinner, tokens } from "@fluentui/react-components";
-import { getManifestStore, useManifestStore } from "./stores/useManifestStore";
+import { useManifestStore } from "./stores/useManifestStore";
 import { useCallback, useEffect, useRef } from "react";
 import { nanoid } from "nanoid";
 import CreatorToolbar from "./components/Toolbar";
@@ -19,6 +19,7 @@ import { useDataTrackStore } from "./stores/useDataTrackStore";
 import Properties from "./components/Properties";
 import { getManifestFromPath } from "../main/utils/widgets";
 import { componentTypeToDataMap } from "./components/Sidebar/ComponentList";
+import { useShallow } from "zustand/shallow";
 
 const useStyles = makeStyles({
   toolbar: {
@@ -32,8 +33,9 @@ interface AppProps {}
 
 const App: React.FC<AppProps> = () => {
   const styles = useStyles();
-  const manifestStore = getManifestStore();
-  const elementMap = useManifestStore((state) => state.elementMap);
+  const [manifestStore, elementMap] = useManifestStore(
+    useShallow((state) => [state.manifest, state.elementMap])
+  );
   const {
     initialStateLoading,
     incrementInitialStateLoadCounter,
