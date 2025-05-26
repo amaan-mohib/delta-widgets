@@ -347,16 +347,9 @@ const debouncedHistory = debounce(
 
 useManifestStore.subscribe(
   (state) => state.manifest,
-  (manifest) => {
-    if (!manifest) return;
-    debouncedUpdate(manifest);
-  }
-);
-useManifestStore.subscribe(
-  (state) => state.manifest,
-  (_, prevManifest) => {
-    if (!prevManifest) return;
-    debouncedHistory(prevManifest);
+  (manifest, prevManifest) => {
+    if (manifest) debouncedUpdate(manifest);
+    if (prevManifest) debouncedHistory(prevManifest);
   }
 );
 
