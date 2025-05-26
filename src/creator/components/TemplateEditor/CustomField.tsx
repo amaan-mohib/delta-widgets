@@ -7,32 +7,41 @@ import {
   Card,
   Field,
   Input,
+  InputOnChangeData,
   Textarea,
+  TextareaOnChangeData,
 } from "@fluentui/react-components";
-import React from "react";
+import React, { useState } from "react";
 import { useManifestStore } from "../../stores/useManifestStore";
 
 interface CustomFieldProps {}
 
+const defaultValues = {
+  name: "",
+  value: "",
+  description: "",
+};
+
 const CustomField: React.FC<CustomFieldProps> = () => {
-  const formRef = React.useRef<HTMLFormElement>(null);
+  const [values, setValues] = useState(defaultValues);
+
+  const onChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    { value }: InputOnChangeData | TextareaOnChangeData
+  ) => {
+    setValues((prev) => ({ ...prev, [e.target.name]: value }));
+  };
 
   const onSubmit = () => {
-    const formData = new FormData(formRef.current!);
-    const elements = formRef.current?.elements;
-    [...formData.keys()].forEach((key) => {
-      const input = elements?.namedItem(key);
-      if (input && "value" in input) {
-        input.value = "";
-      }
-    });
-    const name = formData.get("name") as string;
+    const { name, description, value } = values;
+    if (!name.trim() || !value.trim()) {
+      return;
+    }
     const key = name.trim().toLowerCase().replace(/\s+/g, "-");
-    const value = formData.get("value") as string;
-    const description = formData.get("description") as string;
     useManifestStore.getState().updateCustomValues({
       [key]: { key, label: name.trim(), value: value.trim(), description },
     });
+    setValues(defaultValues);
   };
 
   return (
@@ -53,23 +62,33 @@ const CustomField: React.FC<CustomFieldProps> = () => {
                 gap: "8px",
                 paddingBottom: "1rem",
               }}
-              ref={formRef}
               onSubmit={(e) => {
                 e.preventDefault();
                 onSubmit();
               }}>
-              <Field
-                label="Name"
-                size="small"
-                required
-                defaultValue={"New Field"}>
-                <Input name="name" placeholder="Enter name" />
+              <Field label="Name" size="small" required>
+                <Input
+                  value={values.name}
+                  onChange={onChange}
+                  name="name"
+                  placeholder="Enter name"
+                />
               </Field>
               <Field label="Value" size="small" required>
-                <Input name="value" placeholder="Enter a value" />
+                <Input
+                  value={values.value}
+                  onChange={onChange}
+                  name="value"
+                  placeholder="Enter a value"
+                />
               </Field>
               <Field label="Description" size="small">
-                <Textarea name="description" placeholder="Enter description" />
+                <Textarea
+                  value={values.description}
+                  onChange={onChange}
+                  name="description"
+                  placeholder="Enter description"
+                />
               </Field>
               <Button
                 appearance="primary"

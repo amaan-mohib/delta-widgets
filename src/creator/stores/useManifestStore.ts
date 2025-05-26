@@ -7,6 +7,7 @@ import debounce from "lodash.debounce";
 import { updateManifest } from "../../main/utils/widgets";
 import { useDataTrackStore } from "./useDataTrackStore";
 import { arrayMove } from "@dnd-kit/sortable";
+import { useShallow } from "zustand/shallow";
 
 const cloneObject = <T>(obj: T) => {
   return JSON.parse(JSON.stringify(obj)) as T;
@@ -358,3 +359,6 @@ useManifestStore.subscribe(
     debouncedHistory(prevManifest);
   }
 );
+
+export const getManifestStore = () =>
+  useManifestStore(useShallow((state) => state.manifest));

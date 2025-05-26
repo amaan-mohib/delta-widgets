@@ -11,7 +11,7 @@ import "./index.css";
 import Sidebar from "./components/Sidebar";
 import Canvas from "./components/Canvas";
 import { makeStyles, Spinner, tokens } from "@fluentui/react-components";
-import { useManifestStore } from "./stores/useManifestStore";
+import { getManifestStore, useManifestStore } from "./stores/useManifestStore";
 import { useCallback, useEffect, useRef } from "react";
 import { nanoid } from "nanoid";
 import CreatorToolbar from "./components/Toolbar";
@@ -32,7 +32,7 @@ interface AppProps {}
 
 const App: React.FC<AppProps> = () => {
   const styles = useStyles();
-  const manifestStore = useManifestStore((state) => state.manifest);
+  const manifestStore = getManifestStore();
   const elementMap = useManifestStore((state) => state.elementMap);
   const {
     initialStateLoading,

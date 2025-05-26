@@ -29,8 +29,7 @@ import getTemplateCategories, {
   ITemplate,
   ITemplateCategory,
 } from "./categories";
-import { useManifestStore } from "../../stores/useManifestStore";
-import { IWidget } from "../../../types/manifest";
+import { getManifestStore } from "../../stores/useManifestStore";
 import CustomField from "./CustomField";
 
 export const TemplateCard: React.FC<{
@@ -89,13 +88,11 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const quillRef = useRef<ReactQuill>(null);
   const [selection, setSelection] = useState(0);
-  const { customFields = {} } = useManifestStore(
-    (state) => state.manifest || ({} as IWidget)
-  );
+  const manifest = getManifestStore();
 
   const templateCategories = useMemo(
-    () => getTemplateCategories(customFields),
-    [customFields]
+    () => getTemplateCategories(manifest?.customFields || {}),
+    [manifest]
   );
 
   useEffect(() => {

@@ -7,7 +7,7 @@ import {
   ToolbarGroup,
   Tooltip,
 } from "@fluentui/react-components";
-import { useManifestStore } from "../stores/useManifestStore";
+import { getManifestStore, useManifestStore } from "../stores/useManifestStore";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowRedoRegular,
@@ -32,7 +32,7 @@ import CustomFieldsView from "./CustomFieldsView";
 interface ToolbarProps {}
 
 const CreatorToolbar: React.FC<ToolbarProps> = () => {
-  const manifest = useManifestStore((state) => state.manifest);
+  const manifest = getManifestStore();
   const projectName = useManifestStore((obj) => obj.manifest?.label);
   const [editName, setEditName] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);

@@ -8,9 +8,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@fluentui/react-components";
-import React from "react";
-import { useManifestStore } from "../stores/useManifestStore";
-import { IWidget } from "../../types/manifest";
+import React, { useMemo } from "react";
+import { getManifestStore, useManifestStore } from "../stores/useManifestStore";
 import CustomField from "./TemplateEditor/CustomField";
 import { getCustomFieldsTemplate } from "./TemplateEditor/categories";
 import { TemplateCard } from "./TemplateEditor";
@@ -24,11 +23,12 @@ const CustomFieldsView: React.FC<CustomFieldsViewProps> = ({
   open,
   setOpen,
 }) => {
-  const { customFields = {} } = useManifestStore(
-    (state) => state.manifest || ({} as IWidget)
-  );
+  const manifest = getManifestStore();
 
-  const templates = getCustomFieldsTemplate(customFields);
+  const templates = useMemo(
+    () => getCustomFieldsTemplate(manifest?.customFields || {}),
+    [manifest]
+  );
 
   return (
     <Dialog open={open} onOpenChange={(_, data) => setOpen(data.open)}>
