@@ -13,6 +13,7 @@ const useVariableUpdater = () => {
     currentMedia,
     systemInfo,
     weatherInfo,
+    customFields,
   } = useVariableStore();
 
   useEffect(() => {
@@ -42,6 +43,17 @@ const useVariableUpdater = () => {
       },
     });
   }, [currentDate]);
+
+  useEffect(() => {
+    if (!customFields || Object.keys(customFields).length === 0) return;
+
+    useDynamicTextStore.setState({
+      custom: (formatStr?: string) => {
+        if (!formatStr) return "NA";
+        return customFields?.[formatStr] || "NA";
+      },
+    });
+  }, [customFields]);
 
   useEffect(() => {
     if (!currentMedia) return;

@@ -12,6 +12,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowRedoRegular,
   ArrowUndoRegular,
+  BracesVariableRegular,
   CheckmarkRegular,
   DeleteRegular,
   DismissRegular,
@@ -26,6 +27,7 @@ import {
   updateManifest,
 } from "../../main/utils/widgets";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
+import CustomFieldsView from "./CustomFieldsView";
 
 interface ToolbarProps {}
 
@@ -40,6 +42,7 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
   const undoStack = useManifestStore((state) => state.undoStack);
   const redoStack = useManifestStore((state) => state.redoStack);
   const [isPreviewing, setIsPreviewing] = useState(false);
+  const [isCustomFieldsOpen, setIsCustomFieldsOpen] = useState(false);
 
   useEffect(() => {
     if (!manifest) return;
@@ -158,6 +161,16 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
         )}
       </ToolbarGroup>
       <ToolbarGroup style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        {Object.keys(manifest?.customFields || {}).length > 0 && (
+          <Tooltip content="Custom fields" relationship="label">
+            <ToolbarButton
+              icon={<BracesVariableRegular />}
+              onClick={() => {
+                setIsCustomFieldsOpen(true);
+              }}
+            />
+          </Tooltip>
+        )}
         <Button
           size="small"
           onClick={async () => {
@@ -176,6 +189,10 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
           Publish
         </Button>
       </ToolbarGroup>
+      <CustomFieldsView
+        open={isCustomFieldsOpen}
+        setOpen={setIsCustomFieldsOpen}
+      />
     </Toolbar>
   );
 };

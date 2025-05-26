@@ -17,9 +17,15 @@ const App: React.FC<AppProps> = () => {
     manifest,
   } = useDataTrackStore();
 
-  const elements = useMemo(() => manifest?.elements || [], [manifest]);
+  const { elements, customFields } = useMemo(
+    () => ({
+      elements: manifest?.elements || [],
+      customFields: manifest?.customFields || {},
+    }),
+    [manifest]
+  );
 
-  useFetcher(elements, manifest?.customFields || {});
+  useFetcher(elements, customFields);
   useVariableUpdater();
 
   useEffect(() => {

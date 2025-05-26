@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { IWidget, IWidgetElement } from "../../types/manifest";
+import { IWidget, IWidgetElement, TCustomFields } from "../../types/manifest";
 import { subscribeWithSelector } from "zustand/middleware";
 import lodashSet from "lodash.set";
 import lodashGet from "lodash.get";
@@ -16,6 +16,8 @@ export interface IManifestStore {
   manifest: IWidget | null;
   updateWidgetDimensions: (width: number, height: number) => void;
   updateManifest: (data: Partial<IWidget>) => void;
+  updateCustomValues: (data: TCustomFields) => void;
+  removeCustomValues: (id: string) => void;
   updateElementProperties: (
     id: string,
     { data, styles }: { data?: any; styles?: IWidgetElement["styles"] }
@@ -53,6 +55,25 @@ export const useManifestStore = create<IManifestStore>()(
       const oldManifest = get().manifest;
       if (!oldManifest) return;
       const manifest = { ...cloneObject(oldManifest), ...data };
+      set({ manifest });
+    },
+    updateCustomValues(data) {
+      const oldManifest = get().manifest;
+      if (!oldManifest) return;
+      const manifest = cloneObject(oldManifest);
+      manifest.customFields = {
+        ...(manifest.customFields || {}),
+        ...data,
+      };
+      set({ manifest });
+    },
+    removeCustomValues(id) {
+      const oldManifest = get().manifest;
+      if (!oldManifest) return;
+      const manifest = cloneObject(oldManifest);
+      if (manifest.customFields && manifest.customFields[id]) {
+        delete manifest.customFields[id];
+      }
       set({ manifest });
     },
     addElements(element, parentId) {

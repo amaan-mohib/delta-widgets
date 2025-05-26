@@ -42,6 +42,16 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
   const [weatherCounter, setWeatherCounter] = useState(0);
 
   useEffect(() => {
+    if (!customFields) return;
+
+    const customFieldsData: Record<string, string> = {};
+    Object.entries(customFields || {}).forEach(([key, field]) => {
+      customFieldsData[key] = field.value;
+    });
+    useVariableStore.setState({ customFields: customFieldsData });
+  }, [customFields]);
+
+  useEffect(() => {
     if (!dynamicVariables.has("media")) return;
 
     const getMedia = debounce(() => {

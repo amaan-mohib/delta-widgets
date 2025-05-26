@@ -12,6 +12,7 @@ export interface IVariableStore {
   selectedMediaPlayer: string | null;
   systemInfo: Partial<ISystemInformation>;
   weatherInfo: Partial<WeatherResponse>;
+  customFields?: Record<string, string>;
 }
 
 export const useVariableStore = create<IVariableStore>(() => ({

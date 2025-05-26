@@ -31,29 +31,36 @@ import getTemplateCategories, {
 } from "./categories";
 import { useManifestStore } from "../../stores/useManifestStore";
 import { IWidget } from "../../../types/manifest";
+import CustomField from "./CustomField";
 
-const TemplateCard: React.FC<{
+export const TemplateCard: React.FC<{
   template: ITemplate;
-  onInsert: (template: ITemplate) => void;
-}> = ({ template, onInsert }) => {
+  onInsert?: (template: ITemplate) => void;
+  onRemove?: (template: ITemplate) => void;
+}> = ({ template, onInsert, onRemove }) => {
   return (
     <Card
       size="small"
       key={template.id}
       appearance="subtle"
       onClick={() => {
-        onInsert(template);
+        if (onInsert) {
+          onInsert(template);
+        }
+        if (onRemove) {
+          onRemove(template);
+        }
       }}>
       <CardHeader
         header={template.label}
         action={
           <Button appearance="transparent" size="small">
-            Insert
+            {onInsert ? "Insert" : "Remove"}
           </Button>
         }
       />
       <code>{template.value}</code>
-      <p>{template.description}</p>
+      {template.description && <p>{template.description}</p>}
     </Card>
   );
 };
@@ -85,6 +92,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const { customFields = {} } = useManifestStore(
     (state) => state.manifest || ({} as IWidget)
   );
+
   const templateCategories = useMemo(
     () => getTemplateCategories(customFields),
     [customFields]
@@ -105,7 +113,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
           template.description.toLowerCase().includes(search.toLowerCase())
       )
     );
-  }, [search]);
+  }, [search, templateCategories]);
 
   const insertTemplate = (template: string) => {
     if (quillRef.current && isHtml) {
@@ -130,6 +138,51 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
       }, 0);
     }
   };
+
+  const templates = useMemo(() => {
+    if (search) {
+      return filteredTemplates.map((template) => (
+        <TemplateCard
+          key={template.id}
+          onInsert={(template) => {
+            insertTemplate(template.value);
+          }}
+          template={template}
+        />
+      ));
+    }
+    if (selectedCategory) {
+      const seletedTemplates =
+        templateCategories.find((t) => t.id === selectedCategory.id)
+          ?.templates || [];
+      return seletedTemplates.map((template) => (
+        <TemplateCard
+          key={template.id}
+          onInsert={(template) => {
+            insertTemplate(template.value);
+          }}
+          template={template}
+        />
+      ));
+    }
+    return templateCategories.map((category) => (
+      <Card
+        size="small"
+        key={category.id}
+        appearance="subtle"
+        onClick={() => {
+          setSelectedCategory(category);
+        }}>
+        <CardHeader
+          image={category.icon}
+          header={category.name}
+          action={
+            <Button appearance="transparent" icon={<ChevronRightRegular />} />
+          }
+        />
+      </Card>
+    ));
+  }, [search, selectedCategory, templateCategories, filteredTemplates]);
 
   return (
     <>
@@ -248,46 +301,8 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
                       }
                     />
                     <div style={{ height: 400, overflow: "auto" }}>
-                      {search
-                        ? filteredTemplates.map((template) => (
-                            <TemplateCard
-                              key={template.id}
-                              onInsert={(template) => {
-                                insertTemplate(template.value);
-                              }}
-                              template={template}
-                            />
-                          ))
-                        : selectedCategory
-                        ? selectedCategory.templates.map((template) => (
-                            <TemplateCard
-                              key={template.id}
-                              onInsert={(template) => {
-                                insertTemplate(template.value);
-                              }}
-                              template={template}
-                            />
-                          ))
-                        : templateCategories.map((category) => (
-                            <Card
-                              size="small"
-                              key={category.id}
-                              appearance="subtle"
-                              onClick={() => {
-                                setSelectedCategory(category);
-                              }}>
-                              <CardHeader
-                                image={category.icon}
-                                header={category.name}
-                                action={
-                                  <Button
-                                    appearance="transparent"
-                                    icon={<ChevronRightRegular />}
-                                  />
-                                }
-                              />
-                            </Card>
-                          ))}
+                      {selectedCategory?.id === "custom" && <CustomField />}
+                      {templates}
                     </div>
                   </Card>
                 </div>

@@ -13,7 +13,7 @@ export interface IWidgetElement {
 
 export type TCustomFields = Record<
   string,
-  { key: string; label: string; value: string }
+  { key: string; label: string; value: string; description?: string }
 >;
 
 export interface IWidget {

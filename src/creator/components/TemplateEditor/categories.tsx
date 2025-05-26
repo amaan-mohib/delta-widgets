@@ -20,6 +20,17 @@ export interface ITemplateCategory {
   templates: ITemplate[];
 }
 
+export function getCustomFieldsTemplate(
+  customFields: TCustomFields
+): ITemplate[] {
+  return Object.values(customFields).map((field) => ({
+    id: field.key,
+    label: field.label,
+    value: `{{custom:${field.key}}}`,
+    description: field.description || "",
+  }));
+}
+
 const getTemplateCategories = (
   customFields: TCustomFields
 ): ITemplateCategory[] => [
@@ -361,12 +372,7 @@ const getTemplateCategories = (
     id: "custom",
     name: "Custom Fields",
     icon: <Braces20Regular />,
-    templates: Object.values(customFields).map((field) => ({
-      id: field.key,
-      label: field.label,
-      value: `{{${field.key}}}`,
-      description: field.label,
-    })),
+    templates: getCustomFieldsTemplate(customFields),
   },
 ];
 
