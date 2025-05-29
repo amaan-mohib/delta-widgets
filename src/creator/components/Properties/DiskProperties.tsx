@@ -1,6 +1,9 @@
 import React from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
-import { useManifestStore } from "../../stores/useManifestStore";
+import {
+  IUpdateElementProperties,
+  useManifestStore,
+} from "../../stores/useManifestStore";
 import Panel from "./Panel";
 import { ColorPickerPopup } from "./ColorPickerPopup";
 import { Select, SpinButton, tokens } from "@fluentui/react-components";
@@ -11,6 +14,11 @@ interface DiskPropertiesProps {}
 const DiskProperties: React.FC<DiskPropertiesProps> = () => {
   const selectedId = useDataTrackStore((state) => state.selectedId);
   const elementMap = useManifestStore((state) => state.elementMap);
+
+  const updateProperties = (value: IUpdateElementProperties) => {
+    if (!selectedId) return;
+    useManifestStore.getState().updateElementProperties(selectedId, value);
+  };
 
   if (!selectedId || !elementMap[selectedId]) return null;
 
@@ -36,13 +44,11 @@ const DiskProperties: React.FC<DiskPropertiesProps> = () => {
                   )}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          styles: {
-                            padding: `${value}px`,
-                          },
-                        });
+                      updateProperties({
+                        styles: {
+                          padding: `${value}px`,
+                        },
+                      });
                     });
                   }}
                 />
@@ -59,13 +65,11 @@ const DiskProperties: React.FC<DiskPropertiesProps> = () => {
                   )}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          styles: {
-                            borderRadius: `${value}px`,
-                          },
-                        });
+                      updateProperties({
+                        styles: {
+                          borderRadius: `${value}px`,
+                        },
+                      });
                     });
                   }}
                 />
@@ -82,13 +86,11 @@ const DiskProperties: React.FC<DiskPropertiesProps> = () => {
                   )}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          styles: {
-                            gap: `${value}px`,
-                          },
-                        });
+                      updateProperties({
+                        styles: {
+                          gap: `${value}px`,
+                        },
+                      });
                     });
                   }}
                 />
@@ -100,11 +102,9 @@ const DiskProperties: React.FC<DiskPropertiesProps> = () => {
                 <Select
                   value={containerData?.flexDirection || "column"}
                   onChange={(_, { value }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        styles: { flexDirection: value as any },
-                      });
+                    updateProperties({
+                      styles: { flexDirection: value as any },
+                    });
                   }}>
                   <option value="column">Vertical</option>
                   <option value="row">Horizontal</option>
@@ -126,13 +126,11 @@ const DiskProperties: React.FC<DiskPropertiesProps> = () => {
                     "transparent"
                   }
                   setColor={(color) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        styles: {
-                          backgroundColor: color,
-                        },
-                      });
+                    updateProperties({
+                      styles: {
+                        backgroundColor: color,
+                      },
+                    });
                   }}
                 />
               ),
@@ -152,13 +150,11 @@ const DiskProperties: React.FC<DiskPropertiesProps> = () => {
                       )
                   }
                   setColor={(color) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        styles: {
-                          color,
-                        },
-                      });
+                    updateProperties({
+                      styles: {
+                        color,
+                      },
+                    });
                   }}
                 />
               ),

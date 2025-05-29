@@ -1,5 +1,4 @@
 import { Location, WeatherResponse } from "../types/variables";
-console.log({ env: import.meta.env });
 
 export const getWeather = async (city: string) => {
   if (!city.trim()) {

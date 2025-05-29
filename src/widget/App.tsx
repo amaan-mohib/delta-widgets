@@ -6,6 +6,7 @@ import "./index.css";
 import Element from "./components/Element";
 import useFetcher from "./useFetcher";
 import useVariableUpdater from "./useVariableUpdater";
+import FontPicker from "react-fontpicker-ts";
 
 interface AppProps {}
 
@@ -15,6 +16,7 @@ const App: React.FC<AppProps> = () => {
     incrementInitialStateLoadCounter,
     initialStateLoadCounter,
     manifest,
+    fontsToLoad,
   } = useDataTrackStore();
 
   const { elements, customFields } = useMemo(
@@ -61,6 +63,9 @@ const App: React.FC<AppProps> = () => {
         height: manifest?.dimensions?.height,
         display: "flex",
       }}>
+      {fontsToLoad.length > 0 && (
+        <FontPicker loadFonts={fontsToLoad} loaderOnly />
+      )}
       {elements &&
         elements.map((element) => (
           <Element key={element.id} component={element} />

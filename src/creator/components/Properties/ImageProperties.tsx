@@ -1,7 +1,10 @@
 import { Checkbox, Select, SpinButton } from "@fluentui/react-components";
 import React from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
-import { useManifestStore } from "../../stores/useManifestStore";
+import {
+  IUpdateElementProperties,
+  useManifestStore,
+} from "../../stores/useManifestStore";
 import { spinButtonOnChange } from "../../utils";
 import Panel from "./Panel";
 import TemplateEditor from "../TemplateEditor";
@@ -11,6 +14,11 @@ interface ImagePropertiesProps {}
 const ImageProperties: React.FC<ImagePropertiesProps> = () => {
   const selectedId = useDataTrackStore((state) => state.selectedId);
   const elementMap = useManifestStore((state) => state.elementMap);
+
+  const updateProperties = (value: IUpdateElementProperties) => {
+    if (!selectedId) return;
+    useManifestStore.getState().updateElementProperties(selectedId, value);
+  };
 
   if (!selectedId || !elementMap[selectedId]) return null;
 
@@ -30,11 +38,9 @@ const ImageProperties: React.FC<ImagePropertiesProps> = () => {
                 <TemplateEditor
                   value={elementMap[selectedId].data?.src}
                   onChange={(value) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        data: { src: value || "" },
-                      });
+                    updateProperties({
+                      data: { src: value || "" },
+                    });
                   }}
                   placeholder="Enter source"
                 />
@@ -46,11 +52,9 @@ const ImageProperties: React.FC<ImagePropertiesProps> = () => {
                 <Select
                   value={imageData?.fit || "cover"}
                   onChange={(_, { value }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        data: { fit: value || "cover" },
-                      });
+                    updateProperties({
+                      data: { fit: value || "cover" },
+                    });
                   }}>
                   <option value="default">Default</option>
                   <option value="center">Center</option>
@@ -66,11 +70,9 @@ const ImageProperties: React.FC<ImagePropertiesProps> = () => {
                 <Select
                   value={imageData?.shape || "square"}
                   onChange={(_, { value }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        data: { shape: value || "square" },
-                      });
+                    updateProperties({
+                      data: { shape: value || "square" },
+                    });
                   }}>
                   <option value="rounded">Rounded</option>
                   <option value="circular">Circular</option>
@@ -84,13 +86,11 @@ const ImageProperties: React.FC<ImagePropertiesProps> = () => {
                 <Checkbox
                   checked={imageData?.shadow && imageData?.shadow !== "true"}
                   onChange={(_, { checked }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        data: {
-                          shadow: checked || false,
-                        },
-                      });
+                    updateProperties({
+                      data: {
+                        shadow: checked || false,
+                      },
+                    });
                   }}
                 />
               ),
@@ -103,13 +103,11 @@ const ImageProperties: React.FC<ImagePropertiesProps> = () => {
                     imageData?.bordered && imageData?.bordered !== "true"
                   }
                   onChange={(_, { checked }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        data: {
-                          bordered: checked || false,
-                        },
-                      });
+                    updateProperties({
+                      data: {
+                        bordered: checked || false,
+                      },
+                    });
                   }}
                 />
               ),
@@ -131,13 +129,11 @@ const ImageProperties: React.FC<ImagePropertiesProps> = () => {
                   )}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          styles: {
-                            width: `${value}px`,
-                          },
-                        });
+                      updateProperties({
+                        styles: {
+                          width: `${value}px`,
+                        },
+                      });
                     });
                   }}
                 />
@@ -154,13 +150,11 @@ const ImageProperties: React.FC<ImagePropertiesProps> = () => {
                   )}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          styles: {
-                            height: `${value}px`,
-                          },
-                        });
+                      updateProperties({
+                        styles: {
+                          height: `${value}px`,
+                        },
+                      });
                     });
                   }}
                 />

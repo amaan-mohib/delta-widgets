@@ -1,6 +1,9 @@
 import React from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
-import { useManifestStore } from "../../stores/useManifestStore";
+import {
+  IUpdateElementProperties,
+  useManifestStore,
+} from "../../stores/useManifestStore";
 import Panel from "./Panel";
 import { Select, SpinButton } from "@fluentui/react-components";
 import { spinButtonOnChange } from "../../utils";
@@ -11,6 +14,11 @@ interface ProgressPropertiesProps {}
 const ProgressProperties: React.FC<ProgressPropertiesProps> = () => {
   const selectedId = useDataTrackStore((state) => state.selectedId);
   const elementMap = useManifestStore((state) => state.elementMap);
+
+  const updateProperties = (value: IUpdateElementProperties) => {
+    if (!selectedId) return;
+    useManifestStore.getState().updateElementProperties(selectedId, value);
+  };
 
   if (!selectedId || !elementMap[selectedId]) return null;
 
@@ -30,11 +38,9 @@ const ProgressProperties: React.FC<ProgressPropertiesProps> = () => {
                 <Select
                   defaultValue={progressData?.thickness || "medium"}
                   onChange={(_, { value }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        data: { thickness: value },
-                      });
+                    updateProperties({
+                      data: { thickness: value },
+                    });
                   }}>
                   <option value="medium">Medium</option>
                   <option value="large">Large</option>
@@ -47,11 +53,9 @@ const ProgressProperties: React.FC<ProgressPropertiesProps> = () => {
                 <TemplateEditor
                   value={progressData?.value || "0"}
                   onChange={(value) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        data: { value: value || "0" },
-                      });
+                    updateProperties({
+                      data: { value: value || "0" },
+                    });
                   }}
                   placeholder="Enter value"
                 />
@@ -63,11 +67,9 @@ const ProgressProperties: React.FC<ProgressPropertiesProps> = () => {
                 <TemplateEditor
                   value={progressData?.maxValue || "100"}
                   onChange={(value) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        data: { maxValue: value || "100" },
-                      });
+                    updateProperties({
+                      data: { maxValue: value || "100" },
+                    });
                   }}
                   placeholder="Enter maximum"
                 />
@@ -83,13 +85,16 @@ const ProgressProperties: React.FC<ProgressPropertiesProps> = () => {
                     10
                   )}
                   onChange={(event, data) => {
-                    spinButtonOnChange(event, data, (value) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
+                    spinButtonOnChange(
+                      event,
+                      data,
+                      (value) => {
+                        updateProperties({
                           styles: { padding: value },
                         });
-                    });
+                      },
+                      5
+                    );
                   }}
                 />
               ),

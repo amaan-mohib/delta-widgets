@@ -2,7 +2,10 @@ import { Button, SpinButton, Tooltip } from "@fluentui/react-components";
 import { ArrowClockwiseRegular } from "@fluentui/react-icons";
 import React from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
-import { useManifestStore } from "../../stores/useManifestStore";
+import {
+  IUpdateElementProperties,
+  useManifestStore,
+} from "../../stores/useManifestStore";
 import { spinButtonOnChange } from "../../utils";
 import { ColorPickerPopup } from "./ColorPickerPopup";
 import Panel from "./Panel";
@@ -12,6 +15,11 @@ interface GridPropertiesProps {}
 const GridProperties: React.FC<GridPropertiesProps> = () => {
   const selectedId = useDataTrackStore((state) => state.selectedId);
   const elementMap = useManifestStore((state) => state.elementMap);
+
+  const updateProperties = (value: IUpdateElementProperties) => {
+    if (!selectedId) return;
+    useManifestStore.getState().updateElementProperties(selectedId, value);
+  };
 
   if (!selectedId || !elementMap[selectedId]) return null;
 
@@ -33,13 +41,11 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
                   value={parseInt(String(gridStyles.padding || 0), 10)}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          styles: {
-                            padding: `${value}px`,
-                          },
-                        });
+                      updateProperties({
+                        styles: {
+                          padding: `${value}px`,
+                        },
+                      });
                     });
                   }}
                 />
@@ -56,13 +62,11 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
                   )}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          styles: {
-                            borderRadius: `${value}px`,
-                          },
-                        });
+                      updateProperties({
+                        styles: {
+                          borderRadius: `${value}px`,
+                        },
+                      });
                     });
                   }}
                 />
@@ -75,13 +79,11 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
                   value={parseInt(String(gridStyles.gap || 0), 10)}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          styles: {
-                            gap: `${value}px`,
-                          },
-                        });
+                      updateProperties({
+                        styles: {
+                          gap: `${value}px`,
+                        },
+                      });
                     });
                   }}
                 />
@@ -104,13 +106,11 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
                       event,
                       data,
                       (value) => {
-                        useManifestStore
-                          .getState()
-                          .updateElementProperties(selectedId, {
-                            styles: {
-                              flex: value / 100,
-                            },
-                          });
+                        updateProperties({
+                          styles: {
+                            flex: value / 100,
+                          },
+                        });
                       },
                       1
                     );
@@ -132,16 +132,14 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
                         event,
                         data,
                         (value) => {
-                          useManifestStore
-                            .getState()
-                            .updateElementProperties(selectedId, {
-                              styles: {
-                                gridSize: {
-                                  ...(gridSize || {}),
-                                  rows: value,
-                                },
+                          updateProperties({
+                            styles: {
+                              gridSize: {
+                                ...(gridSize || {}),
+                                rows: value,
                               },
-                            });
+                            },
+                          });
                         },
                         16
                       );
@@ -161,16 +159,14 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
                       appearance="outline"
                       icon={<ArrowClockwiseRegular />}
                       onClick={() => {
-                        useManifestStore
-                          .getState()
-                          .updateElementProperties(selectedId, {
-                            styles: {
-                              gridSize: {
-                                ...(gridSize || {}),
-                                rows: "auto",
-                              },
+                        updateProperties({
+                          styles: {
+                            gridSize: {
+                              ...(gridSize || {}),
+                              rows: "auto",
                             },
-                          });
+                          },
+                        });
                       }}
                     />
                   </Tooltip>
@@ -191,16 +187,14 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
                         event,
                         data,
                         (value) => {
-                          useManifestStore
-                            .getState()
-                            .updateElementProperties(selectedId, {
-                              styles: {
-                                gridSize: {
-                                  ...(gridSize || {}),
-                                  columns: value,
-                                },
+                          updateProperties({
+                            styles: {
+                              gridSize: {
+                                ...(gridSize || {}),
+                                columns: value,
                               },
-                            });
+                            },
+                          });
                         },
                         16
                       );
@@ -220,16 +214,14 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
                       appearance="outline"
                       icon={<ArrowClockwiseRegular />}
                       onClick={() => {
-                        useManifestStore
-                          .getState()
-                          .updateElementProperties(selectedId, {
-                            styles: {
-                              gridSize: {
-                                ...(gridSize || {}),
-                                columns: "auto",
-                              },
+                        updateProperties({
+                          styles: {
+                            gridSize: {
+                              ...(gridSize || {}),
+                              columns: "auto",
                             },
-                          });
+                          },
+                        });
                       }}
                     />
                   </Tooltip>
@@ -242,13 +234,11 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
                 <ColorPickerPopup
                   color={gridStyles.backgroundColor || "transparent"}
                   setColor={(color) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        styles: {
-                          backgroundColor: color,
-                        },
-                      });
+                    updateProperties({
+                      styles: {
+                        backgroundColor: color,
+                      },
+                    });
                   }}
                 />
               ),

@@ -6,14 +6,19 @@ import debounce from "lodash.debounce";
 import { IMedia, ISystemInformation } from "./types/variables";
 import { useVariableStore } from "./stores/useVariableStore";
 import { getCityFromIp, getWeather } from "./utils/weather";
+import { useDataTrackStore } from "./stores/useDataTrackStore";
 
 const extractDynamicVariables = (
   elements: IWidgetElement[],
   results = new Set<string>(),
-  typesSet = new Set<string>()
+  typesSet = new Set<string>(),
+  fontsSet = new Set<string>()
 ) => {
   elements.forEach((element) => {
     typesSet.add(element.type);
+    if (element.styles?.fontFamily) {
+      fontsSet.add(element.styles.fontFamily);
+    }
     Object.values(element.data || {}).forEach((value) => {
       if (typeof value === "string") {
         const matches = [...value.matchAll(/\{\{([^}]+)\}\}/g)];
@@ -26,14 +31,14 @@ const extractDynamicVariables = (
       }
     });
     if (element.children) {
-      extractDynamicVariables(element.children, results, typesSet);
+      extractDynamicVariables(element.children, results, typesSet, fontsSet);
     }
   });
-  return { dynamicVariables: results, typesSet };
+  return { dynamicVariables: results, typesSet, fontsSet };
 };
 
 function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
-  const { typesSet, dynamicVariables } = useMemo(
+  const { typesSet, dynamicVariables, fontsSet } = useMemo(
     () => extractDynamicVariables(elements),
     [elements]
   );
@@ -154,6 +159,13 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
       clearTimeout(timeout);
     };
   }, [dynamicVariables, weatherCounter, typesSet]);
+
+  useEffect(() => {
+    if (fontsSet.size > 0) {
+      const fonts = Array.from(fontsSet);
+      useDataTrackStore.setState({ fontsToLoad: fonts });
+    }
+  }, [fontsSet]);
 }
 
 export default useFetcher;

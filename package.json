@@ -29,6 +29,7 @@
     "nanoid": "^5.1.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-fontpicker-ts": "^1.2.0",
     "react-quill": "^2.0.0",
     "react-resizable": "^3.0.5",
     "react-zoom-pan-pinch": "^3.7.0",
@@ -47,6 +48,7 @@
     "@types/react-resizable": "^3.0.8",
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "~5.6.2",
-    "vite": "^6.0.3"
+    "vite": "^6.0.3",
+    "vite-plugin-compression2": "^1.4.0"
   }
 }

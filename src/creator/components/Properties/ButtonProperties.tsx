@@ -11,7 +11,10 @@ import {
 } from "@fluentui/react-components";
 import React from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
-import { useManifestStore } from "../../stores/useManifestStore";
+import {
+  IUpdateElementProperties,
+  useManifestStore,
+} from "../../stores/useManifestStore";
 // import {
 //   TextAlignCenterRegular,
 //   TextAlignLeftRegular,
@@ -29,6 +32,11 @@ const ButtonProperties: React.FC<ButtonPropertiesProps> = ({
 }) => {
   const selectedId = useDataTrackStore((state) => state.selectedId);
   const elementMap = useManifestStore((state) => state.elementMap);
+
+  const updateProperties = (value: IUpdateElementProperties) => {
+    if (!selectedId) return;
+    useManifestStore.getState().updateElementProperties(selectedId, value);
+  };
 
   if (!selectedId || !elementMap[selectedId]) return null;
 
@@ -49,11 +57,9 @@ const ButtonProperties: React.FC<ButtonPropertiesProps> = ({
                   disabled={disableDynamic}
                   value={elementMap[selectedId].data?.text}
                   onChange={(value) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        data: { text: value || "" },
-                      });
+                    updateProperties({
+                      data: { text: value || "" },
+                    });
                   }}
                 />
               ),
@@ -64,11 +70,9 @@ const ButtonProperties: React.FC<ButtonPropertiesProps> = ({
                 <Select
                   value={buttonData?.type || "secondary"}
                   onChange={(_, { value }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        data: { type: value || "secondary" },
-                      });
+                    updateProperties({
+                      data: { type: value || "secondary" },
+                    });
                   }}>
                   <option value="primary">Primary</option>
                   <option value="secondary">Secondary</option>
@@ -84,11 +88,9 @@ const ButtonProperties: React.FC<ButtonPropertiesProps> = ({
                 <Select
                   value={buttonData?.shape || "rounded"}
                   onChange={(_, { value }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        data: { shape: value || "rounded" },
-                      });
+                    updateProperties({
+                      data: { shape: value || "rounded" },
+                    });
                   }}>
                   <option value="rounded">Rounded</option>
                   <option value="circular">Pill</option>
@@ -102,11 +104,9 @@ const ButtonProperties: React.FC<ButtonPropertiesProps> = ({
                 <Select
                   value={buttonData?.size || "medium"}
                   onChange={(_, { value }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        data: { size: value || "medium" },
-                      });
+                    updateProperties({
+                      data: { size: value || "medium" },
+                    });
                   }}>
                   <option value="small">Small</option>
                   <option value="medium">Medium</option>
@@ -188,11 +188,9 @@ const ButtonProperties: React.FC<ButtonPropertiesProps> = ({
                 <Select
                   value={buttonData?.iconPosition || "before"}
                   onChange={(_, { value }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        data: { iconPosition: value || "before" },
-                      });
+                    updateProperties({
+                      data: { iconPosition: value || "before" },
+                    });
                   }}>
                   <option value="before">Start</option>
                   <option value="after">End</option>
@@ -208,11 +206,9 @@ const ButtonProperties: React.FC<ButtonPropertiesProps> = ({
                     style={{ width: "140px" }}
                     placeholder="Eg: ArrowClockwiseRegular"
                     onChange={(_, { value }) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          data: { icon: (value || "").replace(/\W+/g, "") },
-                        });
+                      updateProperties({
+                        data: { icon: (value || "").replace(/\W+/g, "") },
+                      });
                     }}
                     value={elementMap[selectedId].data?.icon || ""}
                   />

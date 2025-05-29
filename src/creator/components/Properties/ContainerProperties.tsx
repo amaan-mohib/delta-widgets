@@ -23,7 +23,10 @@ import {
 } from "@fluentui/react-icons";
 import React from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
-import { useManifestStore } from "../../stores/useManifestStore";
+import {
+  IUpdateElementProperties,
+  useManifestStore,
+} from "../../stores/useManifestStore";
 import { ColorPickerPopup } from "./ColorPickerPopup";
 import { spinButtonOnChange } from "../../utils";
 import Panel from "./Panel";
@@ -33,6 +36,11 @@ interface ContainerPropertiesProps {}
 const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
   const selectedId = useDataTrackStore((state) => state.selectedId);
   const elementMap = useManifestStore((state) => state.elementMap);
+
+  const updateProperties = (value: IUpdateElementProperties) => {
+    if (!selectedId) return;
+    useManifestStore.getState().updateElementProperties(selectedId, value);
+  };
 
   if (!selectedId || !elementMap[selectedId]) return null;
 
@@ -58,13 +66,11 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
                   )}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          styles: {
-                            padding: `${value}px`,
-                          },
-                        });
+                      updateProperties({
+                        styles: {
+                          padding: `${value}px`,
+                        },
+                      });
                     });
                   }}
                 />
@@ -81,13 +87,11 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
                   )}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          styles: {
-                            borderRadius: `${value}px`,
-                          },
-                        });
+                      updateProperties({
+                        styles: {
+                          borderRadius: `${value}px`,
+                        },
+                      });
                     });
                   }}
                 />
@@ -109,11 +113,9 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
                     ],
                   }}
                   onCheckedValueChange={(_, { name, checkedItems }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        styles: { [name]: checkedItems[0] },
-                      });
+                    updateProperties({
+                      styles: { [name]: checkedItems[0] },
+                    });
                   }}>
                   <ToolbarRadioGroup>
                     <Tooltip
@@ -149,11 +151,9 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
                     ],
                   }}
                   onCheckedValueChange={(_, { name, checkedItems }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        styles: { [name]: checkedItems[0] },
-                      });
+                    updateProperties({
+                      styles: { [name]: checkedItems[0] },
+                    });
                   }}>
                   <ToolbarRadioGroup>
                     <Tooltip content="Start" relationship="label" withArrow>
@@ -213,11 +213,9 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
                     ],
                   }}
                   onCheckedValueChange={(_, { name, checkedItems }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        styles: { [name]: checkedItems[0] },
-                      });
+                    updateProperties({
+                      styles: { [name]: checkedItems[0] },
+                    });
                   }}>
                   <ToolbarRadioGroup>
                     <Tooltip content="Start" relationship="label" withArrow>
@@ -311,13 +309,11 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
                   )}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
-                      useManifestStore
-                        .getState()
-                        .updateElementProperties(selectedId, {
-                          styles: {
-                            gap: `${value}px`,
-                          },
-                        });
+                      updateProperties({
+                        styles: {
+                          gap: `${value}px`,
+                        },
+                      });
                     });
                   }}
                 />
@@ -341,13 +337,11 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
                       data,
                       (value) => {
                         if (value === 0) value = 1;
-                        useManifestStore
-                          .getState()
-                          .updateElementProperties(selectedId, {
-                            styles: {
-                              flex: value / 100,
-                            },
-                          });
+                        updateProperties({
+                          styles: {
+                            flex: value / 100,
+                          },
+                        });
                       },
                       16
                     );
@@ -370,13 +364,11 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
                     "transparent"
                   }
                   setColor={(color) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        styles: {
-                          backgroundColor: color,
-                        },
-                      });
+                    updateProperties({
+                      styles: {
+                        backgroundColor: color,
+                      },
+                    });
                   }}
                 />
               ),

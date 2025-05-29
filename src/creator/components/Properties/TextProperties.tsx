@@ -1,3 +1,4 @@
+import React, { useEffect, useMemo } from "react";
 import {
   Checkbox,
   SpinButton,
@@ -17,23 +18,52 @@ import {
   TextItalicRegular,
   TextUnderlineRegular,
 } from "@fluentui/react-icons";
-import React from "react";
+import FontPicker from "react-fontpicker-ts";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
-import { useManifestStore } from "../../stores/useManifestStore";
+import {
+  IUpdateElementProperties,
+  useManifestStore,
+} from "../../stores/useManifestStore";
 import { spinButtonOnChange } from "../../utils";
 import { ColorPickerPopup } from "./ColorPickerPopup";
 import Panel from "./Panel";
 import TemplateEditor from "../TemplateEditor";
+import "react-fontpicker-ts/dist/index.css";
 
 interface TextPropertiesProps {}
+
+// const defaultFont = `'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif`;
 
 const TextProperties: React.FC<TextPropertiesProps> = () => {
   const selectedId = useDataTrackStore((state) => state.selectedId);
   const elementMap = useManifestStore((state) => state.elementMap);
+  const [isDefaultFont, setIsDefaultFont] = React.useState(true);
+  const textStyles = selectedId ? elementMap[selectedId].styles : {};
+  const defaultColor = useMemo(
+    () =>
+      window
+        .getComputedStyle(document.querySelector(".fui-FluentProvider")!)
+        .getPropertyValue(
+          tokens.colorNeutralForeground1.replace(/var\(|\)/g, "")
+        ),
+    []
+  );
+
+  const updateProperties = (value: IUpdateElementProperties) => {
+    if (!selectedId) return;
+    useManifestStore.getState().updateElementProperties(selectedId, value);
+  };
+
+  useEffect(() => {
+    if (!selectedId) return;
+    if (textStyles.fontFamily) {
+      setIsDefaultFont(textStyles.fontFamily === tokens.fontFamilyBase);
+    } else {
+      setIsDefaultFont(true);
+    }
+  }, [selectedId, textStyles.fontFamily]);
 
   if (!selectedId || !elementMap[selectedId]) return null;
-
-  const textStyles = elementMap[selectedId].styles;
 
   return (
     <Panel
@@ -49,14 +79,61 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
                 <TemplateEditor
                   value={elementMap[selectedId].data?.text}
                   onChange={(value) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        data: { text: value || "" },
-                      });
+                    updateProperties({
+                      data: { text: value || "" },
+                    });
                   }}
                   isHtml
                 />
+              ),
+            },
+            {
+              label: "Font",
+              control: (
+                <div>
+                  <Checkbox
+                    label="Default"
+                    checked={isDefaultFont}
+                    onChange={(_, { checked }) => {
+                      console.log({ checked });
+                      setIsDefaultFont(Boolean(checked));
+                      if (checked) {
+                        updateProperties({
+                          styles: {
+                            fontFamily: tokens.fontFamilyBase,
+                          },
+                          data: {
+                            previousFont:
+                              textStyles.fontFamily || tokens.fontFamilyBase,
+                          },
+                        });
+                      } else {
+                        updateProperties({
+                          styles: {
+                            fontFamily:
+                              elementMap[selectedId].data?.previousFont ||
+                              tokens.fontFamilyBase,
+                          },
+                        });
+                      }
+                    }}
+                  />
+                  {!isDefaultFont && (
+                    <FontPicker
+                      autoLoad
+                      defaultValue={elementMap[selectedId].data?.previousFont}
+                      value={(value) => {
+                        console.log({ value, isDefaultFont });
+
+                        updateProperties({
+                          styles: {
+                            fontFamily: value,
+                          },
+                        });
+                      }}
+                    />
+                  )}
+                </div>
               ),
             },
             {
@@ -67,11 +144,9 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
                     textAlign: [textStyles.textAlign || "left"],
                   }}
                   onCheckedValueChange={(_, { name, checkedItems }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        styles: { [name]: checkedItems[0] },
-                      });
+                    updateProperties({
+                      styles: { [name]: checkedItems[0] },
+                    });
                   }}>
                   <ToolbarRadioGroup>
                     <Tooltip content="Left" relationship="label" withArrow>
@@ -122,11 +197,9 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
                     ],
                   }}
                   onCheckedValueChange={(_, { name, checkedItems }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        styles: { [name]: checkedItems[1] },
-                      });
+                    updateProperties({
+                      styles: { [name]: checkedItems[1] },
+                    });
                   }}>
                   <Tooltip content="Bold" relationship="label" withArrow>
                     <ToolbarToggleButton
@@ -165,14 +238,12 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
                       event,
                       data,
                       (value) => {
-                        useManifestStore
-                          .getState()
-                          .updateElementProperties(selectedId, {
-                            styles: {
-                              fontSize: `${value}px`,
-                              lineHeight: `${value}px`,
-                            },
-                          });
+                        updateProperties({
+                          styles: {
+                            fontSize: `${value}px`,
+                            lineHeight: `${value}px`,
+                          },
+                        });
                       },
                       16
                     );
@@ -185,16 +256,16 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
               control: (
                 <Checkbox
                   checked={
-                    textStyles.textShadow && textStyles.textShadow !== "none"
+                    !!(
+                      textStyles.textShadow && textStyles.textShadow !== "none"
+                    )
                   }
                   onChange={(_, { checked }) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        styles: {
-                          textShadow: checked ? "1px 1px black" : "none",
-                        },
-                      });
+                    updateProperties({
+                      styles: {
+                        textShadow: checked ? "1px 1px black" : "none",
+                      },
+                    });
                   }}
                 />
               ),
@@ -203,24 +274,13 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
               label: "Color",
               control: (
                 <ColorPickerPopup
-                  color={
-                    textStyles.color ||
-                    window
-                      .getComputedStyle(
-                        document.querySelector(".fui-FluentProvider")!
-                      )
-                      .getPropertyValue(
-                        tokens.colorNeutralForeground1.replace(/var\(|\)/g, "")
-                      )
-                  }
+                  color={textStyles.color || defaultColor}
                   setColor={(color) => {
-                    useManifestStore
-                      .getState()
-                      .updateElementProperties(selectedId, {
-                        styles: {
-                          color,
-                        },
-                      });
+                    updateProperties({
+                      styles: {
+                        color,
+                      },
+                    });
                   }}
                 />
               ),

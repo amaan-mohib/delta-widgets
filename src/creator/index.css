@@ -60,3 +60,17 @@
 .selected-element-info > span {
   white-space: nowrap;
 }
+
+.fontpicker {
+  border: 1px solid var(--colorNeutralStroke1) !important;
+  border-radius: var(--borderRadiusMedium);
+}
+.fontpicker,
+.fontpicker__search,
+.fontpicker__popout {
+  background-color: var(--colorNeutralBackground1) !important;
+}
+.fontpicker__search:focus {
+  border: none !important;
+  border-radius: var(--borderRadiusMedium) !important;
+}

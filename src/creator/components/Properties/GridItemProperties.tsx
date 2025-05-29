@@ -9,7 +9,10 @@ import {
 } from "@fluentui/react-components";
 import React, { useMemo } from "react";
 import { spinButtonOnChange } from "../../utils";
-import { useManifestStore } from "../../stores/useManifestStore";
+import {
+  IUpdateElementProperties,
+  useManifestStore,
+} from "../../stores/useManifestStore";
 
 interface GridItemPropertiesProps {
   selectedId: string;
@@ -33,6 +36,11 @@ const GridItemProperties: React.FC<GridItemPropertiesProps> = ({
   const styles = useStyles();
   const elementMap = useManifestStore((state) => state.elementMap);
 
+  const updateProperties = (value: IUpdateElementProperties) => {
+    if (!selectedId) return;
+    useManifestStore.getState().updateElementProperties(selectedId, value);
+  };
+
   const gridItemStyles = elementMap[selectedId].styles.gridItem;
 
   const isGridParent = useMemo(() => {
@@ -54,16 +62,14 @@ const GridItemProperties: React.FC<GridItemPropertiesProps> = ({
             min={1}
             onChange={(event, data) => {
               spinButtonOnChange(event, data, (value) => {
-                useManifestStore
-                  .getState()
-                  .updateElementProperties(selectedId, {
-                    styles: {
-                      gridItem: {
-                        ...(gridItemStyles || {}),
-                        rowSpan: value,
-                      },
+                updateProperties({
+                  styles: {
+                    gridItem: {
+                      ...(gridItemStyles || {}),
+                      rowSpan: value,
                     },
-                  });
+                  },
+                });
               });
             }}
           />
@@ -74,16 +80,14 @@ const GridItemProperties: React.FC<GridItemPropertiesProps> = ({
             min={1}
             onChange={(event, data) => {
               spinButtonOnChange(event, data, (value) => {
-                useManifestStore
-                  .getState()
-                  .updateElementProperties(selectedId, {
-                    styles: {
-                      gridItem: {
-                        ...(gridItemStyles || {}),
-                        columnSpan: value,
-                      },
+                updateProperties({
+                  styles: {
+                    gridItem: {
+                      ...(gridItemStyles || {}),
+                      columnSpan: value,
                     },
-                  });
+                  },
+                });
               });
             }}
           />

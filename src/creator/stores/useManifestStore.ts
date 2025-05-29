@@ -13,6 +13,11 @@ const cloneObject = <T>(obj: T) => {
   return JSON.parse(JSON.stringify(obj)) as T;
 };
 
+export interface IUpdateElementProperties {
+  data?: any;
+  styles?: IWidgetElement["styles"];
+}
+
 export interface IManifestStore {
   manifest: IWidget | null;
   updateWidgetDimensions: (width: number, height: number) => void;
@@ -21,7 +26,7 @@ export interface IManifestStore {
   removeCustomValues: (id: string) => void;
   updateElementProperties: (
     id: string,
-    { data, styles }: { data?: any; styles?: IWidgetElement["styles"] }
+    { data, styles }: IUpdateElementProperties
   ) => void;
   addElements: (element: IWidgetElement, parentId: string) => void;
   removeElement: (id: string) => void;
