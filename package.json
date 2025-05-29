@@ -19,7 +19,7 @@
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-dialog": "^2.2.0",
     "@tauri-apps/plugin-fs": "^2.2.0",
-    "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-opener": "^2.2.7",
     "buffer": "^6.0.3",
     "date-fns": "^4.1.0",
     "lodash.debounce": "^4.0.8",

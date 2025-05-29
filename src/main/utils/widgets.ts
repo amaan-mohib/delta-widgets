@@ -1,16 +1,28 @@
 import { path } from "@tauri-apps/api";
 import { invoke } from "@tauri-apps/api/core";
 import { message, open } from "@tauri-apps/plugin-dialog";
-import { exists, mkdir, readDir, readTextFile, remove, UnwatchFn, watch, writeTextFile } from "@tauri-apps/plugin-fs";
+import {
+  exists,
+  mkdir,
+  readDir,
+  readTextFile,
+  remove,
+  UnwatchFn,
+  watch,
+  writeTextFile,
+} from "@tauri-apps/plugin-fs";
 import { nanoid } from "nanoid";
 import { IWidget } from "../../types/manifest";
 
 export const getWidgetsDirPath = async (saves?: boolean) => {
   const appDataDir = await path.appDataDir();
-  const widgetsDir = await path.resolve(appDataDir, saves ? "saves" : "widgets");
+  const widgetsDir = await path.resolve(
+    appDataDir,
+    saves ? "saves" : "widgets"
+  );
   const widgetsDirExists = await exists(widgetsDir);
-  return { widgetsDir, widgetsDirExists }
-}
+  return { widgetsDir, widgetsDirExists };
+};
 
 export const getAllWidgets = async (saves?: boolean) => {
   const result: Record<string, IWidget> = {};
@@ -20,49 +32,69 @@ export const getAllWidgets = async (saves?: boolean) => {
   }
   const widgetFolders = await readDir(widgetsDir);
 
-  await Promise.all(widgetFolders.map(async folder => {
-    try {
-      if (folder.isDirectory) {
-        const folderPath = await path.resolve(widgetsDir, folder.name)
-        const manifestPath = await path.resolve(folderPath, "manifest.json");
-        const manifest = JSON.parse(await readTextFile(manifestPath));
-        result[manifest.key] = { ...manifest, path: saves ? manifestPath : folderPath };
+  await Promise.all(
+    widgetFolders.map(async (folder) => {
+      try {
+        if (folder.isDirectory) {
+          const folderPath = await path.resolve(widgetsDir, folder.name);
+          const manifestPath = await path.resolve(folderPath, "manifest.json");
+          const manifest = JSON.parse(await readTextFile(manifestPath));
+          result[manifest.key] = {
+            ...manifest,
+            path: saves ? manifestPath : folderPath,
+          };
+        }
+      } catch (error) {
+        console.error(error);
       }
-    } catch (error) {
-      console.error(error);
-    }
-  }));
+    })
+  );
 
   return result;
-}
+};
 
 export const watchWidgetFolder = async (cb: Function, saves?: boolean) => {
   const { widgetsDir, widgetsDirExists } = await getWidgetsDirPath(saves);
   let unwatch: UnwatchFn | null = null;
   if (widgetsDirExists) {
-    unwatch = await watch(widgetsDir, () => {
-      cb();
-    }, { delayMs: 500, recursive: true });
+    unwatch = await watch(
+      widgetsDir,
+      () => {
+        cb();
+      },
+      { delayMs: 500, recursive: true }
+    );
   }
   return unwatch;
-}
+};
 
-export const fileOrFolderPicker = async (directory: boolean, title?: string, extensions?: string[], validate = true) => {
+export const fileOrFolderPicker = async (
+  directory: boolean,
+  title?: string,
+  extensions?: string[],
+  validate = true
+) => {
   const path = await open({
     directory,
     title: title || "Select file",
-    filters: extensions ? [{ extensions, name: "Filters" }] : undefined
+    filters: extensions ? [{ extensions, name: "Filters" }] : undefined,
   });
   if (validate && path && !directory) {
     try {
       const manifest = JSON.parse(await readTextFile(path)) as IWidget;
       if (!manifest.key) {
-        await message("Invalid widget JSON file", { title: "Invalid file", kind: 'error' });
+        await message("Invalid widget JSON file", {
+          title: "Invalid file",
+          kind: "error",
+        });
         return { path: null };
       }
       return { manifest, path };
     } catch (error) {
-      await message("Invalid widget JSON file", { title: "Invalid file", kind: 'error' });
+      await message("Invalid widget JSON file", {
+        title: "Invalid file",
+        kind: "error",
+      });
       console.error(error);
       return { path: null };
     }
@@ -70,8 +102,11 @@ export const fileOrFolderPicker = async (directory: boolean, title?: string, ext
   if (validate && path && directory) {
     try {
       const htmlFiles = await readDir(path);
-      if (!htmlFiles.find(item => item.name === "index.html")) {
-        await message("No index.html found in the folder", { title: "Invalid folder", kind: 'error' });
+      if (!htmlFiles.find((item) => item.name === "index.html")) {
+        await message("No index.html found in the folder", {
+          title: "Invalid folder",
+          kind: "error",
+        });
         return { path: null };
       }
     } catch (error) {
@@ -80,11 +115,18 @@ export const fileOrFolderPicker = async (directory: boolean, title?: string, ext
     }
   }
   return { path };
-}
+};
 
-export const addWidget = async (type: IWidget["widgetType"] = "json", data: { url?: string, path?: string, manifest?: IWidget, label: string }, saves?: boolean) => {
+export const addWidget = async (
+  type: IWidget["widgetType"] = "json",
+  data: { url?: string; path?: string; manifest?: IWidget; label: string },
+  saves?: boolean
+) => {
   if (!data.label) {
-    await message("Label is required", { title: "Label is required", kind: 'error' });
+    await message("Label is required", {
+      title: "Label is required",
+      kind: "error",
+    });
     return Promise.reject("Label is required");
   }
   const key = data.manifest?.key || data.label.toLowerCase();
@@ -94,12 +136,15 @@ export const addWidget = async (type: IWidget["widgetType"] = "json", data: { ur
     return Promise.reject("Widget directory does not exist");
   }
   const widgetFolders = await readDir(widgetsDir);
-  if (widgetFolders.find(item => item.name === key)) {
-    await message("Widget with same key exists", { title: "Cannot add widget", kind: 'error' });
+  if (widgetFolders.find((item) => item.name === key)) {
+    await message("Widget with same key exists", {
+      title: "Cannot add widget",
+      kind: "error",
+    });
     return Promise.reject("Widget with same key exists");
   }
   await mkdir(await path.resolve(widgetsDir, key));
-  let manifest: Omit<IWidget, 'path'> | null = null;
+  let manifest: Omit<IWidget, "path"> | null = null;
 
   if (type === "url" && data.url) {
     manifest = {
@@ -107,7 +152,7 @@ export const addWidget = async (type: IWidget["widgetType"] = "json", data: { ur
       key,
       label: data.label,
       url: data.url,
-      description
+      description,
     };
   }
 
@@ -121,13 +166,16 @@ export const addWidget = async (type: IWidget["widgetType"] = "json", data: { ur
       key,
       label: data.label,
       file: await path.resolve(data.path, "index.html"),
-      description
+      description,
     };
   }
 
-  await writeTextFile(await path.resolve(widgetsDir, key, "manifest.json"), JSON.stringify({ ...manifest, widgetType: type, path: undefined }, null, 2));
+  await writeTextFile(
+    await path.resolve(widgetsDir, key, "manifest.json"),
+    JSON.stringify({ ...manifest, widgetType: type, path: undefined }, null, 2)
+  );
   return Promise.resolve();
-}
+};
 
 export const duplicateWidget = async (widget: IWidget, saves?: boolean) => {
   const copyLabel = `${widget.label}-${nanoid(4)}`;
@@ -146,33 +194,37 @@ export const duplicateWidget = async (widget: IWidget, saves?: boolean) => {
       url: widget.url,
     },
     saves
-  )
-}
+  );
+};
 
 export const removeWidget = async (filePath: string, saves?: boolean) => {
   try {
-    await remove(saves ? await path.resolve(filePath, "..") : filePath, { recursive: true });
+    await remove(saves ? await path.resolve(filePath, "..") : filePath, {
+      recursive: true,
+    });
   } catch (error) {
     console.error(error);
-    await message("Could not remove widget", { title: "Error", kind: 'error' });
+    await message("Could not remove widget", { title: "Error", kind: "error" });
   }
-}
+};
 
-export const defaultManifest: Omit<IWidget, 'path'> = {
+export const defaultManifest: Omit<IWidget, "path"> = {
   key: "",
   label: "",
-  elements: [{
-    type: "container",
-    id: "container",
-    styles: {
-      display: "flex",
-      background: "transparent",
-      flex: 1,
-      width: "100%",
-      padding: "5px"
+  elements: [
+    {
+      type: "container",
+      id: "container",
+      styles: {
+        display: "flex",
+        background: "transparent",
+        flex: 1,
+        width: "100%",
+        padding: "5px",
+      },
+      children: [],
     },
-    children: []
-  }],
+  ],
   dimensions: {
     width: 400,
     height: 300,
@@ -197,37 +249,51 @@ export const createCreatorWindow = async (manifestPath?: string) => {
     await mkdir(projectFolder);
 
     manifestPath = await path.resolve(projectFolder, "manifest.json");
-    await writeTextFile(manifestPath, JSON.stringify({ ...defaultManifest, key, label }, null, 2));
+    await writeTextFile(
+      manifestPath,
+      JSON.stringify({ ...defaultManifest, key, label }, null, 2)
+    );
   } else {
     projectFolder = await path.resolve(manifestPath, "..");
   }
   await invoke("create_creator_window", {
     manifest: JSON.stringify({ path: projectFolder }),
-    currentFolder: projectFolder
+    currentFolder: projectFolder,
   });
-}
+};
 
-export const createWidgetWindow = async (manifestPath: string, isPreview?: boolean) => {
+export const createWidgetWindow = async (
+  manifestPath: string,
+  isPreview?: boolean
+) => {
   const pathWithJSON = await path.resolve(manifestPath, "manifest.json");
   await invoke("create_widget_window", {
     path: JSON.stringify(pathWithJSON),
     isPreview,
   });
-}
+};
 
 export const closeWidgetWindow = async (label: string) => {
   await invoke("close_widget_window", { label });
-}
+};
 
-export const getManifestFromPath = async (manifestPath: string) => {
+export const getManifestPath = async (manifestPath: string) => {
   if (!manifestPath.endsWith("manifest.json")) {
     manifestPath = await path.resolve(manifestPath, "manifest.json");
   }
+  return manifestPath;
+};
+
+export const getManifestFromPath = async (manifestPath: string) => {
+  manifestPath = await getManifestPath(manifestPath);
   const manifest = await readTextFile(manifestPath);
-  return JSON.parse(manifest) as Omit<IWidget, 'path'>;
-}
+  return JSON.parse(manifest) as Omit<IWidget, "path">;
+};
 
 export const updateManifest = async (manifest: IWidget) => {
   const manifestPath = await path.resolve(manifest.path, "manifest.json");
-  await writeTextFile(manifestPath, JSON.stringify({ ...manifest, path: undefined }, null, 2));
-}
+  await writeTextFile(
+    manifestPath,
+    JSON.stringify({ ...manifest, path: undefined }, null, 2)
+  );
+};

@@ -120,11 +120,12 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
                   />
                   {!isDefaultFont && (
                     <FontPicker
-                      autoLoad
-                      defaultValue={elementMap[selectedId].data?.previousFont}
+                      defaultValue={
+                        textStyles.fontFamily !== tokens.fontFamilyBase
+                          ? textStyles.fontFamily
+                          : elementMap[selectedId].data?.previousFont
+                      }
                       value={(value) => {
-                        console.log({ value, isDefaultFont });
-
                         updateProperties({
                           styles: {
                             fontFamily: value,

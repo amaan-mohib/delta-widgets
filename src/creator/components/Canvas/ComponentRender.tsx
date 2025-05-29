@@ -13,6 +13,8 @@ import { parseDynamicText } from "../../utils";
 import MediaSelectComponent from "./MediaSelectComponent";
 import DiskComponent from "./DiskComponent";
 import ProgressComponent from "./ProgressComponent";
+import FontPicker from "react-fontpicker-ts";
+import { tokens } from "@fluentui/react-components";
 
 interface ComponentRenderProps {
   component: IWidgetElement;
@@ -70,11 +72,15 @@ const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
     );
   }
   if (component.type === "text") {
+    const fontFamily = component.styles.fontFamily;
     return (
       <Dropable
         id={component.id}
         styles={getComponentStyles(component.styles)}
         disableDrop>
+        {fontFamily && fontFamily !== tokens.fontFamilyBase && (
+          <FontPicker loadFonts={fontFamily} loaderOnly />
+        )}
         <div
           id={`${component.id}-child`}
           dangerouslySetInnerHTML={{

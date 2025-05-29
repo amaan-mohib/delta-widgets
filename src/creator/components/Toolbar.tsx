@@ -17,6 +17,7 @@ import {
   DeleteRegular,
   DismissRegular,
   EditRegular,
+  FolderRegular,
   SaveRegular,
 } from "@fluentui/react-icons";
 import { message } from "@tauri-apps/plugin-dialog";
@@ -24,11 +25,13 @@ import { useDataTrackStore } from "../stores/useDataTrackStore";
 import {
   closeWidgetWindow,
   createWidgetWindow,
+  getManifestPath,
   updateManifest,
 } from "../../main/utils/widgets";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import CustomFieldsView from "./CustomFieldsView";
 import { useShallow } from "zustand/shallow";
+import { revealItemInDir } from "@tauri-apps/plugin-opener";
 
 interface ToolbarProps {}
 
@@ -172,6 +175,17 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
             />
           </Tooltip>
         )}
+        <Tooltip content="Open containing folder" relationship="label">
+          <ToolbarButton
+            icon={<FolderRegular />}
+            onClick={async () => {
+              if (manifest?.path) {
+                const path = await getManifestPath(manifest.path);
+                revealItemInDir(path);
+              }
+            }}
+          />
+        </Tooltip>
         <Button
           size="small"
           onClick={async () => {
