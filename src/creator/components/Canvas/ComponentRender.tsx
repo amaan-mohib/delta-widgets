@@ -1,11 +1,6 @@
 import React from "react";
 import { IWidgetElement } from "../../../types/manifest";
 import Dropable from "../Dropable";
-import {
-  horizontalListSortingStrategy,
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
 import ImageComponent from "./ImageComponent";
 import ButtonComponent from "./ButtonComponent";
 import SliderComponent from "./SliderComponent";
@@ -52,22 +47,13 @@ const getComponentStyles = (
 };
 
 const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
-  if (component.type === "container" || component.type === "container-grid") {
+  const { id, type, styles, children = [] } = component;
+  if (type === "container" || type === "container-grid") {
     return (
-      <Dropable id={component.id} styles={getComponentStyles(component.styles)}>
-        {component.children && component.children.length > 0 && (
-          <SortableContext
-            strategy={
-              component.styles.flexDirection === "column"
-                ? verticalListSortingStrategy
-                : horizontalListSortingStrategy
-            }
-            items={component.children.map((item) => item.id)}>
-            {component.children.map((child) => (
-              <ComponentRender key={child.id} component={child} />
-            ))}
-          </SortableContext>
-        )}
+      <Dropable id={id} styles={getComponentStyles(styles)}>
+        {children.map((child) => (
+          <ComponentRender key={child.id} component={child} />
+        ))}
       </Dropable>
     );
   }
