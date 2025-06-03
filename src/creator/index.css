@@ -44,11 +44,11 @@
 .selected-element-info {
   position: absolute;
   left: -1px;
-  top: 0;
+  top: -1px;
   transform: translateY(-100%);
-  background: var(--colorNeutralForeground2BrandPressed);
+  background: var(--colorBrandBackground);
   padding: 3px 7px;
-  color: white;
+  color: var(--colorNeutralForegroundOnBrand);
   white-space: nowrap;
   display: flex;
   align-items: center;

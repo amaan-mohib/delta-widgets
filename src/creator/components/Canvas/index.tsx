@@ -24,6 +24,7 @@ import { Buffer } from "buffer";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { useManifestStore } from "../../stores/useManifestStore";
 import ComponentRender from "./ComponentRender";
+import { useShallow } from "zustand/shallow";
 
 const useStyles = makeStyles({
   canvas: {
@@ -127,10 +128,12 @@ const Controls = ({
 };
 const Canvas: React.FC<CanvasProps> = () => {
   const styles = useStyles();
-  const widgetDimension = useManifestStore(
-    (state) => state.manifest?.dimensions
+  const [widgetDimension, elements = []] = useManifestStore(
+    useShallow((state) => {
+      const { dimensions, elements } = state.manifest || {};
+      return [dimensions, elements];
+    })
   );
-  const elements = useManifestStore((state) => state.manifest?.elements);
   const zoomDisabled = useDataTrackStore((state) => state.zoomDisabled);
   const scale = useDataTrackStore((state) => state.scale);
   const centerRef = useRef<HTMLDivElement>(null);
@@ -213,10 +216,9 @@ const Canvas: React.FC<CanvasProps> = () => {
                   widgetDimension.width
                 )}px X ${Math.round(widgetDimension.height)}px`}</Text>
               </div>
-              {elements &&
-                elements.map((element) => (
-                  <ComponentRender key={element.id} component={element} />
-                ))}
+              {elements.map((element) => (
+                <ComponentRender key={element.id} component={element} />
+              ))}
             </>
           </ResizableBox>
         </TransformComponent>

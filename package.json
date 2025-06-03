@@ -31,7 +31,7 @@
     "react-dom": "^18.3.1",
     "react-fontpicker-ts": "^1.2.0",
     "react-quill": "^2.0.0",
-    "react-resizable": "^3.0.5",
+    "react-resizable": "github:amaan-mohib/react-resizable",
     "react-zoom-pan-pinch": "^3.7.0",
     "tauri-plugin-system-info-api": "^2.0.10",
     "zustand": "^5.0.3"
