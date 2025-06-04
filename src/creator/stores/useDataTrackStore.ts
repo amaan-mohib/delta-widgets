@@ -10,7 +10,10 @@ export interface IUseDataTrackStore {
   isSaving: boolean;
   isDragging: boolean;
   scale: number;
+  position: any;
   zoomDisabled: boolean;
+  rectMap: Record<string, DOMRect>;
+  updateRectMap: (id: string, rect: DOMRect) => void;
 }
 
 export const useDataTrackStore = create<IUseDataTrackStore>((set, get) => ({
@@ -25,5 +28,15 @@ export const useDataTrackStore = create<IUseDataTrackStore>((set, get) => ({
   isSaving: false,
   isDragging: false,
   scale: 1,
+  position: null,
   zoomDisabled: false,
+  rectMap: {},
+  updateRectMap(id, rect) {
+    set((state) => ({
+      rectMap: {
+        ...state.rectMap,
+        [id]: rect,
+      },
+    }));
+  },
 }));

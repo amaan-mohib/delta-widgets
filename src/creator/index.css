@@ -74,3 +74,10 @@
   border: none !important;
   border-radius: var(--borderRadiusMedium) !important;
 }
+
+.drop-zone {
+  position: absolute;
+  pointer-events: none;
+  display: inline-flex;
+  transition: "background 0.15s";
+}

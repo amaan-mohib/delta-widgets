@@ -27,6 +27,7 @@ import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { IWidgetElement } from "../../../types/manifest";
 import { nanoid } from "nanoid";
 import SliderIcon from "../icons/SliderIcon";
+import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 
 interface ComponentListProps {}
 
@@ -348,7 +349,7 @@ const ComponentList: React.FC<ComponentListProps> = () => {
           )
         )}
       </Accordion>
-      <DragOverlay dropAnimation={null}>
+      <DragOverlay dropAnimation={null} modifiers={[restrictToWindowEdges]}>
         {draggingId ? <ComponentItem itemId={draggingId} /> : null}
       </DragOverlay>
     </div>

@@ -1,25 +1,16 @@
-import {
-  closestCenter,
-  CollisionDetection,
-  DndContext,
-  getFirstCollision,
-  pointerWithin,
-  rectIntersection,
-  UniqueIdentifier,
-} from "@dnd-kit/core";
+import { closestCenter, DndContext } from "@dnd-kit/core";
 import "./index.css";
 import Sidebar from "./components/Sidebar";
 import Canvas from "./components/Canvas";
 import { makeStyles, Spinner, tokens } from "@fluentui/react-components";
-import { useManifestStore } from "./stores/useManifestStore";
-import { useCallback, useEffect, useRef } from "react";
+import { getManifestStore, useManifestStore } from "./stores/useManifestStore";
+import { useEffect } from "react";
 import { nanoid } from "nanoid";
 import CreatorToolbar from "./components/Toolbar";
 import { useDataTrackStore } from "./stores/useDataTrackStore";
 import Properties from "./components/Properties";
 import { getManifestFromPath } from "../main/utils/widgets";
 import { componentTypeToDataMap } from "./components/Sidebar/ComponentList";
-import { useShallow } from "zustand/shallow";
 
 const useStyles = makeStyles({
   toolbar: {
@@ -33,16 +24,12 @@ interface AppProps {}
 
 const App: React.FC<AppProps> = () => {
   const styles = useStyles();
-  const [manifestStore, elementMap] = useManifestStore(
-    useShallow((state) => [state.manifest, state.elementMap])
-  );
+  const manifestStore = getManifestStore();
   const {
     initialStateLoading,
     incrementInitialStateLoadCounter,
     initialStateLoadCounter,
   } = useDataTrackStore();
-  const lastOverId = useRef<UniqueIdentifier | null>(null);
-  const recentlyMovedToNewContainer = useRef(false);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -80,74 +67,6 @@ const App: React.FC<AppProps> = () => {
     }
   }, [initialStateLoading]);
 
-  const collisionDetectionStrategy: CollisionDetection = useCallback(
-    (args) => {
-      if (!args.active.data.current?.sortable) {
-        return pointerWithin({ ...args });
-      }
-      if (args.active.id && args.active.id.toString().startsWith("container")) {
-        return closestCenter({
-          ...args,
-          droppableContainers: args.droppableContainers.filter((container) =>
-            container.id.toString().startsWith("container")
-          ),
-        });
-      }
-
-      // Start by finding any intersecting droppable
-      const pointerIntersections = pointerWithin(args);
-      const intersections =
-        pointerIntersections.length > 0
-          ? // If there are droppables intersecting with the pointer, return those
-            pointerIntersections
-          : rectIntersection(args);
-      let overId = getFirstCollision(intersections, "id");
-
-      if (overId != null) {
-        if (overId === "TRASH_ID") {
-          // If the intersecting droppable is the trash, return early
-          // Remove this if you're not using trashable functionality in your app
-          return intersections;
-        }
-
-        if (overId.toString().startsWith("container")) {
-          const containerItems = (elementMap[overId].children || []).map(
-            (item) => item.id
-          );
-
-          // If a container is matched and it contains items (columns 'A', 'B', 'C')
-          if (containerItems.length > 0) {
-            // Return the closest droppable within that container
-            overId = closestCenter({
-              ...args,
-              droppableContainers: args.droppableContainers.filter(
-                (container) =>
-                  container.id !== overId &&
-                  containerItems.includes(container.id.toString())
-              ),
-            })[0]?.id;
-          }
-        }
-
-        lastOverId.current = overId;
-
-        return [{ id: overId }];
-      }
-
-      // When a draggable item moves to a new container, the layout may shift
-      // and the `overId` may become `null`. We manually set the cached `lastOverId`
-      // to the id of the draggable item that was moved to the new container, otherwise
-      // the previous `overId` will be returned which can cause items to incorrectly shift positions
-      if (recentlyMovedToNewContainer.current) {
-        lastOverId.current = args.active.id;
-      }
-
-      // If no droppable is matched, return the last match
-      return lastOverId.current ? [{ id: lastOverId.current }] : [];
-    },
-    [elementMap]
-  );
-
   return initialStateLoading ? (
     <main
       className="container"
@@ -156,7 +75,7 @@ const App: React.FC<AppProps> = () => {
     </main>
   ) : (
     <DndContext
-      collisionDetection={collisionDetectionStrategy}
+      collisionDetection={closestCenter}
       onDragStart={(e) => {
         useDataTrackStore.setState({
           activeId: String(e.active.id),

@@ -10,6 +10,7 @@ import DiskComponent from "./DiskComponent";
 import ProgressComponent from "./ProgressComponent";
 import FontPicker from "react-fontpicker-ts";
 import { tokens } from "@fluentui/react-components";
+import DropZone from "../DropZone";
 
 interface ComponentRenderProps {
   component: IWidgetElement;
@@ -49,11 +50,33 @@ const getComponentStyles = (
 const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
   const { id, type, styles, children = [] } = component;
   if (type === "container" || type === "container-grid") {
+    const flexDirection =
+      (styles.flexDirection || "row") === "row" ? "row" : "column";
     return (
-      <Dropable id={id} styles={getComponentStyles(styles)}>
-        {children.map((child) => (
-          <ComponentRender key={child.id} component={child} />
+      <Dropable
+        id={id}
+        styles={getComponentStyles(styles)}
+        disableDrop={children.length !== 0}>
+        {children.length !== 0 && (
+          <DropZone id={id} index={0} direction={flexDirection} />
+        )}
+        {children.map((child, index) => (
+          <React.Fragment key={child.id}>
+            <ComponentRender key={child.id} component={child} />
+            {index + 1 !== children.length && (
+              <DropZone
+                id={child.id}
+                parentId={id}
+                index={index}
+                direction={flexDirection}
+                end
+              />
+            )}
+          </React.Fragment>
         ))}
+        {children.length !== 0 && (
+          <DropZone id={id} index={1} direction={flexDirection} end />
+        )}
       </Dropable>
     );
   }

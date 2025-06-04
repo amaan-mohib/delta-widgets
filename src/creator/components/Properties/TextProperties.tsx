@@ -51,6 +51,8 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
 
   const updateProperties = (value: IUpdateElementProperties) => {
     if (!selectedId) return;
+    if (textStyles.fontFamily === value.styles?.fontFamily) return;
+
     useManifestStore.getState().updateElementProperties(selectedId, value);
   };
 

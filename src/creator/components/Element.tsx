@@ -1,9 +1,11 @@
 import { Active, DragOverlay, useDraggable } from "@dnd-kit/core";
 import React, { PropsWithChildren } from "react";
 import { useDataTrackStore } from "../stores/useDataTrackStore";
-import { Text, tokens } from "@fluentui/react-components";
+import { Card, Text, tokens } from "@fluentui/react-components";
 import { ReOrderDotsVerticalRegular } from "@fluentui/react-icons";
 import { createPortal } from "react-dom";
+import { useElementRect } from "./Canvas/hooks/useElementRect";
+import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 
 interface ElementProps {
   id: string;
@@ -21,13 +23,15 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
   isOver,
   wrapperRef,
 }) => {
-  const { attributes, listeners, setNodeRef, isDragging, node } = useDraggable({
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id,
   });
+  const [containerRef] = useElementRect(id);
 
   const selectedId = useDataTrackStore((state) => state.selectedId);
   const activeId = useDataTrackStore((state) => state.activeId);
   const hoveredId = useDataTrackStore((state) => state.hoveredId);
+  const isDraggingGlobal = useDataTrackStore((state) => state.isDragging);
   const style: React.CSSProperties = {
     ...styles,
     borderRadius: styles?.borderRadius || 2,
@@ -37,10 +41,6 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
           opacity: 0.5,
         }
       : {
-          padding:
-            activeId && id.startsWith("container")
-              ? `calc(${styles?.padding || "0px"} + 5px)`
-              : styles?.padding,
           outline: isOver
             ? `2px solid ${tokens.colorNeutralForeground2BrandHover}`
             : selectedId === id
@@ -63,7 +63,11 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
   return (
     <>
       <div
-        className={hoveredId === id ? "dropable-container-hover" : ""}
+        className={
+          hoveredId === id && !isDraggingGlobal
+            ? "dropable-container-hover"
+            : ""
+        }
         onClick={(e) => {
           e.stopPropagation();
           useDataTrackStore.setState({ selectedId: id });
@@ -71,6 +75,7 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
         id={id}
         ref={(ref) => {
           wrapperRef && wrapperRef(ref);
+          containerRef(ref);
           setNodeRef(ref);
         }}
         style={style}
@@ -100,16 +105,10 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
       </div>
       {isDragging &&
         createPortal(
-          <DragOverlay dropAnimation={null}>
-            <div
-              style={{
-                ...styles,
-                height: node.current?.clientHeight,
-                width: node.current?.clientWidth,
-                position: "absolute",
-              }}>
-              {children}
-            </div>
+          <DragOverlay dropAnimation={null} modifiers={[restrictToWindowEdges]}>
+            <Card>
+              <Text size={400}>#{id}</Text>
+            </Card>
           </DragOverlay>,
           document.querySelector(".fui-FluentProvider")!
         )}

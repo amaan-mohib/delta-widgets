@@ -178,8 +178,11 @@ const Canvas: React.FC<CanvasProps> = () => {
         initialScale={1}
         disabled={zoomDisabled || isDragging}
         centerOnInit
-        onTransformed={(_, { scale }) => {
-          useDataTrackStore.setState({ scale });
+        onTransformed={(_, { scale, positionX, positionY }) => {
+          useDataTrackStore.setState({
+            scale,
+            position: { positionX, positionY },
+          });
         }}>
         <Controls
           scale={scale}
