@@ -1,6 +1,6 @@
 import React from "react";
 import { ProgressBar } from "@fluentui/react-components";
-import { IWidgetElement } from "../../../types/manifest";
+import { IWidgetElement } from "../../../../types/manifest";
 
 interface ProgressComponentProps {
   component: IWidgetElement;

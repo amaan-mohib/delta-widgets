@@ -1,5 +1,5 @@
 import React from "react";
-import { useDataTrackStore } from "../stores/useDataTrackStore";
+import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { createPortal } from "react-dom";
 import { useDroppable } from "@dnd-kit/core";
 import { tokens } from "@fluentui/react-components";

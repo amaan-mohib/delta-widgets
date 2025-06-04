@@ -1,6 +1,6 @@
 import { Button } from "@fluentui/react-components";
 import React from "react";
-import { IWidgetElement } from "../../../types/manifest";
+import { IWidgetElement } from "../../../../types/manifest";
 import { ChevronDownRegular } from "@fluentui/react-icons";
 
 interface MediaSelectComponentProps {

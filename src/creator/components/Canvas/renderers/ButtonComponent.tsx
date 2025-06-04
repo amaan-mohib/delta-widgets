@@ -1,7 +1,7 @@
 import { Button } from "@fluentui/react-components";
-import { IWidgetElement } from "../../../types/manifest";
+import { IWidgetElement } from "../../../../types/manifest";
 import * as icons from "@fluentui/react-icons";
-import { useDataTrackStore } from "../../stores/useDataTrackStore";
+import { useDataTrackStore } from "../../../stores/useDataTrackStore";
 
 interface ButtonComponentProps {
   component: IWidgetElement;

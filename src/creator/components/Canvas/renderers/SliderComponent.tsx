@@ -1,5 +1,5 @@
 import { Slider } from "@fluentui/react-components";
-import { IWidgetElement } from "../../../types/manifest";
+import { IWidgetElement } from "../../../../types/manifest";
 
 interface SliderComponentProps {
   component: IWidgetElement;

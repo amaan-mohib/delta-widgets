@@ -1,10 +1,10 @@
 import React from "react";
-import { IWidgetElement } from "../../../types/manifest";
+import { IWidgetElement } from "../../../../types/manifest";
 import { ResizableBox } from "react-resizable";
-import { useManifestStore } from "../../stores/useManifestStore";
-import { useDataTrackStore } from "../../stores/useDataTrackStore";
+import { useManifestStore } from "../../../stores/useManifestStore";
+import { useDataTrackStore } from "../../../stores/useDataTrackStore";
 import { Image } from "@fluentui/react-components";
-import { parseDynamicText } from "../../utils";
+import { parseDynamicText } from "../../../utils";
 
 interface ImageComponentProps {
   component: IWidgetElement;

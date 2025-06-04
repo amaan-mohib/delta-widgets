@@ -1,16 +1,16 @@
 import React from "react";
-import { IWidgetElement } from "../../../types/manifest";
-import Dropable from "../Dropable";
+import { IWidgetElement } from "../../../../types/manifest";
+import Dropable from "../../DnD/Dropable";
 import ImageComponent from "./ImageComponent";
 import ButtonComponent from "./ButtonComponent";
-import SliderComponent from "./SliderComponent";
-import { parseDynamicText } from "../../utils";
+import { parseDynamicText } from "../../../utils";
 import MediaSelectComponent from "./MediaSelectComponent";
 import DiskComponent from "./DiskComponent";
+import SliderComponent from "./SliderComponent";
 import ProgressComponent from "./ProgressComponent";
 import FontPicker from "react-fontpicker-ts";
 import { tokens } from "@fluentui/react-components";
-import DropZone from "../DropZone";
+import DropZone from "../../DnD/DropZone";
 
 interface ComponentRenderProps {
   component: IWidgetElement;

@@ -23,7 +23,7 @@ import { ResizableBox } from "react-resizable";
 import { Buffer } from "buffer";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { useManifestStore } from "../../stores/useManifestStore";
-import ComponentRender from "./ComponentRender";
+import ComponentRender from "./renderers";
 import { useShallow } from "zustand/shallow";
 
 const useStyles = makeStyles({

@@ -1,10 +1,10 @@
 import { Active, DragOverlay, useDraggable } from "@dnd-kit/core";
 import React, { PropsWithChildren } from "react";
-import { useDataTrackStore } from "../stores/useDataTrackStore";
+import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { Card, Text, tokens } from "@fluentui/react-components";
 import { ReOrderDotsVerticalRegular } from "@fluentui/react-icons";
 import { createPortal } from "react-dom";
-import { useElementRect } from "./Canvas/hooks/useElementRect";
+import { useElementRect } from "../Canvas/hooks/useElementRect";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 
 interface ElementProps {

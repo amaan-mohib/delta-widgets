@@ -1,5 +1,3 @@
-import { closestCenter, DndContext } from "@dnd-kit/core";
-import "./index.css";
 import Sidebar from "./components/Sidebar";
 import Canvas from "./components/Canvas";
 import { makeStyles, Spinner, tokens } from "@fluentui/react-components";
@@ -10,7 +8,8 @@ import CreatorToolbar from "./components/Toolbar";
 import { useDataTrackStore } from "./stores/useDataTrackStore";
 import Properties from "./components/Properties";
 import { getManifestFromPath } from "../main/utils/widgets";
-import { componentTypeToDataMap } from "./components/Sidebar/ComponentList";
+import DnDWrapper from "./components/DnD/DnDWrapper";
+import "./index.css";
 
 const useStyles = makeStyles({
   toolbar: {
@@ -74,43 +73,7 @@ const App: React.FC<AppProps> = () => {
       <Spinner size="huge" />
     </main>
   ) : (
-    <DndContext
-      collisionDetection={closestCenter}
-      onDragStart={(e) => {
-        useDataTrackStore.setState({
-          activeId: String(e.active.id),
-          isDragging: true,
-          selectedId: null,
-        });
-      }}
-      onDragEnd={(e) => {
-        if (e.active.id === "container") {
-          useDataTrackStore.setState({ activeId: null, isDragging: false });
-          return;
-        }
-
-        if (e.over?.id) {
-          if (e.active.data.current?.sortable && e.active.id !== e.over.id) {
-            useManifestStore
-              .getState()
-              .moveElement(e.active.id.toString(), e.over.id.toString());
-          } else if (!e.over?.id.toString().startsWith("container")) {
-            useDataTrackStore.setState({ activeId: null, isDragging: false });
-            return;
-          } else if (e.active.data.current) {
-            const { type } = e.active.data.current as { type: string };
-            const element = componentTypeToDataMap[type]
-              ? componentTypeToDataMap[type]()
-              : null;
-            if (element) {
-              useManifestStore
-                .getState()
-                .addElements(element, String(e.over.id));
-            }
-          }
-        }
-        useDataTrackStore.setState({ activeId: null, isDragging: false });
-      }}>
+    <DnDWrapper>
       <main className="container">
         <div className={styles.toolbar}>
           <CreatorToolbar />
@@ -121,7 +84,7 @@ const App: React.FC<AppProps> = () => {
           <Properties />
         </div>
       </main>
-    </DndContext>
+    </DnDWrapper>
   );
 };
 

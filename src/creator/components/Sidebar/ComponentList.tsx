@@ -21,7 +21,7 @@ import {
   VideoPlayPauseRegular,
 } from "@fluentui/react-icons";
 import React, { ReactNode, useMemo } from "react";
-import Draggable from "../Draggable";
+import Draggable from "../DnD/Draggable";
 import { DragOverlay } from "@dnd-kit/core";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { IWidgetElement } from "../../../types/manifest";
