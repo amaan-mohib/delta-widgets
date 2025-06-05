@@ -80,4 +80,5 @@
   pointer-events: none;
   display: inline-flex;
   transition: "background 0.15s";
+  border-radius: 9999px;
 }

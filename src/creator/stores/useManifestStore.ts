@@ -28,9 +28,13 @@ export interface IManifestStore {
     id: string,
     { data, styles }: IUpdateElementProperties
   ) => void;
-  addElements: (element: IWidgetElement, parentId: string) => void;
+  addElements: (
+    element: IWidgetElement,
+    parentId: string,
+    index?: number
+  ) => void;
   removeElement: (id: string) => void;
-  moveElement: (id: string, dropId: string) => void;
+  moveElement: (id: string, dropId: string, dropIndex: number) => string | void;
   elementMap: Record<
     string,
     IWidgetElement & {
@@ -82,20 +86,23 @@ export const useManifestStore = create<IManifestStore>()(
       }
       set({ manifest });
     },
-    addElements(element, parentId) {
+    addElements(element, parentId, index) {
       const oldManifest = get().manifest;
       if (!oldManifest) return;
       const manifest = cloneObject(oldManifest);
       const elementPath = get().elementMap[parentId]?.path || "";
-      const elementIndex = parentId
-        ? lodashGet(manifest.elements, elementPath)?.children?.length
-        : manifest.elements?.length;
+      const elements: IWidgetElement[] =
+        lodashGet(manifest.elements, elementPath)?.children || [];
+      if (index !== undefined) {
+        elements.splice(index, 0, element);
+      } else {
+        elements.push(element);
+      }
+
       const newManifest = lodashSet(
         manifest,
-        parentId
-          ? `elements${elementPath}.children[${elementIndex}]`
-          : `elements[${elementIndex}]`,
-        element
+        `elements${elementPath}.children`,
+        elements
       );
 
       set({
@@ -121,7 +128,10 @@ export const useManifestStore = create<IManifestStore>()(
       );
       set({ manifest: newManifest });
     },
-    moveElement(id, dropId) {
+    moveElement(id, dropId, dropIndex) {
+      if (!dropId.startsWith("container")) {
+        return "Something went wrong, please try again.";
+      }
       const { manifest: oldManifest, elementMap } = get();
       if (!oldManifest || !elementMap[id] || !elementMap[dropId]) return;
 
@@ -132,21 +142,22 @@ export const useManifestStore = create<IManifestStore>()(
         index: sourceIndex,
         parentPath: sourceParentPath,
         parentId: sourceParentId,
+        path: sourcePath,
       } = elementMap[id];
 
       // Get target element details
-      const {
-        index: targetIndex,
-        path: targetPath,
-        parentPath: targetParentPath,
-      } = elementMap[dropId];
+      const { path: targetPath } = elementMap[dropId];
+
+      if (targetPath.startsWith(sourcePath)) {
+        return "Cannot move an element into itself or its children.";
+      }
 
       // Case 1: Moving within the same parent
-      if (sourceParentPath === targetParentPath) {
+      if (sourceParentId === dropId) {
         const reorderedElements = arrayMove(
           lodashGet(manifest, `elements${sourceParentPath}`) || [],
           sourceIndex,
-          targetIndex
+          dropIndex
         );
 
         const newManifest = lodashSet(
@@ -160,64 +171,51 @@ export const useManifestStore = create<IManifestStore>()(
       }
 
       // Case 2: Moving between different parents
-      if (sourceParentId !== dropId) {
-        // Determine the target path based on whether dropping into a container
-        const targetInsertPath = `elements${
-          dropId.startsWith("container")
-            ? `${targetPath}.children`
-            : targetParentPath
-        }`;
+      const targetInsertPath = `elements${targetPath}.children`;
+      const targetItems: any[] = [
+        ...(lodashGet(manifest, targetInsertPath) || []),
+      ];
+      targetItems.splice(dropIndex, 0, {
+        ...elementMap[id],
+        parentId: undefined,
+        parentPath: undefined,
+        index: undefined,
+        path: undefined,
+      });
+      const sourceItems = [
+        ...(lodashGet(manifest, `elements${sourceParentPath}`) || []),
+      ].filter((item: any) => item.id !== id);
 
-        // Insert element at new location
-        const targetItems: any[] = lodashGet(manifest, targetInsertPath) || [];
-        targetItems.splice(targetIndex + 1, 0, {
-          ...elementMap[id],
-          parentId: undefined,
-          parentPath: undefined,
-          index: undefined,
-          path: undefined,
-        });
-
-        // Handle special case where target and source share inheritance
-        const inheritanceIndex = targetItems.findIndex(
-          (item) => item.id === sourceParentId
-        );
-        if (inheritanceIndex !== -1) {
-          const updatedItems = targetItems.map((item, index) => {
-            if (index === inheritanceIndex && item.id.startsWith("container")) {
-              return {
-                ...item,
-                children: item.children.filter((child: any) => child.id !== id),
-              };
-            }
-            return item;
-          });
-
-          set({
-            manifest: lodashSet(manifest, targetInsertPath, updatedItems),
-          });
-          return;
-        }
-
-        // Update both source and target locations
+      // Update source then target if moving from a child to any of the parents
+      if (sourcePath.startsWith(targetPath)) {
         const manifestWithNewTarget = lodashSet(
           manifest,
+          `elements${sourceParentPath}`,
+          sourceItems
+        );
+        const finalManifest = lodashSet(
+          manifestWithNewTarget,
           targetInsertPath,
           targetItems
         );
 
-        const sourceItems = (
-          lodashGet(manifestWithNewTarget, `elements${sourceParentPath}`) || []
-        ).filter((item: any) => item.id !== id);
-
-        const finalManifest = lodashSet(
-          manifestWithNewTarget,
-          `elements${sourceParentPath}`,
-          sourceItems
-        );
-
         set({ manifest: finalManifest });
+        return;
       }
+
+      // Update target then source if moving between different containers or within same inheritance
+      const manifestWithNewTarget = lodashSet(
+        manifest,
+        targetInsertPath,
+        targetItems
+      );
+      const finalManifest = lodashSet(
+        manifestWithNewTarget,
+        `elements${sourceParentPath}`,
+        sourceItems
+      );
+
+      set({ manifest: finalManifest });
     },
     updateElementProperties(id, { data, styles }) {
       const oldManifest = get().manifest;

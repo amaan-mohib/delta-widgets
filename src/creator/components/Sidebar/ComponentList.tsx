@@ -337,7 +337,7 @@ const ComponentList: React.FC<ComponentListProps> = () => {
                       dragOverlay
                       id={item.key}
                       key={item.key}
-                      data={{ type: item.type }}>
+                      data={{ type: item.type, new: true }}>
                       <ComponentItem item={item} />
                     </Draggable>
                   ))}

@@ -21,7 +21,9 @@ const DropZone: React.FC<DropZoneProps> = ({
   direction,
   end,
 }) => {
-  const dropId = `drop-zone-${id}-${parentId}-${index}${end ? "-end" : ""}`;
+  const dropId = `drop-zone-${id}-${parentId || ""}-${index}${
+    end ? "-end" : ""
+  }`;
   const { setNodeRef, isOver } = useDroppable({
     id: dropId,
     data: { dropId, id, parentId, index, end },

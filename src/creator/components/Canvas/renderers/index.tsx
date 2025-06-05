@@ -67,7 +67,7 @@ const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
               <DropZone
                 id={child.id}
                 parentId={id}
-                index={index}
+                index={index + 1}
                 direction={flexDirection}
                 end
               />
@@ -75,7 +75,12 @@ const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
           </React.Fragment>
         ))}
         {children.length !== 0 && (
-          <DropZone id={id} index={1} direction={flexDirection} end />
+          <DropZone
+            id={id}
+            index={children.length}
+            direction={flexDirection}
+            end
+          />
         )}
       </Dropable>
     );

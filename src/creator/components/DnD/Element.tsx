@@ -25,6 +25,7 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
 }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id,
+    data: { move: true },
   });
   const [containerRef] = useElementRect(id);
 
@@ -106,7 +107,7 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
       {isDragging &&
         createPortal(
           <DragOverlay dropAnimation={null} modifiers={[restrictToWindowEdges]}>
-            <Card>
+            <Card style={{ opacity: 0.8 }}>
               <Text size={400}>#{id}</Text>
             </Card>
           </DragOverlay>,

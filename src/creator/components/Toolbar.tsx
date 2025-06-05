@@ -32,6 +32,7 @@ import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import CustomFieldsView from "./CustomFieldsView";
 import { useShallow } from "zustand/shallow";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import CancelZone from "./DnD/CancelZone";
 
 interface ToolbarProps {}
 
@@ -163,6 +164,9 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
             />
           </Tooltip>
         )}
+      </ToolbarGroup>
+      <ToolbarGroup style={{ display: "flex", alignItems: "center" }}>
+        <CancelZone />
       </ToolbarGroup>
       <ToolbarGroup style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {Object.keys(manifest?.customFields || {}).length > 0 && (
