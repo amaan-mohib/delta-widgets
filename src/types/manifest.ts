@@ -3,6 +3,7 @@ import { CSSProperties } from "react";
 export interface IWidgetElement {
   type: string;
   id: string;
+  label?: string;
   styles: CSSProperties & {
     gridSize?: { rows?: "auto" | number; columns?: "auto" | number };
     gridItem?: { rowSpan?: number; columnSpan?: number };

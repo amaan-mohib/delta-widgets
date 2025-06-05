@@ -11,6 +11,7 @@ import {
 } from "@fluentui/react-components";
 import React, { ReactNode } from "react";
 import GridItemProperties from "./GridItemProperties";
+import LabelProperties from "./LabelProperties";
 
 interface IPanelItemFields {
   label: string;
@@ -55,6 +56,7 @@ const Panel: React.FC<PanelProps> = ({ title, items, selectedId }) => {
         collapsible
         multiple
         defaultOpenItems={items.map((item) => item.value)}>
+        {selectedId && <LabelProperties selectedId={selectedId} />}
         {items.map((item) => (
           <AccordionItem key={item.value} value={item.value}>
             <AccordionHeader expandIconPosition="end" size="large">

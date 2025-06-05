@@ -16,6 +16,7 @@ const cloneObject = <T>(obj: T) => {
 export interface IUpdateElementProperties {
   data?: any;
   styles?: IWidgetElement["styles"];
+  label?: string;
 }
 
 export interface IManifestStore {
@@ -24,10 +25,7 @@ export interface IManifestStore {
   updateManifest: (data: Partial<IWidget>) => void;
   updateCustomValues: (data: TCustomFields) => void;
   removeCustomValues: (id: string) => void;
-  updateElementProperties: (
-    id: string,
-    { data, styles }: IUpdateElementProperties
-  ) => void;
+  updateElementProperties: (id: string, data: IUpdateElementProperties) => void;
   addElements: (
     element: IWidgetElement,
     parentId: string,
@@ -217,7 +215,7 @@ export const useManifestStore = create<IManifestStore>()(
 
       set({ manifest: finalManifest });
     },
-    updateElementProperties(id, { data, styles }) {
+    updateElementProperties(id, { data, styles, label }) {
       const oldManifest = get().manifest;
       const elementMap = get().elementMap;
       if (!oldManifest || !elementMap[id]) return;
@@ -226,6 +224,7 @@ export const useManifestStore = create<IManifestStore>()(
       const oldElement = lodashGet(manifest, `elements${element.path}`) || {};
       const newManifest = lodashSet(manifest, `elements${element.path}`, {
         ...oldElement,
+        label: label || element.label || id,
         data: {
           ...(element.data || {}),
           ...(data || {}),

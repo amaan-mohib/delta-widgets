@@ -6,6 +6,7 @@ import { ReOrderDotsVerticalRegular } from "@fluentui/react-icons";
 import { createPortal } from "react-dom";
 import { useElementRect } from "../Canvas/hooks/useElementRect";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";
+import { useManifestStore } from "../../stores/useManifestStore";
 
 interface ElementProps {
   id: string;
@@ -33,6 +34,8 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
   const activeId = useDataTrackStore((state) => state.activeId);
   const hoveredId = useDataTrackStore((state) => state.hoveredId);
   const isDraggingGlobal = useDataTrackStore((state) => state.isDragging);
+  const elementMap = useManifestStore((state) => state.elementMap);
+
   const style: React.CSSProperties = {
     ...styles,
     borderRadius: styles?.borderRadius || 2,
@@ -60,6 +63,7 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
   };
 
   const shouldShowToolbar = isOver || selectedId === id || activeId === id;
+  const elementLabel = elementMap[id]?.label || `#${id}`;
 
   return (
     <>
@@ -99,7 +103,7 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
                 <ReOrderDotsVerticalRegular fontSize="16px" />
               </div>
             )}
-            <Text size={300}>#{id}</Text>
+            <Text size={300}>{elementLabel}</Text>
           </div>
         )}
         {children}
@@ -108,7 +112,7 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
         createPortal(
           <DragOverlay dropAnimation={null} modifiers={[restrictToWindowEdges]}>
             <Card style={{ opacity: 0.8 }}>
-              <Text size={400}>#{id}</Text>
+              <Text size={400}>{elementLabel}</Text>
             </Card>
           </DragOverlay>,
           document.querySelector(".fui-FluentProvider")!
