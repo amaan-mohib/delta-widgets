@@ -63,15 +63,13 @@ const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
         {children.map((child, index) => (
           <React.Fragment key={child.id}>
             <ComponentRender key={child.id} component={child} />
-            {index + 1 !== children.length && (
-              <DropZone
-                id={child.id}
-                parentId={id}
-                index={index + 1}
-                direction={flexDirection}
-                end
-              />
-            )}
+            <DropZone
+              id={child.id}
+              parentId={id}
+              index={index}
+              direction={flexDirection}
+              end
+            />
           </React.Fragment>
         ))}
         {children.length !== 0 && (

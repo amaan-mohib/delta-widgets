@@ -79,6 +79,13 @@
   position: absolute;
   pointer-events: none;
   display: inline-flex;
-  transition: "background 0.15s";
+  transition: all 400ms;
   border-radius: 9999px;
+}
+.drop-zone-layer {
+  pointer-events: none;
+  transition: all 400ms;
+  border-radius: 9999px;
+  z-index: 10;
+  width: 100%;
 }

@@ -1,10 +1,10 @@
 import React from "react";
-import { DndTree } from "./DndTree";
+import LayersTree from "./LayersTree";
 
 interface LayersProps {}
 
 const Layers: React.FC<LayersProps> = () => {
-  return <DndTree />;
+  return <LayersTree />;
 };
 
 export default Layers;

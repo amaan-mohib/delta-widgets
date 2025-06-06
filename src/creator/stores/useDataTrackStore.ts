@@ -14,6 +14,10 @@ export interface IUseDataTrackStore {
   zoomDisabled: boolean;
   rectMap: Record<string, DOMRect>;
   updateRectMap: (id: string, rect: DOMRect) => void;
+  layerOpenMap: Record<string, boolean>;
+  toggleLayerOpen: (id: string) => void;
+  layerActiveId: string | null;
+  layerIsDragging: boolean;
 }
 
 export const useDataTrackStore = create<IUseDataTrackStore>((set, get) => ({
@@ -39,4 +43,15 @@ export const useDataTrackStore = create<IUseDataTrackStore>((set, get) => ({
       },
     }));
   },
+  layerOpenMap: {},
+  toggleLayerOpen(id) {
+    set((state) => ({
+      layerOpenMap: {
+        ...state.layerOpenMap,
+        [id]: !!!state.layerOpenMap[id],
+      },
+    }));
+  },
+  layerActiveId: null,
+  layerIsDragging: false,
 }));
