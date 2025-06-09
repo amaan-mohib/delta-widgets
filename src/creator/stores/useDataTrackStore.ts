@@ -18,6 +18,7 @@ export interface IUseDataTrackStore {
   toggleLayerOpen: (id: string) => void;
   layerActiveId: string | null;
   layerIsDragging: boolean;
+  contextMenuData: { x: number; y: number; node: HTMLElement } | null;
 }
 
 export const useDataTrackStore = create<IUseDataTrackStore>((set, get) => ({
@@ -54,4 +55,6 @@ export const useDataTrackStore = create<IUseDataTrackStore>((set, get) => ({
   },
   layerActiveId: null,
   layerIsDragging: false,
+  contextMenuId: null,
+  contextMenuData: null,
 }));

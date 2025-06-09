@@ -9,7 +9,7 @@ import { useDataTrackStore } from "./useDataTrackStore";
 import { arrayMove } from "@dnd-kit/sortable";
 import { useShallow } from "zustand/shallow";
 
-const cloneObject = <T>(obj: T) => {
+export const cloneObject = <T>(obj: T) => {
   return JSON.parse(JSON.stringify(obj)) as T;
 };
 
@@ -18,6 +18,13 @@ export interface IUpdateElementProperties {
   styles?: IWidgetElement["styles"];
   label?: string;
 }
+
+export type IWidgetElementValue = IWidgetElement & {
+  path: string;
+  index: number;
+  parentPath: string;
+  parentId: string | null;
+};
 
 export interface IManifestStore {
   manifest: IWidget | null;
@@ -31,22 +38,15 @@ export interface IManifestStore {
     parentId: string,
     index?: number
   ) => void;
-  removeElement: (id: string) => void;
+  removeElement: (id: string, cut?: boolean) => void;
   moveElement: (id: string, dropId: string, dropIndex: number) => string | void;
-  elementMap: Record<
-    string,
-    IWidgetElement & {
-      path: string;
-      index: number;
-      parentPath: string;
-      parentId: string | null;
-    }
-  >;
+  elementMap: Record<string, IWidgetElementValue>;
   undoStack: { timestamp: string; data: IWidget }[];
   redoStack: { timestamp: string; data: IWidget }[];
   undo: () => void;
   redo: () => void;
   isUndoRedo: boolean;
+  clipboard: IWidgetElement | null;
 }
 
 export const useManifestStore = create<IManifestStore>()(
@@ -110,7 +110,7 @@ export const useManifestStore = create<IManifestStore>()(
         },
       });
     },
-    removeElement(id) {
+    removeElement(id, cut) {
       const oldManifest = get().manifest;
       const elementMap = get().elementMap;
       if (!oldManifest || !elementMap[id]) return;
@@ -124,6 +124,19 @@ export const useManifestStore = create<IManifestStore>()(
           (_, index) => index !== elementIndex
         )
       );
+      if (cut) {
+        const element = cloneObject(elementMap[id]);
+        set({
+          clipboard: {
+            id: element.id,
+            styles: element.styles,
+            type: element.type,
+            children: element.children,
+            data: element.data,
+            label: element.label,
+          },
+        });
+      }
       set({ manifest: newManifest });
     },
     moveElement(id, dropId, dropIndex) {
@@ -276,6 +289,7 @@ export const useManifestStore = create<IManifestStore>()(
       }
     },
     isUndoRedo: false,
+    clipboard: null,
   }))
 );
 

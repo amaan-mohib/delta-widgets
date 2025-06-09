@@ -25,6 +25,7 @@ import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { useManifestStore } from "../../stores/useManifestStore";
 import ComponentRender from "./renderers";
 import { useShallow } from "zustand/shallow";
+import ContextMenu from "./ContextMenu";
 
 const useStyles = makeStyles({
   canvas: {
@@ -164,6 +165,16 @@ const Canvas: React.FC<CanvasProps> = () => {
         e.stopPropagation();
         useDataTrackStore.setState({ selectedId: null });
       }}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        useDataTrackStore.setState({
+          contextMenuData: {
+            x: e.pageX,
+            y: e.pageY,
+            node: e.target as HTMLElement,
+          },
+        });
+      }}
       style={
         wallpaper && showWallpaper
           ? {
@@ -226,6 +237,7 @@ const Canvas: React.FC<CanvasProps> = () => {
           </ResizableBox>
         </TransformComponent>
       </TransformWrapper>
+      <ContextMenu />
     </div>
   );
 };

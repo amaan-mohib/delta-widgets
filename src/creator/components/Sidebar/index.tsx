@@ -40,7 +40,9 @@ const Sidebar: React.FC<SidebarProps> = () => {
         <Tab value="templates">Templates</Tab>
         <Tab value="layers">Elements</Tab>
       </TabList>
-      <div style={{ flex: 1, overflow: "auto" }}>{tabComponent}</div>
+      <div key={selectedTab} style={{ flex: 1, overflow: "auto" }}>
+        {tabComponent}
+      </div>
     </div>
   );
 };
