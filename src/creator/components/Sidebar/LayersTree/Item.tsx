@@ -31,7 +31,11 @@ const Item: React.FC<ItemProps> = ({ item }) => {
     <div>
       <div
         ref={setNodeRef}
-        style={{ display: "flex", alignItems: "center" }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          opacity: isDragging ? 0.8 : 1,
+        }}
         id={`layer-${id}`}>
         {hasChildren ? (
           <Button

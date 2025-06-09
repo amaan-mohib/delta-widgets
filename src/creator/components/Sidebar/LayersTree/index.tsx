@@ -41,7 +41,7 @@ const LayersTree: React.FC<LayersTreeProps> = () => {
     <DnDWrapper>
       <div style={{ padding: 5 }}>
         {elements.map((item) => (
-          <Item item={item} />
+          <Item key={item.id} item={item} />
         ))}
       </div>
     </DnDWrapper>
