@@ -11,7 +11,7 @@ import {
   IWidgetElementValue,
   useManifestStore,
 } from "../../stores/useManifestStore";
-import { useToolbarActions } from "./hooks/useToolbarActions";
+import { useToolbarActions } from "../../hooks/useToolbarActions";
 
 interface ContextMenuProps {}
 

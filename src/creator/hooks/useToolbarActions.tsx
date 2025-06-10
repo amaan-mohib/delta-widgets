@@ -11,9 +11,9 @@ import {
 import {
   IWidgetElementValue,
   useManifestStore,
-} from "../../../stores/useManifestStore";
-import { useDataTrackStore } from "../../../stores/useDataTrackStore";
-import { cloneObject } from "../../../utils";
+} from "../stores/useManifestStore";
+import { useDataTrackStore } from "../stores/useDataTrackStore";
+import { cloneObject } from "../utils";
 import { nanoid } from "nanoid";
 
 interface IAction {

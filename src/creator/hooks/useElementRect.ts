@@ -1,5 +1,5 @@
 import { useCallback, useLayoutEffect, useState } from "react";
-import { useDataTrackStore } from "../../../stores/useDataTrackStore";
+import { useDataTrackStore } from "../stores/useDataTrackStore";
 
 export const useElementRect = <T extends HTMLDivElement>(
   id: string
