@@ -47,6 +47,18 @@ const LabelProperties: React.FC<LabelPropertiesProps> = ({ selectedId }) => {
             }}
           />
         </Field>
+        <Field key={"className"} orientation="horizontal" label={"CSS Class"}>
+          <Input
+            style={{ width: 160 }}
+            placeholder="Enter classname"
+            value={elementMap[selectedId].data?.className || ""}
+            onChange={(_, { value }) => {
+              useManifestStore.getState().updateElementProperties(selectedId, {
+                data: { className: value },
+              });
+            }}
+          />
+        </Field>
       </AccordionPanel>
     </AccordionItem>
   );

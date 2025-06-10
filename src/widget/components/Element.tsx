@@ -47,58 +47,86 @@ const getComponentStyles = (
   };
 };
 
+interface IWrapperElementProps {
+  styles?: (keyof IWidgetElement["styles"] | "default")[];
+}
+const WrapperElement: React.FC<
+  IWrapperElementProps & ElementProps & React.PropsWithChildren
+> = ({ component, styles, children }) => {
+  let style: React.CSSProperties = {};
+  if (styles) {
+    styles.forEach((key) => {
+      if (key === "default") {
+        style = {
+          ...style,
+          ...component.styles,
+        };
+      } else {
+        style = {
+          ...style,
+          [key]: component.styles[key],
+        };
+      }
+    });
+  } else {
+    style = component.styles;
+  }
+
+  return (
+    <div
+      className={component.data?.className}
+      id={component.id}
+      style={getComponentStyles(style)}>
+      {children}
+    </div>
+  );
+};
+
 const Element: React.FC<ElementProps> = ({ component }) => {
   if (component.type === "container" || component.type === "container-grid") {
     return (
-      <div
-        id={component.id}
-        style={getComponentStyles({
-          ...component.styles,
-          borderRadius: component.styles.borderRadius || 2,
-        })}>
+      <WrapperElement
+        component={{
+          ...component,
+          styles: {
+            ...component.styles,
+            borderRadius: component.styles.borderRadius || 2,
+          },
+        }}>
         {component.children &&
           component.children.length > 0 &&
           component.children.map((child) => (
             <Element key={child.id} component={child} />
           ))}
-      </div>
+      </WrapperElement>
     );
   }
   if (component.type === "text") {
     return (
-      <div id={component.id} style={getComponentStyles(component.styles)}>
+      <WrapperElement component={component}>
         <TextComponent component={component} />
-      </div>
+      </WrapperElement>
     );
   }
   if (component.type === "image") {
     return (
-      <div
-        id={component.id}
-        style={getComponentStyles({ gridItem: component.styles.gridItem })}>
+      <WrapperElement component={component} styles={["gridItem"]}>
         <ImageComponent component={component} />
-      </div>
+      </WrapperElement>
     );
   }
   if (component.type === "button") {
     return (
-      <div
-        id={component.id}
-        style={getComponentStyles({
-          gridItem: component.styles.gridItem,
-          textAlign: component.styles.textAlign,
-        })}>
+      <WrapperElement component={component} styles={["gridItem", "textAlign"]}>
         <ButtonComponent component={component} />
-      </div>
+      </WrapperElement>
     );
   }
   if (component.type === "slider") {
     return (
-      <div
-        id={component.id}
-        style={getComponentStyles({ gridItem: component.styles.gridItem })}>
+      <WrapperElement component={component} styles={["gridItem"]}>
         <SliderComponent component={component} />
-      </div>
+      </WrapperElement>
     );
   }
   if (component.type === "toggle-play") {
@@ -115,70 +143,54 @@ const Element: React.FC<ElementProps> = ({ component }) => {
   }
   if (component.type === "media-next") {
     return (
-      <div
-        id={component.id}
-        style={getComponentStyles({
-          gridItem: component.styles.gridItem,
-          textAlign: component.styles.textAlign,
-        })}>
+      <WrapperElement component={component} styles={["gridItem", "textAlign"]}>
         <NextButton component={component} />
-      </div>
+      </WrapperElement>
     );
   }
   if (component.type === "media-prev") {
     return (
-      <div
-        id={component.id}
-        style={getComponentStyles({
-          gridItem: component.styles.gridItem,
-          textAlign: component.styles.textAlign,
-        })}>
+      <WrapperElement component={component} styles={["gridItem", "textAlign"]}>
         <PrevButton component={component} />
-      </div>
+      </WrapperElement>
     );
   }
   if (component.type === "media-slider") {
     return (
-      <div
-        id={component.id}
-        style={getComponentStyles({ gridItem: component.styles.gridItem })}>
+      <WrapperElement component={component} styles={["gridItem"]}>
         <MediaSlider component={component} />
-      </div>
+      </WrapperElement>
     );
   }
   if (component.type === "media-select") {
     return (
-      <div
-        id={component.id}
-        style={getComponentStyles({ gridItem: component.styles.gridItem })}>
+      <WrapperElement component={component} styles={["gridItem"]}>
         <MediaSelect component={component} />
-      </div>
+      </WrapperElement>
     );
   }
   if (component.type === "disk-usage") {
     return (
-      <div
-        id={component.id}
-        style={getComponentStyles({
-          ...component.styles,
-          gridItem: component.styles.gridItem,
-        })}>
+      <WrapperElement component={component} styles={["default", "gridItem"]}>
         <DiskComponent />
-      </div>
+      </WrapperElement>
     );
   }
   if (component.type === "progress") {
     return (
-      <div
-        id={component.id}
-        style={getComponentStyles({
-          ...component.styles,
-          width: "100%",
-          minWidth: 150,
-          gridItem: component.styles.gridItem,
-        })}>
+      <WrapperElement
+        component={{
+          ...component,
+          styles: {
+            ...component.styles,
+            width: "100%",
+            minWidth: 150,
+            gridItem: component.styles.gridItem,
+          },
+        }}
+        styles={["default", "gridItem"]}>
         <ProgressComponent component={component} />
-      </div>
+      </WrapperElement>
     );
   }
   return (

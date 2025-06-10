@@ -11,7 +11,8 @@ import {
 } from "@fluentui/react-components";
 import { CodeRegular, FolderRegular, LinkRegular } from "@fluentui/react-icons";
 import React, { useCallback, useEffect, useState } from "react";
-import { addWidget, fileOrFolderPicker, IWidget } from "../utils/widgets";
+import { addWidget, fileOrFolderPicker } from "../utils/widgets";
+import { IWidget } from "../../types/manifest";
 
 export interface IDialogState {
   open: boolean;

@@ -64,15 +64,16 @@ const Element: React.FC<ElementProps & PropsWithChildren> = ({
 
   const shouldShowToolbar = isOver || selectedId === id || activeId === id;
   const elementLabel = elementMap[id]?.label || `#${id}`;
+  const elementCustomClassName = elementMap[id]?.data?.className;
 
   return (
     <>
       <div
-        className={
+        className={`${elementCustomClassName || ""} ${
           hoveredId === id && !isDraggingGlobal
             ? "dropable-container-hover"
             : ""
-        }
+        }`}
         onClick={(e) => {
           e.stopPropagation();
           useDataTrackStore.setState({ selectedId: id });

@@ -30,4 +30,5 @@ export interface IWidget {
   file?: string;
   widgetType?: "url" | "html" | "json";
   customFields?: TCustomFields;
+  css?: string[];
 }

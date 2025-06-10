@@ -18,6 +18,7 @@ import {
 import CustomField from "../TemplateEditor/CustomField";
 import { getCustomFieldsTemplate } from "../TemplateEditor/categories";
 import { TemplateCard } from "../TemplateEditor";
+import CustomCSSForm from "./CustomCSSForm";
 
 interface CustomFieldsViewProps {
   open: boolean;
@@ -55,7 +56,7 @@ const CustomFieldsView: React.FC<CustomFieldsViewProps> = ({
         </>
       );
     }
-    return "CSS";
+    return <CustomCSSForm />;
   }, [selectedTab, templates]);
 
   return (
