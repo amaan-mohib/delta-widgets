@@ -11,12 +11,7 @@ import {
   IWidgetElementValue,
   useManifestStore,
 } from "../../stores/useManifestStore";
-import {
-  ClipboardRegular,
-  CopyRegular,
-  CutRegular,
-  DeleteRegular,
-} from "@fluentui/react-icons";
+import { useToolbarActions } from "./hooks/useToolbarActions";
 
 interface ContextMenuProps {}
 
@@ -36,10 +31,10 @@ const isElementInMap = (
 const ContextMenu: React.FC<ContextMenuProps> = () => {
   const contextMenuData = useDataTrackStore((state) => state.contextMenuData);
   const elementMap = useManifestStore((state) => state.elementMap);
-  const clipboard = useManifestStore((state) => state.clipboard);
   const [open, setOpen] = useState(false);
   const [selectedElement, setSelectedElement] =
     useState<IWidgetElementValue | null>(null);
+  const actions = useToolbarActions(selectedElement);
 
   useEffect(() => {
     if (contextMenuData) {
@@ -59,7 +54,7 @@ const ContextMenu: React.FC<ContextMenuProps> = () => {
     }
   }, []);
 
-  if (!contextMenuData || !selectedElement) return null;
+  if (!contextMenuData || !selectedElement || actions.length === 0) return null;
 
   return (
     <Menu
@@ -79,28 +74,15 @@ const ContextMenu: React.FC<ContextMenuProps> = () => {
       </MenuTrigger>
       <MenuPopover style={{ top: contextMenuData.y, left: contextMenuData.x }}>
         <MenuList>
-          <MenuItem
-            icon={<CutRegular />}
-            onClick={() => {
-              useManifestStore
-                .getState()
-                .removeElement(selectedElement.id, true);
-              useDataTrackStore.setState({ selectedId: null });
-            }}>
-            Cut
-          </MenuItem>
-          <MenuItem icon={<CopyRegular />} disabled={!clipboard}>
-            Copy
-          </MenuItem>
-          <MenuItem icon={<ClipboardRegular />}>Paste</MenuItem>
-          <MenuItem
-            icon={<DeleteRegular />}
-            onClick={() => {
-              useManifestStore.getState().removeElement(selectedElement.id);
-              useDataTrackStore.setState({ selectedId: null });
-            }}>
-            Delete
-          </MenuItem>
+          {actions.map((item) => (
+            <MenuItem
+              key={item.label}
+              disabled={!item.enabled}
+              icon={item.icon}
+              onClick={item.onClick}>
+              {item.label}
+            </MenuItem>
+          ))}
         </MenuList>
       </MenuPopover>
     </Menu>

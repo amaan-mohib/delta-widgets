@@ -38,7 +38,7 @@ const LabelProperties: React.FC<LabelPropertiesProps> = ({ selectedId }) => {
       <AccordionPanel className={styles.panel}>
         <Field key={"label"} orientation="horizontal" label={"Label"}>
           <Input
-            style={{ width: 170 }}
+            style={{ width: 160 }}
             value={elementMap[selectedId].label || `#${selectedId}`}
             onChange={(_, { value }) => {
               useManifestStore

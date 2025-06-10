@@ -14,7 +14,6 @@ import {
   ArrowUndoRegular,
   BracesVariableRegular,
   CheckmarkRegular,
-  DeleteRegular,
   DismissRegular,
   EditRegular,
   FolderRegular,
@@ -33,6 +32,7 @@ import CustomFieldsView from "./CustomFieldsView";
 import { useShallow } from "zustand/shallow";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import CancelZone from "./DnD/CancelZone";
+import { useToolbarActions } from "./Canvas/hooks/useToolbarActions";
 
 interface ToolbarProps {}
 
@@ -48,6 +48,9 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
   );
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isCustomFieldsOpen, setIsCustomFieldsOpen] = useState(false);
+
+  const selectedElement = selectedId ? elementMap[selectedId] : null;
+  const actions = useToolbarActions(selectedElement);
 
   useEffect(() => {
     if (!manifest) return;
@@ -148,21 +151,13 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
             }}
           />
         </Tooltip>
-        {selectedId && selectedId !== "container" && (
-          <Tooltip content="Delete" relationship="label">
-            <ToolbarButton
-              icon={<DeleteRegular />}
-              onClick={() => {
-                const selectedElement = selectedId
-                  ? elementMap[selectedId]
-                  : null;
-                if (selectedElement) {
-                  useManifestStore.getState().removeElement(selectedElement.id);
-                  useDataTrackStore.setState({ selectedId: null });
-                }
-              }}
-            />
-          </Tooltip>
+        {actions.length > 0 && <ToolbarDivider />}
+        {actions.map((item) =>
+          item.enabled ? (
+            <Tooltip key={item.label} content={item.label} relationship="label">
+              <ToolbarButton icon={item.icon} onClick={item.onClick} />
+            </Tooltip>
+          ) : null
         )}
       </ToolbarGroup>
       <ToolbarGroup style={{ display: "flex", alignItems: "center" }}>

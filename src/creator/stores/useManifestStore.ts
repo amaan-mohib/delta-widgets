@@ -8,10 +8,7 @@ import { updateManifest } from "../../main/utils/widgets";
 import { useDataTrackStore } from "./useDataTrackStore";
 import { arrayMove } from "@dnd-kit/sortable";
 import { useShallow } from "zustand/shallow";
-
-export const cloneObject = <T>(obj: T) => {
-  return JSON.parse(JSON.stringify(obj)) as T;
-};
+import { cloneObject } from "../utils";
 
 export interface IUpdateElementProperties {
   data?: any;

@@ -19,6 +19,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_prevent_default::debug())
         .invoke_handler(tauri::generate_handler![
             media::get_media,
             media::media_action,
