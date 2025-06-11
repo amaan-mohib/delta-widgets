@@ -17,6 +17,13 @@ export type TCustomFields = Record<
   { key: string; label: string; value: string; description?: string }
 >;
 
+export interface ICustomAssets {
+  kind: "file" | "url";
+  path: string;
+  key: string;
+  type?: string; // e.g., "css", "js", etc.
+}
+
 export interface IWidget {
   key: string;
   label: string;
@@ -30,5 +37,5 @@ export interface IWidget {
   file?: string;
   widgetType?: "url" | "html" | "json";
   customFields?: TCustomFields;
-  css?: string[];
+  customAssets?: ICustomAssets[];
 }

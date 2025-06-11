@@ -7,18 +7,49 @@ import {
   Text,
 } from "@fluentui/react-components";
 import { DocumentRegular } from "@fluentui/react-icons";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { fileOrFolderPicker } from "../../../main/utils/widgets";
 import {
   getManifestStore,
   useManifestStore,
 } from "../../stores/useManifestStore";
+import { nanoid } from "nanoid";
+import { message } from "@tauri-apps/plugin-dialog";
 
 interface CustomCSSFormProps {}
 
 const CustomCSSForm: React.FC<CustomCSSFormProps> = () => {
   const manifest = getManifestStore();
   const [cssUrl, setCssUrl] = useState("");
+
+  const addCss = useCallback(
+    (path: string, type: "file" | "url") => {
+      if (type === "url") {
+        try {
+          new URL(path);
+        } catch (e) {
+          message("Invalid URL format. Please enter a valid URL.", {
+            kind: "error",
+            title: "Invalid URL",
+          });
+          return;
+        }
+      }
+      const data = {
+        key: `${nanoid()}.css`,
+        kind: type,
+        path,
+        type: "css",
+      };
+      useManifestStore.getState().updateManifest({
+        customAssets: manifest?.customAssets
+          ? [...manifest.customAssets, data]
+          : [data],
+      });
+      setCssUrl("");
+    },
+    [manifest]
+  );
 
   if (!manifest) return null;
 
@@ -37,10 +68,7 @@ const CustomCSSForm: React.FC<CustomCSSFormProps> = () => {
             appearance="primary"
             disabled={!cssUrl}
             onClick={() => {
-              useManifestStore
-                .getState()
-                .updateManifest({ css: [...(manifest.css || []), cssUrl] });
-              setCssUrl("");
+              addCss(cssUrl, "url");
             }}>
             Add
           </Button>
@@ -56,27 +84,31 @@ const CustomCSSForm: React.FC<CustomCSSFormProps> = () => {
               false
             );
             if (path) {
-              setCssUrl(path);
+              addCss(path, "file");
             }
           }}>
           Select CSS file
         </Button>
       </Card>
-      {(manifest.css?.length ?? 0) > 0 && (
+      {(manifest.customAssets?.length ?? 0) > 0 && (
         <Card appearance="outline">
           <Text>Added:</Text>
-          {(manifest.css || []).map((item, index) => (
+          {(manifest.customAssets || []).map((item) => (
             <Card
-              key={`${item}-${index}`}
+              key={item.key}
               appearance="subtle"
               size="small"
               onClick={() => {
                 useManifestStore.getState().updateManifest({
-                  css: [...(manifest.css || []).filter((_, i) => i !== index)],
+                  customAssets: [
+                    ...(manifest.customAssets || []).filter(
+                      (i) => i.key !== item.key
+                    ),
+                  ],
                 });
               }}>
               <CardHeader
-                header={item}
+                header={item.path}
                 action={
                   <Button appearance="transparent" size="small">
                     Remove

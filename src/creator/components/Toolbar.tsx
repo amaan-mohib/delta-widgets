@@ -164,7 +164,7 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
         <CancelZone />
       </ToolbarGroup>
       <ToolbarGroup style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <Tooltip content="Custom fields" relationship="label">
+        <Tooltip content="Custom Variables" relationship="label">
           <ToolbarButton
             icon={<BracesVariableRegular />}
             onClick={() => {

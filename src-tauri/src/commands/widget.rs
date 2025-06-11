@@ -322,3 +322,29 @@ pub async fn close_widget_window(app: tauri::AppHandle, label: String) {
     let window = app.get_webview_window(&label).expect("window should exist");
     window.close().unwrap();
 }
+
+#[tauri::command]
+pub async fn copy_custom_assets(app: tauri::AppHandle, key: String, path: String) {
+    let asset_path = app
+        .path()
+        .resolve("assets", tauri::path::BaseDirectory::AppCache)
+        .unwrap();
+    if !asset_path.exists() {
+        if let Err(err) = fs::create_dir_all(&asset_path) {
+            eprintln!("Error creating asset directory: {}", err);
+            return;
+        }
+    }
+    let destination = asset_path.join(&key);
+
+    let _ = match fs::copy(path.as_str(), destination) {
+        Ok(_) => {
+            // println!("File copied successfully!");
+            Ok(())
+        }
+        Err(err) => {
+            eprintln!("Error copying file: {}", err);
+            Err(format!("Error copying file: {}", err))
+        }
+    };
+}

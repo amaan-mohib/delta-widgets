@@ -26,7 +26,7 @@ import { useManifestStore } from "../../stores/useManifestStore";
 import ComponentRender from "./renderers";
 import { useShallow } from "zustand/shallow";
 import ContextMenu from "./ContextMenu";
-import { useCustomCss } from "../../hooks/useCustomCss";
+import { useCustomAssets } from "../../hooks/useCustomAssets";
 
 const useStyles = makeStyles({
   canvas: {
@@ -146,7 +146,7 @@ const Canvas: React.FC<CanvasProps> = () => {
   const isDragging = useDataTrackStore((state) => state.isDragging);
   const [showWallpaper, setShowWallpaper] = useState(true);
 
-  useCustomCss();
+  useCustomAssets();
 
   useEffect(() => {
     if (initialStateLoading) return;
