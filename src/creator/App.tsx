@@ -10,6 +10,7 @@ import Properties from "./components/Properties";
 import { getManifestFromPath } from "../main/utils/widgets";
 import DnDWrapper from "./components/DnD/DnDWrapper";
 import "./index.css";
+import { useCustomAssets } from "./hooks/useCustomAssets";
 
 const useStyles = makeStyles({
   toolbar: {
@@ -29,6 +30,8 @@ const App: React.FC<AppProps> = () => {
     incrementInitialStateLoadCounter,
     initialStateLoadCounter,
   } = useDataTrackStore();
+
+  useCustomAssets(manifestStore);
 
   useEffect(() => {
     const timeout = setTimeout(() => {

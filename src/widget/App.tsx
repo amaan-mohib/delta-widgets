@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo } from "react";
 import { useDataTrackStore } from "./stores/useDataTrackStore";
 import { getManifestFromPath } from "../main/utils/widgets";
-
-import "./index.css";
 import Element from "./components/Element";
 import useFetcher from "./useFetcher";
 import useVariableUpdater from "./useVariableUpdater";
 import FontPicker from "react-fontpicker-ts";
+import { useCustomAssets } from "../creator/hooks/useCustomAssets";
+
+import "./index.css";
 
 interface AppProps {}
 
@@ -29,6 +30,7 @@ const App: React.FC<AppProps> = () => {
 
   useFetcher(elements, customFields);
   useVariableUpdater();
+  useCustomAssets(manifest);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
