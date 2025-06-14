@@ -12,6 +12,10 @@ import {
   MenuTrigger,
   Switch,
   Text,
+  Toast,
+  ToastBody,
+  ToastTitle,
+  useToastController,
 } from "@fluentui/react-components";
 import React from "react";
 import {
@@ -51,6 +55,17 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
 }) => {
   const styles = useStyles();
   const [visible, setVisible] = React.useState(widget.visible ?? false);
+  const { dispatchToast, dismissToast } = useToastController("toaster");
+  const notify = () =>
+    dispatchToast(
+      <Toast>
+        <ToastTitle>Enabled {widget.label}</ToastTitle>
+        <ToastBody>
+          Widget enabled. You'll find it at the bottom of all windows.
+        </ToastBody>
+      </Toast>,
+      { toastId: widget.key, intent: "info" }
+    );
 
   return (
     <Card
@@ -118,12 +133,15 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
             onChange={async (_, { checked }) => {
               if (checked) {
                 await createWidgetWindow(widget.path, false, true);
+                // TODO: Do not show if always on top enabled
+                notify();
               } else {
                 await closeWidgetWindow(
                   `widget-${widget.key}`,
                   true,
                   widget.path
                 );
+                dismissToast(widget.key);
               }
               setVisible(checked);
             }}

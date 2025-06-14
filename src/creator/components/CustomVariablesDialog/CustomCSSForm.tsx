@@ -77,12 +77,11 @@ const CustomCSSForm: React.FC<CustomCSSFormProps> = () => {
         <Button
           icon={<DocumentRegular />}
           onClick={async () => {
-            const { path } = await fileOrFolderPicker(
-              false,
-              "Select CSS file",
-              ["css"],
-              false
-            );
+            const { path } = await fileOrFolderPicker({
+              title: "Select CSS file",
+              extensions: ["css"],
+              validate: false,
+            });
             if (path) {
               addCss(path, "file");
             }

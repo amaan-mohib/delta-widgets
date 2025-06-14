@@ -117,8 +117,8 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({
   return (
     <Dialog
       open={dialogState.open}
-      onOpenChange={(_, open) => {
-        if (!open) resetDialogState((prev) => ({ ...prev, open }));
+      onOpenChange={(_, { open }) => {
+        resetDialogState((prev) => ({ ...prev, open }));
       }}>
       <DialogSurface style={{ maxWidth: "400px" }}>
         <DialogBody>

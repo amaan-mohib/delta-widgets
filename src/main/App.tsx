@@ -18,6 +18,7 @@ import {
   MenuTrigger,
   Text,
   Title3,
+  Toaster,
 } from "@fluentui/react-components";
 import {
   AddRegular,
@@ -228,6 +229,8 @@ function App() {
         dialogState={dialogState}
         resetDialogState={setDialogState}
       />
+
+      <Toaster toasterId={"toaster"} />
     </main>
   );
 }
