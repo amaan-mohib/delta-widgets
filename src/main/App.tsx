@@ -30,7 +30,6 @@ import { UnwatchFn } from "@tauri-apps/plugin-fs";
 import AddWidgetDialog, { IDialogState } from "./components/AddWidgetDialog";
 import WidgetCard from "./components/WidgetCard";
 import { IWidget } from "../types/manifest";
-import { invoke } from "@tauri-apps/api/core";
 
 const useStyles = makeStyles({
   container: {
@@ -76,16 +75,15 @@ function App() {
     [JSON.stringify(savedWidgets)]
   );
 
-  const getAndSetWidgets = useCallback(() => {
-    getAllWidgets().then((widgets) => {
-      setWidgets(widgets);
-    });
+  const getAndSetWidgets = useCallback(async () => {
+    const widgets = await getAllWidgets();
+    setWidgets(widgets);
   }, []);
   useEffect(() => {
     let unwatch: UnwatchFn | null;
     (async () => {
       try {
-        unwatch = await watchWidgetFolder(() => {
+        unwatch = await watchWidgetFolder(async () => {
           getAndSetWidgets();
         });
       } catch (error) {
@@ -98,10 +96,9 @@ function App() {
     };
   }, []);
 
-  const getAndSetSavedWidgets = useCallback(() => {
-    getAllWidgets(true).then((widgets) => {
-      setSavedWidgets(widgets);
-    });
+  const getAndSetSavedWidgets = useCallback(async () => {
+    const widgets = await getAllWidgets(true);
+    setSavedWidgets(widgets);
   }, []);
   useEffect(() => {
     let unwatch: UnwatchFn | null;
@@ -123,25 +120,29 @@ function App() {
   useEffect(() => {
     getAndSetWidgets();
     getAndSetSavedWidgets();
-    invoke("get_system_info").then((data) => {
-      console.log(data);
-    });
   }, []);
 
-  // async function greet() {
-  //   // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-  //   setGreetMsg(await invoke("greet", { name }));
-  //   const data: any = await invoke("get_media").catch(console.log);
-  //   console.log(data);
-  //   // setImage(
-  //   //   `data:image/png;base64,${Buffer.from(data.thumbnail).toString("base64")}`
-  //   // );
-  //   await invoke("media_action", {
-  //     playerId: data[0].player_id,
-  //     action: "position",
-  //     position: 10000,
-  //   }).catch(console.log);
-  // }
+  const importHTML = useCallback(async () => {
+    const { path } = await fileOrFolderPicker({
+      directory: true,
+      title: "Select HTML folder",
+    });
+    if (path) setDialogState({ open: true, type: "folder", path });
+  }, []);
+
+  const importJSON = useCallback(async () => {
+    const { path, manifest } = await fileOrFolderPicker({
+      title: "Select JSON file",
+      extensions: ["json"],
+    });
+    if (path && manifest)
+      setDialogState({
+        open: true,
+        type: "file",
+        path,
+        manifest,
+      });
+  }, []);
 
   return (
     <main className="container">
@@ -154,17 +155,7 @@ function App() {
           </MenuTrigger>
           <MenuPopover>
             <MenuList>
-              <MenuItem
-                icon={<CodeRegular />}
-                onClick={async () => {
-                  const { path } = await fileOrFolderPicker(
-                    true,
-                    "Select HTML folder"
-                  );
-                  if (path)
-                    setDialogState({ open: true, type: "folder", path });
-                  console.log(path);
-                }}>
+              <MenuItem icon={<CodeRegular />} onClick={importHTML}>
                 HTML
               </MenuItem>
               <MenuItem
@@ -174,23 +165,7 @@ function App() {
                 }}>
                 URL
               </MenuItem>
-              <MenuItem
-                icon={<BracesRegular />}
-                onClick={async () => {
-                  const { path, manifest } = await fileOrFolderPicker(
-                    false,
-                    "Select JSON file",
-                    ["json"]
-                  );
-                  if (path && manifest)
-                    setDialogState({
-                      open: true,
-                      type: "file",
-                      path,
-                      manifest,
-                    });
-                  console.log(path);
-                }}>
+              <MenuItem icon={<BracesRegular />} onClick={importJSON}>
                 Import JSON
               </MenuItem>
             </MenuList>
@@ -252,7 +227,6 @@ function App() {
       <AddWidgetDialog
         dialogState={dialogState}
         resetDialogState={setDialogState}
-        onClose={() => {}}
       />
     </main>
   );

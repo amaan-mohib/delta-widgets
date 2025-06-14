@@ -10,7 +10,7 @@ import {
   Input,
 } from "@fluentui/react-components";
 import { CodeRegular, FolderRegular, LinkRegular } from "@fluentui/react-icons";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { addWidget, fileOrFolderPicker } from "../utils/widgets";
 import { IWidget } from "../../types/manifest";
 
@@ -24,14 +24,12 @@ export interface IDialogState {
 interface AddWidgetDialogProps {
   title?: string;
   dialogState: IDialogState;
-  onClose: () => void;
   resetDialogState: React.Dispatch<React.SetStateAction<IDialogState>>;
 }
 
 const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({
   title,
   dialogState,
-  onClose,
   resetDialogState,
 }) => {
   const [label, setLabel] = useState("");
@@ -49,12 +47,72 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({
   }, [dialogState.path, dialogState.type]);
 
   const onDialogClose = useCallback(() => {
-    onClose();
     resetDialogState((prev) => ({ ...prev, open: false }));
     setLabel("");
     setUrl("");
     setError("");
   }, [JSON.stringify(dialogState)]);
+
+  const updateFile = useCallback(async () => {
+    if (dialogState.type === "file") {
+      const { path, manifest } = await fileOrFolderPicker({
+        title: "Select JSON file",
+        extensions: ["json"],
+      });
+      if (path && manifest)
+        resetDialogState({
+          open: true,
+          type: "file",
+          path,
+          manifest,
+        });
+    }
+    if (dialogState.type === "folder") {
+      const { path } = await fileOrFolderPicker({
+        directory: true,
+        title: "Select HTML folder",
+      });
+      if (path) resetDialogState({ open: true, type: "folder", path });
+    }
+  }, [dialogState.type, resetDialogState]);
+
+  const onSubmit = useCallback(async () => {
+    if (
+      dialogState.type === "url" &&
+      !/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/.test(
+        url
+      )
+    ) {
+      setError("Invalid URL");
+      return;
+    }
+    try {
+      const type =
+        dialogState.type === "url"
+          ? "url"
+          : dialogState.type === "file"
+          ? "json"
+          : dialogState.type === "folder"
+          ? "html"
+          : "json";
+      await addWidget(type, {
+        label,
+        manifest: dialogState.manifest,
+        path: dialogState.path,
+        url,
+      });
+      onDialogClose();
+    } catch (error) {
+      console.error(error);
+    }
+  }, [onDialogClose, dialogState, label, url]);
+
+  const canSubmit = useMemo(() => {
+    if (dialogState.type === "url") {
+      return !label.trim() || !url.trim();
+    }
+    return !label.trim();
+  }, [dialogState.type, label, url]);
 
   return (
     <Dialog
@@ -106,32 +164,7 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({
                       <FolderRegular />
                     )
                   }
-                  onClick={async () => {
-                    if (dialogState.type === "file") {
-                      const { path, manifest } = await fileOrFolderPicker(
-                        false,
-                        "Select JSON file",
-                        ["json"]
-                      );
-                      if (path && manifest)
-                        resetDialogState({
-                          open: true,
-                          type: "file",
-                          path,
-                          manifest,
-                        });
-                      console.log(path);
-                    }
-                    if (dialogState.type === "folder") {
-                      const { path } = await fileOrFolderPicker(
-                        true,
-                        "Select HTML folder"
-                      );
-                      if (path)
-                        resetDialogState({ open: true, type: "folder", path });
-                      console.log(path);
-                    }
-                  }}
+                  onClick={updateFile}
                   style={{ width: "max-content" }}>
                   {dialogState.path.split(/\/|\\/).at(-1) || ""}
                 </Button>
@@ -139,50 +172,11 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({
             )}
           </DialogContent>
           <DialogActions>
+            <Button onClick={onDialogClose}>Cancel</Button>
             <Button
-              onClick={() => {
-                onDialogClose();
-              }}>
-              Cancel
-            </Button>
-            <Button
-              onClick={async () => {
-                if (
-                  dialogState.type === "url" &&
-                  !/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/.test(
-                    url
-                  )
-                ) {
-                  setError("Invalid URL");
-                  return;
-                }
-                addWidget(
-                  dialogState.type === "url"
-                    ? "url"
-                    : dialogState.type === "file"
-                    ? "json"
-                    : dialogState.type === "folder"
-                    ? "html"
-                    : "json",
-                  {
-                    label,
-                    manifest: dialogState.manifest,
-                    path: dialogState.path,
-                    url,
-                  }
-                )
-                  .then(() => {
-                    onDialogClose();
-                  })
-                  .catch(console.error);
-              }}
+              onClick={onSubmit}
               appearance="primary"
-              disabled={(() => {
-                if (dialogState.type === "url") {
-                  return !label.trim() || !url.trim();
-                }
-                return !label.trim();
-              })()}>
+              disabled={canSubmit}>
               Submit
             </Button>
           </DialogActions>

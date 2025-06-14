@@ -53,7 +53,7 @@ export const getAllWidgets = async (saves?: boolean) => {
   return result;
 };
 
-export const watchWidgetFolder = async (cb: Function, saves?: boolean) => {
+export const watchWidgetFolder = async (cb: () => void, saves?: boolean) => {
   const { widgetsDir, widgetsDirExists } = await getWidgetsDirPath(saves);
   let unwatch: UnwatchFn | null = null;
   if (widgetsDirExists) {
@@ -68,15 +68,21 @@ export const watchWidgetFolder = async (cb: Function, saves?: boolean) => {
   return unwatch;
 };
 
-export const fileOrFolderPicker = async (
-  directory: boolean,
-  title?: string,
-  extensions?: string[],
-  validate = true
-) => {
+export const fileOrFolderPicker = async (params: {
+  directory?: boolean;
+  title?: string;
+  extensions?: string[];
+  validate?: boolean;
+}) => {
+  const {
+    directory,
+    title = "Select file",
+    extensions,
+    validate = true,
+  } = params;
   const path = await open({
     directory,
-    title: title || "Select file",
+    title,
     filters: extensions ? [{ extensions, name: "Filters" }] : undefined,
   });
   if (validate && path && !directory) {
@@ -262,26 +268,66 @@ export const createCreatorWindow = async (manifestPath?: string) => {
   });
 };
 
-export const createWidgetWindow = async (
-  manifestPath: string,
-  isPreview?: boolean
-) => {
-  const pathWithJSON = await path.resolve(manifestPath, "manifest.json");
-  await invoke("create_widget_window", {
-    path: JSON.stringify(pathWithJSON),
-    isPreview,
-  });
-};
-
-export const closeWidgetWindow = async (label: string) => {
-  await invoke("close_widget_window", { label });
-};
-
+/** Get manifest path with manifest.json attached */
 export const getManifestPath = async (manifestPath: string) => {
   if (!manifestPath.endsWith("manifest.json")) {
     manifestPath = await path.resolve(manifestPath, "manifest.json");
   }
   return manifestPath;
+};
+
+export const createWidgetWindow = async (
+  manifestPath: string,
+  isPreview?: boolean,
+  toggleVisibility?: boolean
+) => {
+  try {
+    const pathWithJSON = await getManifestPath(manifestPath);
+    if (toggleVisibility) {
+      await invoke("toggle_widget_visibility", {
+        visibility: true,
+        path: JSON.stringify(pathWithJSON),
+      });
+    }
+    await invoke("create_widget_window", {
+      path: JSON.stringify(pathWithJSON),
+      isPreview,
+    });
+  } catch (error) {
+    console.error("Error creating widget window:", error);
+    await message(
+      `Widget maybe already being ${
+        isPreview ? "previewed" : "enabled"
+      } or something went wrong.`,
+      {
+        title: "Error",
+        kind: "error",
+      }
+    );
+  }
+};
+
+export const closeWidgetWindow = async (
+  label: string,
+  toggleVisibility?: boolean,
+  path?: string
+) => {
+  try {
+    if (toggleVisibility && path) {
+      const pathWithJSON = await getManifestPath(path);
+      await invoke("toggle_widget_visibility", {
+        visibility: false,
+        path: JSON.stringify(pathWithJSON),
+      });
+    }
+    await invoke("close_widget_window", { label });
+  } catch (error) {
+    console.error(error);
+    await message("Could not close widget window", {
+      title: "Error",
+      kind: "error",
+    });
+  }
 };
 
 export const getManifestFromPath = async (manifestPath: string) => {
@@ -296,4 +342,17 @@ export const updateManifest = async (manifest: IWidget) => {
     manifestPath,
     JSON.stringify({ ...manifest, path: undefined }, null, 2)
   );
+};
+
+export const publishWidget = async (manifestPath: string) => {
+  try {
+    const path = await getManifestPath(manifestPath);
+    await invoke("publish_widget", { path: JSON.stringify(path) });
+  } catch (error) {
+    console.error(error);
+    await message("Could not publish widget", {
+      title: "Error",
+      kind: "error",
+    });
+  }
 };

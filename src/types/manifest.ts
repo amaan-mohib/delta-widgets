@@ -38,4 +38,6 @@ export interface IWidget {
   widgetType?: "url" | "html" | "json";
   customFields?: TCustomFields;
   customAssets?: ICustomAssets[];
+  published?: boolean;
+  publishedAt?: string | number;
 }

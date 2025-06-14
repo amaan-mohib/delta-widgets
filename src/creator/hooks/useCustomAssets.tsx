@@ -52,11 +52,7 @@ export const useCustomAssets = (manifest: IWidget | null) => {
   useEffect(() => {
     links.forEach((item) => {
       if (item.type === "css") {
-        if (item.kind === "url") {
-          addStyleSheet(item.path, item.key);
-        } else {
-          addStyleSheet(item.path, item.key, true);
-        }
+        addStyleSheet(item.path, item.key, item.kind === "file");
       }
     });
     removeExtraStylesheets(links.map((item) => item.key));

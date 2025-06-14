@@ -27,6 +27,8 @@ pub fn run() {
             widget::create_widget_window,
             widget::close_widget_window,
             widget::copy_custom_assets,
+            widget::publish_widget,
+            widget::toggle_widget_visibility,
             system::get_system_info,
         ])
         .build(tauri::generate_context!())

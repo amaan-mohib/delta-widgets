@@ -109,6 +109,7 @@ pub enum WidgetType {
 #[derive(serde::Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 struct WidgetManifest {
+    key: Option<String>,
     label: Option<String>,
     dimensions: Option<PhysicalSize<f64>>,
     position: Option<PhysicalPosition<f64>>,
@@ -131,6 +132,7 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
         serde_json::from_str(&manifest_content).expect("invalid manifest");
 
     let title = manifest.label.unwrap_or_else(|| "Widget".to_string());
+    let manifest_key = manifest.key.unwrap_or_else(|| "widget".to_string());
     let position = manifest
         .position
         .map(|p| PhysicalPosition {
@@ -152,7 +154,7 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
         } else {
             ""
         },
-        title.to_lowercase().replace(' ', "")
+        manifest_key
     );
 
     let mut window_builder =
@@ -347,4 +349,74 @@ pub async fn copy_custom_assets(app: tauri::AppHandle, key: String, path: String
             Err(format!("Error copying file: {}", err))
         }
     };
+}
+
+#[tauri::command]
+pub async fn publish_widget(app: tauri::AppHandle, path: String) -> Result<u128, String> {
+    let clean_path = serde_json::from_str::<String>(&path).unwrap();
+    let widgets_path = app
+        .path()
+        .resolve("widgets", tauri::path::BaseDirectory::AppData)
+        .unwrap();
+    if !widgets_path.exists() {
+        if let Err(err) = fs::create_dir_all(&widgets_path) {
+            eprintln!("Error creating widgets directory: {}", err);
+            return Err(err.to_string());
+        }
+    }
+    let config_content = fs::read_to_string(&clean_path).unwrap();
+
+    // Parse the existing JSON
+    let mut config: Value = match serde_json::from_str(&config_content) {
+        Ok(json) => json,
+        Err(_) => json!({}),
+    };
+    let key = config
+        .get("key")
+        .and_then(Value::as_str)
+        .unwrap()
+        .to_string();
+    let published_time = std::time::UNIX_EPOCH.elapsed().unwrap().as_millis();
+
+    // Update published status and timestamp
+    if let Value::Object(ref mut map) = config {
+        map.insert(String::from("published"), json!(true));
+
+        map.insert(String::from("publishedAt"), json!(published_time));
+    }
+
+    // Write the updated JSON back to the file
+    if let Ok(json_string) = serde_json::to_string_pretty(&config) {
+        let _ = fs::write(&clean_path, json_string);
+    }
+    // Copy the widget to the published directory
+    if let Ok(json_string) = serde_json::to_string_pretty(&config) {
+        println!("{:?}", key);
+        let manifest_path = widgets_path.join(&key);
+        if !manifest_path.exists() {
+            fs::create_dir_all(&manifest_path).unwrap();
+        }
+        let _ = fs::write(&manifest_path.join("manifest.json"), json_string);
+    }
+    Ok(published_time)
+}
+
+#[tauri::command]
+pub async fn toggle_widget_visibility(_app: tauri::AppHandle, visibility: bool, path: String) {
+    let clean_path = serde_json::from_str::<String>(&path).unwrap();
+    let config_content = fs::read_to_string(&clean_path).unwrap();
+
+    // Parse the existing JSON
+    let mut config: Value = match serde_json::from_str(&config_content) {
+        Ok(json) => json,
+        Err(_) => json!({}),
+    };
+
+    if let Value::Object(ref mut map) = config {
+        map.insert(String::from("visible"), json!(visibility));
+    }
+    // Write the updated JSON back to the file
+    if let Ok(json_string) = serde_json::to_string_pretty(&config) {
+        let _ = fs::write(&clean_path, json_string);
+    }
 }

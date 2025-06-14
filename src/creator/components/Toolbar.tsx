@@ -8,7 +8,7 @@ import {
   Tooltip,
 } from "@fluentui/react-components";
 import { getManifestStore, useManifestStore } from "../stores/useManifestStore";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRedoRegular,
   ArrowUndoRegular,
@@ -25,6 +25,7 @@ import {
   closeWidgetWindow,
   createWidgetWindow,
   getManifestPath,
+  publishWidget,
   updateManifest,
 } from "../../main/utils/widgets";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
@@ -33,12 +34,12 @@ import { useShallow } from "zustand/shallow";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import CancelZone from "./DnD/CancelZone";
 import { useToolbarActions } from "../hooks/useToolbarActions";
+import { Webview } from "@tauri-apps/api/webview";
 
 interface ToolbarProps {}
 
 const CreatorToolbar: React.FC<ToolbarProps> = () => {
   const manifest = getManifestStore();
-  const projectName = useManifestStore((obj) => obj.manifest?.label);
   const [editName, setEditName] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
   const isSaving = useDataTrackStore((state) => state.isSaving);
@@ -52,10 +53,23 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
   const selectedElement = selectedId ? elementMap[selectedId] : null;
   const actions = useToolbarActions(selectedElement);
 
+  const { projectName, isPublished } = useMemo(
+    () => ({
+      projectName: manifest?.label,
+      isPublished: !!manifest?.published,
+    }),
+    [manifest]
+  );
+
   useEffect(() => {
     if (!manifest) return;
     let unsub: UnlistenFn;
     (async () => {
+      const previewWindow = await Webview.getByLabel(
+        `widget-preview-${manifest.key}`
+      );
+      setIsPreviewing(!!previewWindow);
+
       unsub = await listen<string>("widget-close", ({ payload }) => {
         const path = manifest.path;
         if (path && payload.startsWith(path)) {
@@ -81,13 +95,29 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
     setEditName(false);
   }, []);
 
+  const togglePreview = useCallback(async () => {
+    if (isPreviewing) {
+      await closeWidgetWindow(`widget-preview-${manifest?.key || ""}`);
+    } else {
+      await createWidgetWindow(manifest?.path || "", true);
+      setIsPreviewing(true);
+    }
+  }, [isPreviewing, manifest]);
+
+  const publish = useCallback(async () => {
+    useDataTrackStore.setState({ isSaving: true });
+    await publishWidget(manifest?.path || "");
+    useDataTrackStore.setState({ isSaving: false });
+    window.location.reload();
+  }, [manifest]);
+
   return (
     <Toolbar style={{ gap: "5px", justifyContent: "space-between" }}>
       <ToolbarGroup style={{ display: "flex", alignItems: "center" }}>
         {!editName ? (
           <Tooltip content="Project name" relationship="label">
             <Button
-              disabled={isSaving || isPreviewing}
+              disabled={isSaving || isPreviewing || isPublished}
               size="small"
               appearance="secondary"
               icon={<EditRegular />}
@@ -183,23 +213,26 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
             }}
           />
         </Tooltip>
-        <Button
-          size="small"
-          onClick={async () => {
-            if (isPreviewing) {
-              await closeWidgetWindow(
-                `widget-preview-${projectName?.toLowerCase().replace(/ /g, "")}`
-              );
-            } else {
-              await createWidgetWindow(manifest?.path || "", true);
-              setIsPreviewing(true);
-            }
-          }}>
+        <Button size="small" disabled={isSaving} onClick={togglePreview}>
           {isPreviewing ? "Close preview" : "Preview"}
         </Button>
-        <Button size="small" appearance="primary">
-          Publish
-        </Button>
+        <Tooltip
+          content={
+            isPublished && manifest?.publishedAt
+              ? `Last published: ${new Date(
+                  manifest.publishedAt
+                ).toLocaleString()}`
+              : "Add the widget to the Installed list"
+          }
+          relationship="label">
+          <Button
+            size="small"
+            appearance="primary"
+            onClick={publish}
+            disabled={isSaving}>
+            {isPublished ? "Update" : "Publish"}
+          </Button>
+        </Tooltip>
       </ToolbarGroup>
       <CustomVariablesDialog
         open={isCustomFieldsOpen}

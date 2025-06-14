@@ -50,6 +50,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   saves,
 }) => {
   const styles = useStyles();
+  const [visible, setVisible] = React.useState(widget.visible ?? false);
 
   return (
     <Card
@@ -110,18 +111,21 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
         ) : (
           <Switch
             className={styles.switch}
-            label={widget.visible ? "Enabled" : "Disabled"}
+            label={visible ? "Enabled" : "Disabled"}
             style={{ margin: 0 }}
-            defaultChecked={widget.visible}
+            checked={visible}
             indicator={{ className: styles.switch }}
             onChange={async (_, { checked }) => {
               if (checked) {
-                await createWidgetWindow(widget.path);
+                await createWidgetWindow(widget.path, false, true);
               } else {
                 await closeWidgetWindow(
-                  `widget-${widget.label.toLowerCase().replace(/ /g, "")}`
+                  `widget-${widget.key}`,
+                  true,
+                  widget.path
                 );
               }
+              setVisible(checked);
             }}
           />
         )}
