@@ -1,8 +1,9 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "widgets",
+  "productName": "Delta Widgets",
   "version": "0.1.0",
   "identifier": "com.widgets.app",
+  "mainBinaryName": "delta-widgets",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +13,7 @@
   "app": {
     "windows": [
       {
-        "title": "widgets",
+        "title": "Delta Widgets",
         "width": 800,
         "height": 600
       }
