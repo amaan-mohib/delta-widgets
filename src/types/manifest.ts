@@ -40,4 +40,5 @@ export interface IWidget {
   customAssets?: ICustomAssets[];
   published?: boolean;
   publishedAt?: string | number;
+  alwaysOnTop?: boolean;
 }

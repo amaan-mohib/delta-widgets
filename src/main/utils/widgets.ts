@@ -356,3 +356,19 @@ export const publishWidget = async (manifestPath: string) => {
     });
   }
 };
+
+export const toggleAlwaysOnTop = async (
+  manifestPath: string,
+  value: boolean
+) => {
+  try {
+    const path = await getManifestPath(manifestPath);
+    await invoke("toggle_always_on_top", { value, path: JSON.stringify(path) });
+  } catch (error) {
+    console.error(error);
+    await message("Could not set always on top", {
+      title: "Error",
+      kind: "error",
+    });
+  }
+};

@@ -24,8 +24,10 @@ import {
   createWidgetWindow,
   duplicateWidget,
   removeWidget,
+  toggleAlwaysOnTop,
 } from "../utils/widgets";
 import {
+  CheckmarkRegular,
   CopyRegular,
   DeleteRegular,
   EditRegular,
@@ -55,6 +57,9 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
 }) => {
   const styles = useStyles();
   const [visible, setVisible] = React.useState(widget.visible ?? false);
+  const [alwaysOnTop, setAlwaysOnTop] = React.useState(
+    widget.alwaysOnTop ?? false
+  );
   const { dispatchToast, dismissToast } = useToastController("toaster");
   const notify = () =>
     dispatchToast(
@@ -81,7 +86,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       }>
       <CardHeader
         action={
-          <Menu positioning={"below-end"}>
+          <Menu positioning={"below-end"} hasIcons>
             <MenuTrigger disableButtonEnhancement>
               <MenuButton
                 onClick={(e) => e.stopPropagation()}
@@ -103,6 +108,14 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
                   icon={<DeleteRegular />}
                   onClick={() => removeWidget(widget.path)}>
                   Remove
+                </MenuItem>
+                <MenuItem
+                  icon={alwaysOnTop ? <CheckmarkRegular /> : undefined}
+                  onClick={async () => {
+                    await toggleAlwaysOnTop(widget.path, !alwaysOnTop);
+                    setAlwaysOnTop((prev) => !prev);
+                  }}>
+                  Always on Top
                 </MenuItem>
               </MenuList>
             </MenuPopover>
@@ -133,8 +146,9 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
             onChange={async (_, { checked }) => {
               if (checked) {
                 await createWidgetWindow(widget.path, false, true);
-                // TODO: Do not show if always on top enabled
-                notify();
+                if (!alwaysOnTop) {
+                  notify();
+                }
               } else {
                 await closeWidgetWindow(
                   `widget-${widget.key}`,

@@ -116,6 +116,7 @@ struct WidgetManifest {
     url: Option<String>,
     file: Option<String>,
     visible: Option<bool>,
+    always_on_top: Option<bool>,
     #[serde(default = "default_widget_type")]
     widget_type: WidgetType,
 }
@@ -147,8 +148,7 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
         _ => "widget-index.html".into(),
     };
     let label = format!(
-        "{}{}{}",
-        "widget-",
+        "widget-{}{}",
         if is_preview.unwrap_or(false) {
             "preview-"
         } else {
@@ -222,7 +222,12 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
     new_window.show().unwrap();
     if !is_preview.unwrap_or(false) {
         new_window.set_skip_taskbar(true).unwrap();
-        new_window.set_always_on_bottom(true).unwrap();
+        let always_on_top = manifest.always_on_top.unwrap_or(false);
+        if always_on_top {
+            new_window.set_always_on_top(always_on_top).unwrap();
+        } else {
+            new_window.set_always_on_bottom(true).unwrap();
+        }
         attach_window_events(new_window.clone(), clean_path);
     } else {
         new_window.on_window_event(move |event| {
@@ -419,4 +424,45 @@ pub async fn toggle_widget_visibility(_app: tauri::AppHandle, visibility: bool, 
     if let Ok(json_string) = serde_json::to_string_pretty(&config) {
         let _ = fs::write(&clean_path, json_string);
     }
+}
+
+#[tauri::command]
+pub async fn toggle_always_on_top(
+    app: tauri::AppHandle,
+    value: bool,
+    path: String,
+) -> Result<(), String> {
+    let clean_path = serde_json::from_str::<String>(&path).unwrap();
+    let config_content = fs::read_to_string(&clean_path).unwrap();
+
+    // Parse the existing JSON
+    let mut config: Value = match serde_json::from_str(&config_content) {
+        Ok(json) => json,
+        Err(_) => json!({}),
+    };
+    let key = config
+        .get("key")
+        .and_then(Value::as_str)
+        .unwrap()
+        .to_string();
+    let label = format!("widget-{}", key);
+    if let Some(window) = app.get_webview_window(&label) {
+        let _ = match window.set_always_on_bottom(!value) {
+            Ok(_) => Ok(()),
+            Err(err) => Err(format!("Error setting always on top: {}", err)),
+        };
+        let _ = match window.set_always_on_top(value) {
+            Ok(_) => Ok(()),
+            Err(err) => Err(format!("Error setting always on top: {}", err)),
+        };
+    };
+
+    if let Value::Object(ref mut map) = config {
+        map.insert(String::from("alwaysOnTop"), json!(value));
+    }
+    // Write the updated JSON back to the file
+    if let Ok(json_string) = serde_json::to_string_pretty(&config) {
+        let _ = fs::write(&clean_path, json_string);
+    }
+    Ok(())
 }
