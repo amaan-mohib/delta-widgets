@@ -7,7 +7,7 @@ use std::{
 };
 
 use serde_json::{json, Value};
-use tauri::{Emitter, LogicalSize, Manager, PhysicalPosition, PhysicalSize};
+use tauri::{Emitter, Manager, PhysicalPosition, PhysicalSize};
 use tokio::time::{sleep, Instant};
 
 #[tauri::command]
@@ -99,6 +99,50 @@ pub async fn create_creator_window(
     });
 }
 
+pub fn ensure_window_position_bounds(
+    webview: &tauri::WebviewWindow,
+    position: PhysicalPosition<i32>,
+    size: PhysicalSize<u32>,
+) -> PhysicalPosition<i32> {
+    let monitors = webview.available_monitors().unwrap();
+
+    let win_x = position.x;
+    let win_y = position.y;
+    let win_right = win_x + size.width as i32;
+    let win_bottom = win_y + size.height as i32;
+
+    let mut in_bounds = false;
+
+    for monitor in &monitors {
+        let monitor_size = monitor.size();
+        let monitor_position = monitor.position();
+
+        if win_x >= monitor_position.x
+            && win_y >= monitor_position.y
+            && win_right <= monitor_position.x + monitor_size.width as i32
+            && win_bottom <= monitor_position.y + monitor_size.height as i32
+        {
+            in_bounds = true;
+            break;
+        }
+    }
+
+    if in_bounds {
+        return position;
+    }
+
+    if let Some(primary) = webview.primary_monitor().unwrap_or_default() {
+        let mon_pos = primary.position();
+
+        let new_x = mon_pos.x + 30 as i32;
+        let new_y = mon_pos.y + 30 as i32;
+
+        PhysicalPosition { x: new_x, y: new_y }
+    } else {
+        PhysicalPosition { x: 30, y: 30 }
+    }
+}
+
 #[derive(serde::Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum WidgetType {
@@ -134,13 +178,25 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
 
     let title = manifest.label.unwrap_or_else(|| "Widget".to_string());
     let manifest_key = manifest.key.unwrap_or_else(|| "widget".to_string());
-    let position = manifest
-        .position
-        .map(|p| PhysicalPosition {
-            x: p.x as i32,
-            y: p.y as i32,
+
+    let physical_size = manifest
+        .dimensions
+        .map(|d| PhysicalSize {
+            height: d.height as u32,
+            width: d.width as u32,
         })
-        .unwrap_or(PhysicalPosition { x: 30, y: 30 });
+        .unwrap_or(PhysicalSize {
+            width: if manifest.widget_type == WidgetType::Url {
+                520
+            } else {
+                600
+            },
+            height: if manifest.widget_type == WidgetType::Url {
+                840
+            } else {
+                400
+            },
+        });
 
     let url = match manifest.widget_type {
         WidgetType::Url => manifest.url.unwrap_or_else(|| "".to_string()),
@@ -192,32 +248,28 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
 
     let new_window = window_builder.build().unwrap();
 
+    let position = manifest
+        .position
+        .map(|p| {
+            ensure_window_position_bounds(
+                &new_window,
+                PhysicalPosition {
+                    x: p.x as i32,
+                    y: p.y as i32,
+                },
+                physical_size,
+            )
+        })
+        .unwrap_or(PhysicalPosition { x: 30, y: 30 });
+
     new_window.set_position(position).unwrap();
 
-    if manifest.widget_type == WidgetType::Json || manifest.widget_type == WidgetType::Html {
-        let dimensions = manifest
-            .dimensions
-            .map(|d| LogicalSize {
-                height: d.height as u32,
-                width: d.width as u32,
-            })
-            .unwrap_or(LogicalSize {
-                width: 600,
-                height: 400,
-            });
-        new_window.set_size(dimensions).unwrap();
-    } else if manifest.widget_type == WidgetType::Url {
-        let dimensions = manifest
-            .dimensions
-            .map(|d| PhysicalSize {
-                height: d.height as u32,
-                width: d.width as u32,
-            })
-            .unwrap_or(PhysicalSize {
-                width: 520,
-                height: 840,
-            });
-        new_window.set_size(dimensions).unwrap();
+    if manifest.widget_type == WidgetType::Json {
+        new_window
+            .set_size(physical_size.to_logical::<u32>(1.0))
+            .unwrap();
+    } else if manifest.widget_type == WidgetType::Url || manifest.widget_type == WidgetType::Html {
+        new_window.set_size(physical_size).unwrap();
     }
     new_window.show().unwrap();
     if !is_preview.unwrap_or(false) {
@@ -255,6 +307,12 @@ fn save_window_state(window: &tauri::WebviewWindow, config_path: String) {
             Err(_) => json!({}),
         };
 
+        let widget_type = config
+            .get("widgetType")
+            .and_then(Value::as_str)
+            .unwrap_or("json")
+            .to_string();
+
         // Update only the window position and size fields
         if let Value::Object(ref mut map) = config {
             map.insert(
@@ -265,13 +323,15 @@ fn save_window_state(window: &tauri::WebviewWindow, config_path: String) {
                 }),
             );
 
-            map.insert(
-                String::from("size"),
-                json!({
-                    "width": size.width,
-                    "height": size.height
-                }),
-            );
+            if widget_type != "json" {
+                map.insert(
+                    String::from("dimensions"),
+                    json!({
+                        "width": size.width,
+                        "height": size.height
+                    }),
+                );
+            }
         }
 
         // Write the updated JSON back to the file
