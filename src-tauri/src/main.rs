@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    widgets_lib::run()
+    delta_widgets_lib::run()
 }

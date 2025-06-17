@@ -3,6 +3,9 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "windows": ["main", "creator", "widget-*"],
+  "remote": {
+    "urls": ["http://*.localhost*", "http://localhost*"]
+  },
   "permissions": [
     "core:default",
     "opener:default",

@@ -128,59 +128,68 @@ export const addWidget = async (
   data: { url?: string; path?: string; manifest?: IWidget; label: string },
   saves?: boolean
 ) => {
-  if (!data.label) {
-    await message("Label is required", {
-      title: "Label is required",
+  try {
+    if (!data.label) {
+      throw new Error("Label is required");
+    }
+    const key = data.manifest?.key || data.label.toLowerCase();
+    const description = data.manifest?.description;
+    const { widgetsDir, widgetsDirExists } = await getWidgetsDirPath(saves);
+    if (!widgetsDirExists) {
+      throw new Error("Widget directory does not exist");
+    }
+    const widgetFolders = await readDir(widgetsDir);
+    if (widgetFolders.find((item) => item.name === key)) {
+      throw new Error("Widget with same key exists");
+    }
+
+    let manifest: Omit<IWidget, "path"> | null = null;
+
+    if (type === "url" && data.url) {
+      manifest = {
+        ...(data.manifest || {}),
+        key,
+        label: data.label,
+        url: data.url,
+        description,
+      };
+    }
+
+    if (type === "json" && data.manifest) {
+      manifest = { ...data.manifest, label: data.label, description };
+    }
+
+    if (type === "html" && data.path) {
+      await invoke("copy_custom_assets_dir", { key, path: data.path });
+      manifest = {
+        ...(data.manifest || {}),
+        key,
+        label: data.label,
+        file: data.path,
+        description,
+      };
+    }
+    try {
+      await mkdir(await path.resolve(widgetsDir, key));
+      await writeTextFile(
+        await path.resolve(widgetsDir, key, "manifest.json"),
+        JSON.stringify(
+          { ...manifest, widgetType: type, path: undefined },
+          null,
+          2
+        )
+      );
+    } catch (error) {
+      console.error(error);
+      throw new Error("Something went wrong while adding widget");
+    }
+  } catch (error) {
+    console.error(error);
+    await message(error as string, {
+      title: "Error",
       kind: "error",
     });
-    return Promise.reject("Label is required");
   }
-  const key = data.manifest?.key || data.label.toLowerCase();
-  const description = data.manifest?.description;
-  const { widgetsDir, widgetsDirExists } = await getWidgetsDirPath(saves);
-  if (!widgetsDirExists) {
-    return Promise.reject("Widget directory does not exist");
-  }
-  const widgetFolders = await readDir(widgetsDir);
-  if (widgetFolders.find((item) => item.name === key)) {
-    await message("Widget with same key exists", {
-      title: "Cannot add widget",
-      kind: "error",
-    });
-    return Promise.reject("Widget with same key exists");
-  }
-  await mkdir(await path.resolve(widgetsDir, key));
-  let manifest: Omit<IWidget, "path"> | null = null;
-
-  if (type === "url" && data.url) {
-    manifest = {
-      ...(data.manifest || {}),
-      key,
-      label: data.label,
-      url: data.url,
-      description,
-    };
-  }
-
-  if (type === "json" && data.manifest) {
-    manifest = { ...data.manifest, label: data.label, description };
-  }
-
-  if (type === "html" && data.path) {
-    manifest = {
-      ...(data.manifest || {}),
-      key,
-      label: data.label,
-      file: await path.resolve(data.path, "index.html"),
-      description,
-    };
-  }
-
-  await writeTextFile(
-    await path.resolve(widgetsDir, key, "manifest.json"),
-    JSON.stringify({ ...manifest, widgetType: type, path: undefined }, null, 2)
-  );
-  return Promise.resolve();
 };
 
 export const duplicateWidget = async (widget: IWidget, saves?: boolean) => {

@@ -16,7 +16,7 @@ const addStyleSheet = async (
     });
 
     href = convertFileSrc(
-      await path.resolve(await appCacheDir(), "assets", href)
+      await path.resolve(await appCacheDir(), "assets", key)
     );
   }
 

@@ -1,7 +1,8 @@
 use std::{
     collections::HashMap,
     fs::{self, File},
-    io::Read,
+    io::{self, Read},
+    path::Path,
     sync::Mutex,
     time::Duration,
 };
@@ -9,6 +10,8 @@ use std::{
 use serde_json::{json, Value};
 use tauri::{Emitter, Manager, PhysicalPosition, PhysicalSize};
 use tokio::time::{sleep, Instant};
+
+use crate::get_custom_server_port;
 
 #[tauri::command]
 pub async fn create_creator_window(
@@ -143,6 +146,20 @@ pub fn ensure_window_position_bounds(
     }
 }
 
+fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> {
+    fs::create_dir_all(&dst)?;
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let ty = entry.file_type()?;
+        if ty.is_dir() {
+            copy_dir_all(entry.path(), dst.as_ref().join(entry.file_name()))?;
+        } else {
+            fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?;
+        }
+    }
+    Ok(())
+}
+
 #[derive(serde::Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum WidgetType {
@@ -200,7 +217,18 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
 
     let url = match manifest.widget_type {
         WidgetType::Url => manifest.url.unwrap_or_else(|| "".to_string()),
-        WidgetType::Html => manifest.file.unwrap_or_else(|| "index.html".to_string()),
+        WidgetType::Html => {
+            let html_folder = manifest.file.unwrap_or_else(|| "index.html".to_string());
+            let _ = copy_custom_assets_dir(app.clone(), manifest_key.clone(), html_folder.clone())
+                .await
+                .unwrap();
+            let port = get_custom_server_port();
+            format!(
+                "http://localhost:{}/{}/index.html",
+                port,
+                manifest_key.clone(),
+            )
+        }
         _ => "widget-index.html".into(),
     };
     let label = format!(
@@ -414,6 +442,32 @@ pub async fn copy_custom_assets(app: tauri::AppHandle, key: String, path: String
             Err(format!("Error copying file: {}", err))
         }
     };
+}
+
+#[tauri::command]
+pub async fn copy_custom_assets_dir(
+    app: tauri::AppHandle,
+    key: String,
+    path: String,
+) -> Result<String, String> {
+    let asset_path = app
+        .path()
+        .resolve("files", tauri::path::BaseDirectory::AppCache)
+        .unwrap()
+        .join(&key);
+
+    if !fs::exists(std::path::Path::new(path.as_str()).join("index.html")).expect("msg") {
+        return Err("No index.html found in the specified directory".to_string());
+    }
+    if let Err(err) = copy_dir_all(path, &asset_path) {
+        eprintln!("Error copying directory: {}", err);
+        return Err(format!("Error copying directory: {}", err));
+    };
+    Ok(asset_path
+        .clone()
+        .join("index.html")
+        .to_string_lossy()
+        .to_string())
 }
 
 #[tauri::command]

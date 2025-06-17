@@ -24,7 +24,8 @@
         "scope": ["$APPCACHE/**"],
         "enable": true
       }
-    }
+    },
+    "withGlobalTauri": true
   },
   "bundle": {
     "active": true,
