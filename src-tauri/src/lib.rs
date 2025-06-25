@@ -30,6 +30,48 @@ pub fn get_custom_server_port() -> u16 {
     }
 }
 
+pub fn get_or_create_store(app_handle: &AppHandle) -> Result<serde_json::Value, serde_json::Error> {
+    let store_path = app_handle
+        .path()
+        .resolve("store.json", tauri::path::BaseDirectory::AppData)
+        .unwrap();
+
+    if !store_path.exists() {
+        fs::write(&store_path, "{}").expect("Failed to create store file");
+    }
+    fs::read_to_string(&store_path)
+        .and_then(|contents| Ok(serde_json::from_str::<serde_json::Value>(&contents)))
+        .expect("Cannot read store file")
+}
+
+pub fn write_to_store(
+    app_handle: &AppHandle,
+    key: &str,
+    value: serde_json::Value,
+) -> Result<(), std::io::Error> {
+    let store_path = app_handle
+        .path()
+        .resolve("store.json", tauri::path::BaseDirectory::AppData)
+        .unwrap();
+
+    let mut store = get_or_create_store(app_handle)?;
+    store[key] = value;
+
+    fs::write(store_path, serde_json::to_string(&store).unwrap())?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn write_to_store_cmd(
+    app: tauri::AppHandle,
+    key: String,
+    value: Value,
+) -> Result<(), String> {
+    let value = serde_json::to_value(value).map_err(|e| e.to_string())?;
+    write_to_store(&app, &key, value).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let port = portpicker::pick_unused_port().expect("failed to find unused port");
@@ -57,6 +99,7 @@ pub fn run() {
             widget::toggle_always_on_top,
             widget::copy_custom_assets_dir,
             system::get_system_info,
+            write_to_store_cmd,
         ])
         .setup(|app| {
             let show_i = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
@@ -98,22 +141,26 @@ pub fn run() {
                 main_window.show().unwrap(); // show normally
             }
             let autostart_manager = app.autolaunch();
-            // let store = app.store("store.json")?;
-            // let store_autostart = store.get("autostart").and_then(|v| Value::as_bool(&v));
-            // match store_autostart {
-            //     Some(autostart) => {
-            //         if autostart {
-            //             autostart_manager.enable().unwrap();
-            //         } else {
-            //             autostart_manager.disable().unwrap();
-            //         }
-            //     }
-            //     None => {
-            //         // Default to enabled if not set
-            //         store.set("autostart", serde_json::json!(true));
-            //         autostart_manager.enable().unwrap();
-            //     }
-            // }
+            let autostart_enabled = autostart_manager.is_enabled().unwrap_or(false);
+            let store = get_or_create_store(app.handle()).unwrap();
+
+            let store_autostart = store.get("autostart").and_then(Value::as_bool);
+            match store_autostart {
+                Some(autostart) => {
+                    if autostart && !autostart_enabled {
+                        autostart_manager.enable().unwrap();
+                    } else if !autostart && autostart_enabled {
+                        autostart_manager.disable().unwrap();
+                    }
+                }
+                None => {
+                    // Default to enabled if not set
+                    let _ = write_to_store(app.handle(), "autostart", serde_json::json!(true));
+                    if !autostart_enabled {
+                        autostart_manager.enable().unwrap();
+                    }
+                }
+            }
 
             let app_handle = app.handle().clone();
             let widgets_dir = app

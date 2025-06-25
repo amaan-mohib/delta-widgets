@@ -34,6 +34,7 @@ import AddWidgetDialog, { IDialogState } from "./components/AddWidgetDialog";
 import WidgetCard from "./components/WidgetCard";
 import { IWidget } from "../types/manifest";
 import * as autostart from "@tauri-apps/plugin-autostart";
+import { invoke } from "@tauri-apps/api/core";
 
 const useStyles = makeStyles({
   container: {
@@ -162,6 +163,10 @@ function App() {
     } else {
       await autostart.enable();
     }
+    await invoke("write_to_store_cmd", {
+      key: "autostart",
+      value: !autostartEnabled,
+    });
     setAutostartEnabled((prev) => !prev);
   }, [autostartEnabled]);
 
