@@ -13,6 +13,7 @@ import {
   Menu,
   MenuButton,
   MenuItem,
+  MenuItemLink,
   MenuList,
   MenuPopover,
   MenuTrigger,
@@ -26,11 +27,13 @@ import {
   BracesRegular,
   CodeRegular,
   LinkRegular,
+  MoreHorizontal20Regular,
 } from "@fluentui/react-icons";
 import { UnwatchFn } from "@tauri-apps/plugin-fs";
 import AddWidgetDialog, { IDialogState } from "./components/AddWidgetDialog";
 import WidgetCard from "./components/WidgetCard";
 import { IWidget } from "../types/manifest";
+import * as autostart from "@tauri-apps/plugin-autostart";
 
 const useStyles = makeStyles({
   container: {
@@ -44,6 +47,7 @@ const useStyles = makeStyles({
     display: "flex",
     alignItems: "center",
     justifyContent: "end",
+    gap: "10px",
   },
   card: {
     width: "200px",
@@ -61,6 +65,7 @@ function App() {
     type: "none",
     path: "",
   });
+  const [autostartEnabled, setAutostartEnabled] = useState(false);
   const widgetsList = useMemo(
     () =>
       Object.values(widgets).sort((a, b) =>
@@ -123,6 +128,12 @@ function App() {
     getAndSetSavedWidgets();
   }, []);
 
+  useEffect(() => {
+    autostart.isEnabled().then((enabled) => {
+      setAutostartEnabled(enabled);
+    });
+  }, []);
+
   const importHTML = useCallback(async () => {
     const { path } = await fileOrFolderPicker({
       directory: true,
@@ -144,6 +155,15 @@ function App() {
         manifest,
       });
   }, []);
+
+  const toggleAutostart = useCallback(async () => {
+    if (autostartEnabled) {
+      await autostart.disable();
+    } else {
+      await autostart.enable();
+    }
+    setAutostartEnabled((prev) => !prev);
+  }, [autostartEnabled]);
 
   return (
     <main className="container">
@@ -169,6 +189,26 @@ function App() {
               <MenuItem icon={<BracesRegular />} onClick={importJSON}>
                 Import JSON
               </MenuItem>
+            </MenuList>
+          </MenuPopover>
+        </Menu>
+        <Menu>
+          <MenuTrigger disableButtonEnhancement>
+            <MenuButton
+              appearance="subtle"
+              icon={<MoreHorizontal20Regular />}
+            />
+          </MenuTrigger>
+          <MenuPopover>
+            <MenuList>
+              <MenuItem onClick={toggleAutostart}>
+                {`${autostartEnabled ? "Disable" : "Enable"} autostart`}
+              </MenuItem>
+              <MenuItemLink
+                href="https://github.com/amaan-mohib/delta-widgets"
+                target="_blank">
+                About
+              </MenuItemLink>
             </MenuList>
           </MenuPopover>
         </Menu>

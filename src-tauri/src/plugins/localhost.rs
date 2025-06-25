@@ -12,10 +12,12 @@ use tauri::{
 use tiny_http::{Header, Response as HttpResponse, Server};
 
 pub struct Request {
+    #[allow(dead_code)]
     url: String,
 }
 
 impl Request {
+    #[allow(dead_code)]
     pub fn url(&self) -> &str {
         &self.url
     }
@@ -49,11 +51,13 @@ impl Builder {
     }
 
     // Change the host the plugin binds to. Defaults to `localhost`.
+    #[allow(dead_code)]
     pub fn host<H: Into<String>>(mut self, host: H) -> Self {
         self.host = Some(host.into());
         self
     }
 
+    #[allow(dead_code)]
     pub fn on_request<F: Fn(&Request, &mut Response) + Send + Sync + 'static>(
         mut self,
         f: F,
