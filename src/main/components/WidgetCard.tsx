@@ -39,6 +39,7 @@ interface WidgetCardProps {
   widget: IWidget;
   cardStyle: string;
   saves?: boolean;
+  updateAllWidgets: () => void;
 }
 
 const useStyles = makeStyles({
@@ -54,6 +55,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   widget,
   cardStyle,
   saves,
+  updateAllWidgets,
 }) => {
   const styles = useStyles();
   const [visible, setVisible] = React.useState(widget.visible ?? false);
@@ -99,14 +101,19 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
               <MenuList>
                 <MenuItem
                   icon={<CopyRegular />}
-                  onClick={() => {
-                    duplicateWidget(widget, saves).catch(console.log);
+                  onClick={async () => {
+                    await duplicateWidget(widget, saves).catch(console.log);
+                    updateAllWidgets();
                   }}>
                   {saves ? "Clone" : "Duplicate"}
                 </MenuItem>
                 <MenuItem
                   icon={<DeleteRegular />}
-                  onClick={() => removeWidget(widget.path)}>
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    await removeWidget(widget.path);
+                    updateAllWidgets();
+                  }}>
                   Remove
                 </MenuItem>
                 <MenuItem
@@ -130,9 +137,10 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
             <Button icon={<EditRegular />} />
             <Button
               icon={<DeleteRegular />}
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                removeWidget(widget.path, saves);
+                await removeWidget(widget.path);
+                updateAllWidgets();
               }}
             />
           </>

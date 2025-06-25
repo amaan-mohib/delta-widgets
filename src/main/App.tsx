@@ -4,7 +4,6 @@ import {
   createCreatorWindow,
   fileOrFolderPicker,
   getAllWidgets,
-  watchWidgetFolder,
 } from "./utils/widgets";
 import {
   Card,
@@ -29,7 +28,6 @@ import {
   LinkRegular,
   MoreHorizontal20Regular,
 } from "@fluentui/react-icons";
-import { UnwatchFn } from "@tauri-apps/plugin-fs";
 import AddWidgetDialog, { IDialogState } from "./components/AddWidgetDialog";
 import WidgetCard from "./components/WidgetCard";
 import { IWidget } from "../types/manifest";
@@ -83,50 +81,20 @@ function App() {
   );
 
   const getAndSetWidgets = useCallback(async () => {
-    const widgets = await getAllWidgets();
-    setWidgets(widgets);
-  }, []);
-  useEffect(() => {
-    let unwatch: UnwatchFn | null;
-    (async () => {
-      try {
-        unwatch = await watchWidgetFolder(async () => {
-          getAndSetWidgets();
-        });
-      } catch (error) {
-        console.error(error);
-      }
-    })();
-
-    return () => {
-      unwatch && unwatch();
-    };
+    getAllWidgets().then((widgets) => setWidgets(widgets));
   }, []);
 
   const getAndSetSavedWidgets = useCallback(async () => {
-    const widgets = await getAllWidgets(true);
-    setSavedWidgets(widgets);
-  }, []);
-  useEffect(() => {
-    let unwatch: UnwatchFn | null;
-    (async () => {
-      try {
-        unwatch = await watchWidgetFolder(() => {
-          getAndSetSavedWidgets();
-        }, true);
-      } catch (error) {
-        console.error(error);
-      }
-    })();
-
-    return () => {
-      unwatch && unwatch();
-    };
+    getAllWidgets(true).then((widgets) => setSavedWidgets(widgets));
   }, []);
 
-  useEffect(() => {
+  const updateAllWidgets = useCallback(() => {
     getAndSetWidgets();
     getAndSetSavedWidgets();
+  }, []);
+
+  useEffect(() => {
+    updateAllWidgets();
   }, []);
 
   useEffect(() => {
@@ -227,6 +195,7 @@ function App() {
               key={widget.key}
               widget={widget}
               cardStyle={styles.card}
+              updateAllWidgets={updateAllWidgets}
             />
           );
         })}
@@ -235,6 +204,7 @@ function App() {
           style={{ justifyContent: "center" }}
           onClick={async () => {
             await createCreatorWindow();
+            updateAllWidgets();
           }}>
           <div
             style={{
@@ -263,6 +233,7 @@ function App() {
                   widget={widget}
                   cardStyle={styles.card}
                   saves
+                  updateAllWidgets={updateAllWidgets}
                 />
               );
             })}

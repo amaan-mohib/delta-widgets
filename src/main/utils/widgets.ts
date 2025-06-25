@@ -195,7 +195,7 @@ export const addWidget = async (
 export const duplicateWidget = async (widget: IWidget, saves?: boolean) => {
   const copyLabel = `${widget.label}-${nanoid(4)}`;
   const copyKey = copyLabel.toLowerCase();
-  addWidget(
+  await addWidget(
     widget.widgetType,
     {
       label: copyLabel,
