@@ -95,6 +95,7 @@ pub async fn create_creator_window(
     new_window.on_window_event(move |event| {
         match event {
             tauri::WindowEvent::CloseRequested { .. } => {
+                let _ = app.emit_to("main", "creator-close", 1);
                 webview.show().unwrap();
             }
             _ => {}

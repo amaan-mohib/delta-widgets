@@ -101,7 +101,8 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
               <MenuList>
                 <MenuItem
                   icon={<CopyRegular />}
-                  onClick={async () => {
+                  onClick={async (e) => {
+                    e.stopPropagation();
                     await duplicateWidget(widget, saves).catch(console.log);
                     updateAllWidgets();
                   }}>
@@ -116,14 +117,17 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
                   }}>
                   Remove
                 </MenuItem>
-                <MenuItem
-                  icon={alwaysOnTop ? <CheckmarkRegular /> : undefined}
-                  onClick={async () => {
-                    await toggleAlwaysOnTop(widget.path, !alwaysOnTop);
-                    setAlwaysOnTop((prev) => !prev);
-                  }}>
-                  Always on Top
-                </MenuItem>
+                {!saves && (
+                  <MenuItem
+                    icon={alwaysOnTop ? <CheckmarkRegular /> : undefined}
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      await toggleAlwaysOnTop(widget.path, !alwaysOnTop);
+                      setAlwaysOnTop((prev) => !prev);
+                    }}>
+                    Always on Top
+                  </MenuItem>
+                )}
               </MenuList>
             </MenuPopover>
           </Menu>

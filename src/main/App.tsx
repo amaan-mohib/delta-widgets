@@ -33,6 +33,7 @@ import WidgetCard from "./components/WidgetCard";
 import { IWidget } from "../types/manifest";
 import * as autostart from "@tauri-apps/plugin-autostart";
 import { invoke } from "@tauri-apps/api/core";
+import { listen, UnlistenFn } from "@tauri-apps/api/event";
 
 const useStyles = makeStyles({
   container: {
@@ -95,6 +96,18 @@ function App() {
 
   useEffect(() => {
     updateAllWidgets();
+  }, []);
+
+  useEffect(() => {
+    let unsub: UnlistenFn;
+    (async () => {
+      unsub = await listen<string>("creator-close", () => {
+        updateAllWidgets();
+      });
+    })();
+    return () => {
+      unsub && unsub();
+    };
   }, []);
 
   useEffect(() => {
