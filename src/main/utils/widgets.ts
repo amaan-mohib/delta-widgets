@@ -212,9 +212,10 @@ export const duplicateWidget = async (widget: IWidget, saves?: boolean) => {
   );
 };
 
-export const removeWidget = async (filePath: string, saves?: boolean) => {
+export const removeWidget = async (filePath: string) => {
   try {
-    await remove(saves ? await path.resolve(filePath, "..") : filePath, {
+    const manifestPath = await getManifestPath(filePath);
+    await remove(await path.resolve(manifestPath, ".."), {
       recursive: true,
     });
   } catch (error) {
