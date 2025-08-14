@@ -1,0 +1,100 @@
+{
+  "key": "battery",
+  "label": "battery",
+  "elements": [
+    {
+      "type": "container",
+      "id": "container",
+      "styles": {
+        "display": "flex",
+        "background": "transparent",
+        "flex": 1,
+        "width": "100%",
+        "padding": "10px",
+        "backgroundColor": "#000000ff",
+        "flexDirection": "column",
+        "gap": "10px"
+      },
+      "children": [
+        {
+          "id": "text-9Hw8",
+          "type": "text",
+          "styles": {
+            "fontSize": "20px",
+            "lineHeight": "20px",
+            "fontWeight": "bold"
+          },
+          "data": {
+            "text": "<p>Battery</p>"
+          },
+          "label": "text-9Hw8"
+        },
+        {
+          "id": "text-0LFf",
+          "type": "text",
+          "styles": {
+            "fontSize": "16px",
+            "lineHeight": "16px"
+          },
+          "data": {
+            "text": "<p>Technology: {{system:battery_technology}}</p><p>Cycles: {{system:battery_cycles}}</p><p>Charge: {{system:battery_charge}}%</p><p>Health: {{system:battery_health}}%</p><p>Vendor: {{system:battery_vendor}}</p><p>Model: {{system:battery_model}}</p>"
+          },
+          "label": "text-0LFf"
+        },
+        {
+          "id": "text-Vnhb",
+          "type": "text",
+          "styles": {
+            "fontSize": "16px",
+            "lineHeight": "16px"
+          },
+          "data": {
+            "text": "<p>Charge ({{system:battery_charge}}%)</p>"
+          },
+          "label": "text-Vnhb"
+        },
+        {
+          "id": "progress-WxKK",
+          "type": "progress",
+          "styles": {
+            "padding": 0
+          },
+          "data": {
+            "value": "{{system:battery_charge}}",
+            "maxValue": "100",
+            "thickness": "large"
+          }
+        },
+        {
+          "id": "text-vEEY",
+          "type": "text",
+          "styles": {
+            "fontSize": "16px",
+            "lineHeight": "16px"
+          },
+          "data": {
+            "text": "<p>Health ({{system:battery_health}}%)</p>"
+          },
+          "label": "text-vEEY"
+        },
+        {
+          "id": "progress-wqK8",
+          "type": "progress",
+          "styles": {
+            "padding": 0
+          },
+          "data": {
+            "value": "{{system:battery_health}}",
+            "maxValue": "100"
+          }
+        }
+      ],
+      "data": {}
+    }
+  ],
+  "dimensions": {
+    "width": 335,
+    "height": 232
+  },
+  "widgetType": "json"
+}

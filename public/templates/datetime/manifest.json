@@ -1,0 +1,60 @@
+{
+  "key": "datetime",
+  "label": "datetime",
+  "elements": [
+    {
+      "type": "container",
+      "id": "container",
+      "styles": {
+        "display": "flex",
+        "background": "transparent",
+        "flex": 1,
+        "width": "100%",
+        "padding": "5px",
+        "flexDirection": "column",
+        "gap": "5px",
+        "alignItems": "center",
+        "justifyContent": "center",
+        "backgroundColor": "#0000007d",
+        "borderRadius": "500px"
+      },
+      "children": [
+        {
+          "id": "text-TEZS",
+          "type": "text",
+          "styles": {
+            "fontSize": "32px",
+            "lineHeight": "32px",
+            "textAlign": "center",
+            "fontFamily": "Oswald"
+          },
+          "data": {
+            "text": "<p>{{time:hh:mm aa}}</p>"
+          },
+          "label": "text-TEZS"
+        },
+        {
+          "id": "text-MH5e",
+          "type": "text",
+          "styles": {
+            "fontSize": "16px",
+            "lineHeight": "16px",
+            "textAlign": "center",
+            "fontFamily": "Open Sans"
+          },
+          "data": {
+            "text": "<p>{{date:E MMMM d, yyyy}}</p>"
+          },
+          "label": "text-MH5e"
+        }
+      ],
+      "label": "container",
+      "data": {}
+    }
+  ],
+  "dimensions": {
+    "width": 255,
+    "height": 90
+  },
+  "widgetType": "json"
+}

@@ -2,6 +2,7 @@ import { makeStyles, Tab, TabList } from "@fluentui/react-components";
 import React, { useMemo, useState } from "react";
 import ComponentList from "./ComponentList";
 import Layers from "./Layers";
+import WidgetTemplates from "./WidgetTemplates";
 
 interface SidebarProps {}
 
@@ -17,7 +18,7 @@ const useStyles = makeStyles({
 type TTabKey = "components" | "templates" | "layers";
 const tabs: Record<TTabKey, React.ReactNode> = {
   components: <ComponentList />,
-  templates: <>templates</>,
+  templates: <WidgetTemplates />,
   layers: <Layers />,
 };
 

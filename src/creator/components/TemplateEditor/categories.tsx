@@ -43,18 +43,18 @@ const getTemplateCategories = (
         id: "date",
         label: "Date",
         value: "{{date}}",
-        description: "Current date (YYYY/MM/DD)",
+        description: "Current date (yyyy-MMMM-d)",
       },
       {
         id: "date-short",
         label: "Short Date",
-        value: "{{date:MM/DD}}",
-        description: "Short date format (MM/DD)",
+        value: "{{date:d MMM}}",
+        description: "Short date format (MMM/d)",
       },
       {
         id: "date-long",
         label: "Long Date",
-        value: "{{date:MMMM D, YYYY}}",
+        value: "{{date:MMMM d, yyyy}}",
         description: "Long date format (Month Day, Year)",
       },
       {

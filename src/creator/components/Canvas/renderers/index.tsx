@@ -66,7 +66,7 @@ const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
             <DropZone
               id={child.id}
               parentId={id}
-              index={index}
+              index={index + 1}
               direction={flexDirection}
               end
             />

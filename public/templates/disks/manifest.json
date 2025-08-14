@@ -1,0 +1,55 @@
+{
+  "dimensions": {
+    "width": 354,
+    "height": 103
+  },
+  "elements": [
+    {
+      "children": [
+        {
+          "data": {
+            "text": "<p>Disks</p>"
+          },
+          "id": "text-3Yq_",
+          "styles": {
+            "fontSize": "20px",
+            "fontWeight": "bold",
+            "lineHeight": "20px"
+          },
+          "type": "text"
+        },
+        {
+          "data": {},
+          "id": "disk-usage-Jtyw",
+          "styles": {
+            "background": "transparent",
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "20px",
+            "padding": "0px",
+            "width": "100%"
+          },
+          "type": "disk-usage"
+        }
+      ],
+      "data": {},
+      "id": "container",
+      "styles": {
+        "background": "transparent",
+        "backgroundColor": "#000000ff",
+        "display": "flex",
+        "flex": 1,
+        "flexDirection": "column",
+        "gap": "10px",
+        "padding": "10px",
+        "width": "100%"
+      },
+      "type": "container"
+    }
+  ],
+  "key": "disk",
+  "label": "disk",
+  "published": true,
+  "publishedAt": 1750189065604,
+  "widgetType": "json"
+}

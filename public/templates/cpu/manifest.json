@@ -1,0 +1,39 @@
+{
+  "key": "system",
+  "label": "system",
+  "elements": [
+    {
+      "type": "container",
+      "id": "container",
+      "styles": {
+        "display": "flex",
+        "background": "transparent",
+        "flex": 1,
+        "width": "100%",
+        "padding": "10px",
+        "backgroundColor": "#000000ff"
+      },
+      "children": [
+        {
+          "id": "text-7cXI",
+          "type": "text",
+          "styles": {
+            "fontSize": "16px",
+            "lineHeight": "16px"
+          },
+          "data": {
+            "text": "<h2><strong>CPU</strong></h2><p><br></p><p>{{system:cpu_model}} ({{system:cpu_lcores}} cores)</p><p><strong>Speed: </strong>{{system:cpu_speed}}</p><p><strong>Usage:</strong> {{system:cpu_usage}}</p>"
+          },
+          "label": "text-7cXI"
+        }
+      ],
+      "label": "container",
+      "data": {}
+    }
+  ],
+  "dimensions": {
+    "width": 368,
+    "height": 101
+  },
+  "widgetType": "json"
+}

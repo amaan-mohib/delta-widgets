@@ -1,0 +1,92 @@
+{
+  "key": "weather",
+  "label": "weather",
+  "elements": [
+    {
+      "type": "container",
+      "id": "container",
+      "styles": {
+        "display": "flex",
+        "background": "transparent",
+        "flex": 1,
+        "width": "100%",
+        "padding": "5px"
+      },
+      "children": [
+        {
+          "id": "text-hJJR",
+          "type": "text",
+          "styles": {
+            "fontSize": "16px",
+            "lineHeight": "16px"
+          },
+          "data": {
+            "text": "<p><strong>F: {{weather:temperature_fahrenheit}}</strong></p><p><strong>C: {{weather:temperature_celsius}}</strong></p><p><br></p><p>City: {{weather:city}}</p><p>Country: {{weather:country}}</p><p>Region: {{weather:region}}</p><p>UV Index: {{weather:uv_index}}</p><p>Pressure: {{weather:pressure_mb}}</p><p>Precipitation: {{weather:precip_mm}}</p><p>Description: {{weather:description}}</p><p>Humidity: {{weather:humidity}}</p><p>Country: {{weather:country}}</p>"
+          },
+          "label": "text-hJJR"
+        },
+        {
+          "id": "image-mvbh",
+          "type": "image",
+          "styles": {
+            "width": "100px",
+            "height": "100px"
+          },
+          "data": {
+            "src": "{{weather:icon}}",
+            "alt": "image"
+          }
+        }
+      ]
+    }
+  ],
+  "dimensions": {
+    "width": 376,
+    "height": 284
+  },
+  "widgetType": "json",
+  "customFields": {
+    "asd": {
+      "key": "asd",
+      "label": "asd",
+      "value": "qwe",
+      "description": "wfwef"
+    },
+    "trhrth": {
+      "key": "trhrth",
+      "label": "trhrth",
+      "value": "rthrtds",
+      "description": "dsf"
+    },
+    "rtwretrt": {
+      "key": "rtwretrt",
+      "label": "rtwretrt",
+      "value": "retyhrt",
+      "description": ""
+    },
+    "werwe": {
+      "key": "werwe",
+      "label": "werwe",
+      "value": "wer",
+      "description": ""
+    },
+    "erw": {
+      "key": "erw",
+      "label": "erw",
+      "value": "rth",
+      "description": ""
+    },
+    "erg": {
+      "key": "erg",
+      "label": "erg",
+      "value": "erwhtr",
+      "description": ""
+    },
+    "wrgeowerjgoi": {
+      "key": "wrgeowerjgoi",
+      "label": "WRGEOWERJGOI",
+      "value": "rthtrh",
+      "description": ""
+    }
+  }
+}

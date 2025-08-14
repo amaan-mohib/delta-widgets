@@ -1,0 +1,118 @@
+{
+  "key": "ram",
+  "label": "ram",
+  "elements": [
+    {
+      "type": "container",
+      "id": "container",
+      "styles": {
+        "display": "flex",
+        "background": "transparent",
+        "flex": 1,
+        "width": "100%",
+        "padding": "5px",
+        "flexDirection": "column",
+        "backgroundColor": "#000000ff"
+      },
+      "children": [
+        {
+          "id": "container-outo",
+          "type": "container",
+          "styles": {
+            "display": "flex",
+            "flex": 0.8,
+            "background": "transparent",
+            "padding": 5,
+            "width": "100%",
+            "height": "100%",
+            "flexDirection": "column",
+            "alignItems": "center",
+            "justifyContent": "center",
+            "gap": "0px"
+          },
+          "children": [
+            {
+              "id": "container-bNQx",
+              "type": "container",
+              "styles": {
+                "display": "flex",
+                "flex": 1,
+                "background": "transparent",
+                "padding": 5,
+                "width": "100%",
+                "height": "100%",
+                "justifyContent": "space-between",
+                "flexDirection": "row",
+                "alignItems": "center",
+                "gap": "10px"
+              },
+              "children": [
+                {
+                  "id": "text-21n_",
+                  "type": "text",
+                  "styles": {
+                    "fontSize": "20px",
+                    "lineHeight": "20px",
+                    "fontWeight": "bold"
+                  },
+                  "data": {
+                    "text": "<p>RAM</p>"
+                  }
+                },
+                {
+                  "id": "text-lrph",
+                  "type": "text",
+                  "styles": {
+                    "fontSize": "16px",
+                    "lineHeight": "16px"
+                  },
+                  "data": {
+                    "text": "<p>{{system:memory_used}} / {{system:memory_total}}</p>"
+                  }
+                }
+              ],
+              "data": {}
+            },
+            {
+              "id": "container-GV5I",
+              "type": "container",
+              "styles": {
+                "display": "flex",
+                "flex": 1,
+                "background": "transparent",
+                "padding": 5,
+                "width": "100%",
+                "height": "100%",
+                "alignItems": "flex-start",
+                "justifyContent": "center"
+              },
+              "children": [
+                {
+                  "id": "progress-yzdy",
+                  "type": "progress",
+                  "styles": {
+                    "padding": 0
+                  },
+                  "data": {
+                    "value": "{{system:memory_used_bytes}}",
+                    "maxValue": "{{system:memory_total_bytes}}",
+                    "thickness": "large"
+                  }
+                }
+              ],
+              "data": {}
+            }
+          ],
+          "data": {},
+          "label": "container-outo"
+        }
+      ],
+      "data": {}
+    }
+  ],
+  "dimensions": {
+    "width": 233,
+    "height": 55
+  },
+  "widgetType": "json"
+}
