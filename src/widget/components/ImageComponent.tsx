@@ -10,12 +10,14 @@ interface ImageComponentProps {
 
 const ImageComponent: React.FC<ImageComponentProps> = ({ component }) => {
   const textVariables = useDynamicTextStore();
-  const src = useMemo(
-    () =>
-      parseDynamicText(component.data?.src, textVariables) ||
-      "https://placehold.co/400x400?text=No+Image",
-    [textVariables]
-  );
+  const src = useMemo(() => {
+    const text = parseDynamicText(component.data?.src, textVariables);
+    if (text === "Loading...") {
+      return "https://placehold.co/400x400?text=Loading";
+    }
+    return text || "https://placehold.co/400x400?text=No+Image";
+  }, [textVariables]);
+
   return (
     <div
       style={{

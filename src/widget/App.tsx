@@ -58,6 +58,8 @@ const App: React.FC<AppProps> = () => {
     }
   }, [initialStateLoading]);
 
+  if (initialStateLoading || !manifest) return null;
+
   return (
     <div
       style={{

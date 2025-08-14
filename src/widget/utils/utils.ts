@@ -4,15 +4,12 @@ export const parseDynamicText = (
   text: string,
   textVariables: Record<string, (format?: string) => string>
 ) => {
-  return text.replace(
-    /\{\{(\w+)(?::([^}]+))?\}\}/g,
-    (match, key, formatStr) => {
-      if (textVariables[key]) {
-        return textVariables[key](formatStr);
-      }
-      return match;
+  return text.replace(/\{\{(\w+)(?::([^}]+))?\}\}/g, (_, key, formatStr) => {
+    if (textVariables[key]) {
+      return textVariables[key](formatStr);
     }
-  );
+    return "Loading...";
+  });
 };
 
 export const formatDuration = (duration: number) => {
