@@ -2,6 +2,7 @@ mod commands;
 mod plugins;
 
 use commands::{media, system, widget};
+use include_dir::{include_dir, Dir, DirEntry};
 use plugins::localhost;
 use serde_json::Value;
 use std::{fs, sync::OnceLock};
@@ -13,11 +14,12 @@ use tauri::{
 use tauri::{AppHandle, Emitter};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 
-use crate::commands::widget::copy_dir_all;
 use crate::commands::widget::create_widget_window;
 
 static GLOBAL_APP_HANDLE: OnceLock<AppHandle> = OnceLock::new();
 static CUSTOM_SERVER_PORT: OnceLock<u16> = OnceLock::new();
+
+static TEMPLATES: Dir = include_dir!("$CARGO_MANIFEST_DIR/widget_templates");
 
 pub fn emit_global_event(event: &str) {
     if let Some(app_handle) = GLOBAL_APP_HANDLE.get() {
@@ -59,6 +61,27 @@ pub fn write_to_store(
     store[key] = value;
 
     fs::write(store_path, serde_json::to_string(&store).unwrap())?;
+    Ok(())
+}
+
+fn copy_embedded_dir(dir: &Dir, target: &std::path::Path) -> std::io::Result<()> {
+    fs::create_dir_all(target)?;
+
+    for entry in dir.entries() {
+        match entry {
+            DirEntry::Dir(subdir) => {
+                copy_embedded_dir(subdir, &target.join(subdir.path().file_name().unwrap()))?;
+            }
+            DirEntry::File(file) => {
+                let dest_path = target.join(file.path().file_name().unwrap());
+                if let Some(parent) = dest_path.parent() {
+                    fs::create_dir_all(parent)?;
+                }
+                fs::write(&dest_path, file.contents())?;
+            }
+        }
+    }
+
     Ok(())
 }
 
@@ -187,17 +210,13 @@ pub fn run() {
                     });
 
                 if let Some(path_str) = widgets_dir.to_str() {
-                    let entries: Vec<_> = std::fs::read_dir(path_str)
+                    let mut entries = std::fs::read_dir(path_str)
                         .unwrap()
                         .filter_map(|e| e.ok())
-                        .collect();
-                    if entries.is_empty() {
-                        copy_dir_all(
-                            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                                .join("widget_templates"),
-                            &widgets_dir,
-                        )
-                        .expect("Failed to copy default widgets");
+                        .peekable();
+                    if entries.peek().is_none() {
+                        copy_embedded_dir(&TEMPLATES, &widgets_dir)
+                            .expect("Failed to copy widgets directory");
                     }
                     for entry in entries {
                         let entry_path = entry.path();
