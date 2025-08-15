@@ -1,0 +1,125 @@
+{
+  "dimensions": {
+    "height": 55,
+    "width": 233
+  },
+  "elements": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "data": {
+                    "text": "<p>RAM</p>"
+                  },
+                  "id": "text-21n_",
+                  "styles": {
+                    "fontSize": "20px",
+                    "fontWeight": "bold",
+                    "lineHeight": "20px"
+                  },
+                  "type": "text"
+                },
+                {
+                  "data": {
+                    "text": "<p>{{system:memory_used}} / {{system:memory_total}}</p>"
+                  },
+                  "id": "text-lrph",
+                  "styles": {
+                    "fontSize": "16px",
+                    "lineHeight": "16px"
+                  },
+                  "type": "text"
+                }
+              ],
+              "data": {},
+              "id": "container-bNQx",
+              "styles": {
+                "alignItems": "center",
+                "background": "transparent",
+                "display": "flex",
+                "flex": 1,
+                "flexDirection": "row",
+                "gap": "10px",
+                "height": "100%",
+                "justifyContent": "space-between",
+                "padding": 5,
+                "width": "100%"
+              },
+              "type": "container"
+            },
+            {
+              "children": [
+                {
+                  "data": {
+                    "maxValue": "{{system:memory_total_bytes}}",
+                    "thickness": "large",
+                    "value": "{{system:memory_used_bytes}}"
+                  },
+                  "id": "progress-yzdy",
+                  "styles": {
+                    "padding": 0
+                  },
+                  "type": "progress"
+                }
+              ],
+              "data": {},
+              "id": "container-GV5I",
+              "styles": {
+                "alignItems": "flex-start",
+                "background": "transparent",
+                "display": "flex",
+                "flex": 1,
+                "height": "100%",
+                "justifyContent": "center",
+                "padding": 5,
+                "width": "100%"
+              },
+              "type": "container"
+            }
+          ],
+          "data": {},
+          "id": "container-outo",
+          "label": "container-outo",
+          "styles": {
+            "alignItems": "center",
+            "background": "transparent",
+            "display": "flex",
+            "flex": 0.8,
+            "flexDirection": "column",
+            "gap": "0px",
+            "height": "100%",
+            "justifyContent": "center",
+            "padding": 5,
+            "width": "100%"
+          },
+          "type": "container"
+        }
+      ],
+      "data": {},
+      "id": "container",
+      "styles": {
+        "background": "transparent",
+        "backgroundColor": "#000000ff",
+        "display": "flex",
+        "flex": 1,
+        "flexDirection": "column",
+        "padding": "5px",
+        "width": "100%"
+      },
+      "type": "container"
+    }
+  ],
+  "key": "ram",
+  "label": "ram",
+  "position": {
+    "x": 30,
+    "y": 30
+  },
+  "published": true,
+  "publishedAt": 1755283537931,
+  "visible": false,
+  "widgetType": "json"
+}

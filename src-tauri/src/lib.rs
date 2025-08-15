@@ -13,6 +13,7 @@ use tauri::{
 use tauri::{AppHandle, Emitter};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 
+use crate::commands::widget::copy_dir_all;
 use crate::commands::widget::create_widget_window;
 
 static GLOBAL_APP_HANDLE: OnceLock<AppHandle> = OnceLock::new();
@@ -169,13 +170,36 @@ pub fn run() {
                 .unwrap()
                 .to_path_buf();
 
-            // write copy logic for default widgets once made
-
             tauri::async_runtime::spawn(async move {
                 let mut paths: Vec<String> = vec![];
+                widgets_dir
+                    .exists()
+                    .then(|| {
+                        println!("Widgets directory exists: {:?}", widgets_dir.display());
+                    })
+                    .unwrap_or_else(|| {
+                        println!(
+                            "Widgets directory does not exist, creating: {:?}",
+                            widgets_dir.display()
+                        );
+                        fs::create_dir_all(&widgets_dir)
+                            .expect("Failed to create widgets directory");
+                    });
+
                 if let Some(path_str) = widgets_dir.to_str() {
-                    let entries = std::fs::read_dir(path_str).unwrap();
-                    entries.filter_map(|e| e.ok()).for_each(|entry| {
+                    let entries: Vec<_> = std::fs::read_dir(path_str)
+                        .unwrap()
+                        .filter_map(|e| e.ok())
+                        .collect();
+                    if entries.is_empty() {
+                        copy_dir_all(
+                            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                                .join("widget_templates"),
+                            &widgets_dir,
+                        )
+                        .expect("Failed to copy default widgets");
+                    }
+                    for entry in entries {
                         let entry_path = entry.path();
                         let manifest_path = entry_path.join("manifest.json");
                         if manifest_path.exists() {
@@ -195,7 +219,7 @@ pub fn run() {
                                 }
                             }
                         }
-                    });
+                    }
                 }
                 for path in paths {
                     create_widget_window(

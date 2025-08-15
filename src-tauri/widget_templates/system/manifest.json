@@ -1,0 +1,46 @@
+{
+  "dimensions": {
+    "height": 101,
+    "width": 368
+  },
+  "elements": [
+    {
+      "children": [
+        {
+          "data": {
+            "text": "<h2><strong>CPU</strong></h2><p><br></p><p>{{system:cpu_model}} ({{system:cpu_lcores}} cores)</p><p><strong>Speed: </strong>{{system:cpu_speed}}</p><p><strong>Usage:</strong> {{system:cpu_usage}}</p>"
+          },
+          "id": "text-7cXI",
+          "label": "text-7cXI",
+          "styles": {
+            "fontSize": "16px",
+            "lineHeight": "16px"
+          },
+          "type": "text"
+        }
+      ],
+      "data": {},
+      "id": "container",
+      "label": "container",
+      "styles": {
+        "background": "transparent",
+        "backgroundColor": "#000000ff",
+        "display": "flex",
+        "flex": 1,
+        "padding": "10px",
+        "width": "100%"
+      },
+      "type": "container"
+    }
+  ],
+  "key": "system",
+  "label": "system",
+  "position": {
+    "x": 30,
+    "y": 30
+  },
+  "published": true,
+  "publishedAt": 1755283547854,
+  "visible": false,
+  "widgetType": "json"
+}

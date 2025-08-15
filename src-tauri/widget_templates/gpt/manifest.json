@@ -1,0 +1,20 @@
+{
+  "alwaysOnTop": false,
+  "dimensions": {
+    "height": 769,
+    "width": 487
+  },
+  "key": "gpt",
+  "label": "GPT",
+  "position": {
+    "x": 30,
+    "y": 30
+  },
+  "size": {
+    "height": 840,
+    "width": 520
+  },
+  "url": "https://chatgpt.com/",
+  "visible": false,
+  "widgetType": "url"
+}

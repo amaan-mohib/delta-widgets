@@ -1,0 +1,58 @@
+{
+  "dimensions": {
+    "height": 222,
+    "width": 288
+  },
+  "elements": [
+    {
+      "children": [
+        {
+          "data": {
+            "text": "<p><strong>F: {{weather:temperature_fahrenheit}}</strong></p><p><strong>C: {{weather:temperature_celsius}}</strong></p><p><br></p><p>City: {{weather:city}}</p><p>Country: {{weather:country}}</p><p>Region: {{weather:region}}</p><p>UV Index: {{weather:uv_index}}</p><p>Pressure: {{weather:pressure_mb}}</p><p>Precipitation: {{weather:precip_mm}}</p><p>Description: {{weather:description}}</p><p>Humidity: {{weather:humidity}}</p><p>Country: {{weather:country}}</p>"
+          },
+          "id": "text-hJJR",
+          "label": "text-hJJR",
+          "styles": {
+            "fontSize": "16px",
+            "lineHeight": "16px"
+          },
+          "type": "text"
+        },
+        {
+          "data": {
+            "alt": "image",
+            "src": "{{weather:icon}}"
+          },
+          "id": "image-mvbh",
+          "styles": {
+            "height": "100px",
+            "width": "100px"
+          },
+          "type": "image"
+        }
+      ],
+      "data": {},
+      "id": "container",
+      "label": "container",
+      "styles": {
+        "background": "transparent",
+        "backgroundColor": "#000000bd",
+        "display": "flex",
+        "flex": 1,
+        "padding": "5px",
+        "width": "100%"
+      },
+      "type": "container"
+    }
+  ],
+  "key": "weather",
+  "label": "weather",
+  "position": {
+    "x": 30,
+    "y": 30
+  },
+  "published": true,
+  "publishedAt": 1755284232327,
+  "visible": false,
+  "widgetType": "json"
+}

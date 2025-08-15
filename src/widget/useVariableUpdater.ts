@@ -8,13 +8,8 @@ import { Buffer } from "buffer";
 import { formatDuration, humanStorageSize } from "./utils/utils";
 
 const useVariableUpdater = () => {
-  const {
-    currentDate,
-    currentMedia,
-    systemInfo,
-    weatherInfo,
-    customFields,
-  } = useVariableStore();
+  const { currentDate, currentMedia, systemInfo, weatherInfo, customFields } =
+    useVariableStore();
 
   useEffect(() => {
     useDynamicTextStore.setState({
@@ -56,7 +51,39 @@ const useVariableUpdater = () => {
   }, [customFields]);
 
   useEffect(() => {
-    if (!currentMedia) return;
+    if (!currentMedia) {
+      useDynamicTextStore.setState({
+        media: (formatStr?: string) => {
+          switch (formatStr) {
+            case "artist":
+            case "title":
+            case "player":
+              return "No media playing";
+            case "status":
+            case "thumbnail":
+              return "https://cdn.pixabay.com/photo/2017/03/13/04/25/play-button-2138735_1280.png";
+            case "position_text":
+            case "duration_text":
+              return "0:00";
+            case "player_icon":
+            case "position":
+            case "duration":
+            case "next_enabled":
+            case "prev_enabled":
+            case "play_enabled":
+            case "pause_enabled":
+            case "stop_enabled":
+            case "shuffle_enabled":
+            case "repeat_enabled":
+            case "toggle_enabled":
+              return "NA";
+            default:
+              return "NA";
+          }
+        },
+      });
+      return;
+    }
 
     useDynamicTextStore.setState({
       media: (formatStr?: string) => {

@@ -1,0 +1,20 @@
+{
+  "alwaysOnTop": false,
+  "dimensions": {
+    "height": 932,
+    "width": 720
+  },
+  "key": "google",
+  "label": "Google",
+  "position": {
+    "x": 30,
+    "y": 30
+  },
+  "size": {
+    "height": 737,
+    "width": 530
+  },
+  "url": "https://google.com",
+  "visible": false,
+  "widgetType": "url"
+}

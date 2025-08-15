@@ -1,0 +1,107 @@
+{
+  "dimensions": {
+    "height": 232,
+    "width": 335
+  },
+  "elements": [
+    {
+      "children": [
+        {
+          "data": {
+            "text": "<p>Battery</p>"
+          },
+          "id": "text-9Hw8",
+          "label": "text-9Hw8",
+          "styles": {
+            "fontSize": "20px",
+            "fontWeight": "bold",
+            "lineHeight": "20px"
+          },
+          "type": "text"
+        },
+        {
+          "data": {
+            "text": "<p>Technology: {{system:battery_technology}}</p><p>Cycles: {{system:battery_cycles}}</p><p>Charge: {{system:battery_charge}}%</p><p>Health: {{system:battery_health}}%</p><p>Vendor: {{system:battery_vendor}}</p><p>Model: {{system:battery_model}}</p>"
+          },
+          "id": "text-0LFf",
+          "label": "text-0LFf",
+          "styles": {
+            "fontSize": "16px",
+            "lineHeight": "16px"
+          },
+          "type": "text"
+        },
+        {
+          "data": {
+            "text": "<p>Charge ({{system:battery_charge}}%)</p>"
+          },
+          "id": "text-Vnhb",
+          "label": "text-Vnhb",
+          "styles": {
+            "fontSize": "16px",
+            "lineHeight": "16px"
+          },
+          "type": "text"
+        },
+        {
+          "data": {
+            "maxValue": "100",
+            "thickness": "large",
+            "value": "{{system:battery_charge}}"
+          },
+          "id": "progress-WxKK",
+          "styles": {
+            "padding": 0
+          },
+          "type": "progress"
+        },
+        {
+          "data": {
+            "text": "<p>Health ({{system:battery_health}}%)</p>"
+          },
+          "id": "text-vEEY",
+          "label": "text-vEEY",
+          "styles": {
+            "fontSize": "16px",
+            "lineHeight": "16px"
+          },
+          "type": "text"
+        },
+        {
+          "data": {
+            "maxValue": "100",
+            "value": "{{system:battery_health}}"
+          },
+          "id": "progress-wqK8",
+          "styles": {
+            "padding": 0
+          },
+          "type": "progress"
+        }
+      ],
+      "data": {},
+      "id": "container",
+      "styles": {
+        "background": "transparent",
+        "backgroundColor": "#000000ff",
+        "display": "flex",
+        "flex": 1,
+        "flexDirection": "column",
+        "gap": "10px",
+        "padding": "10px",
+        "width": "100%"
+      },
+      "type": "container"
+    }
+  ],
+  "key": "battery",
+  "label": "battery",
+  "position": {
+    "x": 30,
+    "y": 30
+  },
+  "published": true,
+  "publishedAt": 1755283491464,
+  "visible": false,
+  "widgetType": "json"
+}

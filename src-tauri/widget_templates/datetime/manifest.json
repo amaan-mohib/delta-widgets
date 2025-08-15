@@ -1,0 +1,67 @@
+{
+  "dimensions": {
+    "height": 90,
+    "width": 255
+  },
+  "elements": [
+    {
+      "children": [
+        {
+          "data": {
+            "text": "<p>{{time:hh:mm aa}}</p>"
+          },
+          "id": "text-TEZS",
+          "label": "text-TEZS",
+          "styles": {
+            "fontFamily": "Oswald",
+            "fontSize": "32px",
+            "lineHeight": "32px",
+            "textAlign": "center"
+          },
+          "type": "text"
+        },
+        {
+          "data": {
+            "text": "<p>{{date:E MMMM d, yyyy}}</p>"
+          },
+          "id": "text-MH5e",
+          "label": "text-MH5e",
+          "styles": {
+            "fontFamily": "Open Sans",
+            "fontSize": "16px",
+            "lineHeight": "16px",
+            "textAlign": "center"
+          },
+          "type": "text"
+        }
+      ],
+      "data": {},
+      "id": "container",
+      "label": "container",
+      "styles": {
+        "alignItems": "center",
+        "background": "transparent",
+        "backgroundColor": "#0000007d",
+        "borderRadius": "500px",
+        "display": "flex",
+        "flex": 1,
+        "flexDirection": "column",
+        "gap": "5px",
+        "justifyContent": "center",
+        "padding": "5px",
+        "width": "100%"
+      },
+      "type": "container"
+    }
+  ],
+  "key": "datetime",
+  "label": "datetime",
+  "position": {
+    "x": 30,
+    "y": 30
+  },
+  "published": true,
+  "publishedAt": 1755283504704,
+  "visible": false,
+  "widgetType": "json"
+}

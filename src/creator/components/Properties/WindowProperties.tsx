@@ -51,7 +51,7 @@ const WindowProperties: React.FC<WindowPropertiesProps> = () => {
                       (value) => {
                         useManifestStore
                           .getState()
-                          .updateWidgetDimensions(value, dimensions.width);
+                          .updateWidgetDimensions(dimensions.width, value);
                       },
                       400
                     );
