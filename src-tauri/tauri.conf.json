@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Delta Widgets",
-  "version": "0.1.0",
-  "identifier": "com.widgets.app",
+  "version": "0.1.1",
+  "identifier": "com.delta-widgets.app",
   "mainBinaryName": "delta-widgets",
   "build": {
     "beforeDevCommand": "npm run dev",
