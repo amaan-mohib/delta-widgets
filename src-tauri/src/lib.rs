@@ -21,6 +21,14 @@ static CUSTOM_SERVER_PORT: OnceLock<u16> = OnceLock::new();
 
 static TEMPLATES: Dir = include_dir!("$CARGO_MANIFEST_DIR/widget_templates");
 
+fn ensure_paths(app: &AppHandle) {
+    let app_data = app.path().app_data_dir().unwrap();
+    let app_cache = app.path().app_cache_dir().unwrap();
+
+    fs::create_dir_all(&app_data).expect("Failed to create AppData dir");
+    fs::create_dir_all(&app_cache).expect("Failed to create AppCache dir");
+}
+
 pub fn emit_global_event(event: &str) {
     if let Some(app_handle) = GLOBAL_APP_HANDLE.get() {
         app_handle.emit(event, ()).unwrap();
@@ -132,6 +140,9 @@ pub fn run() {
             write_to_store_cmd,
         ])
         .setup(|app| {
+            let app_handle = app.handle().clone();
+            ensure_paths(&app_handle);
+
             let show_i = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
             let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show_i, &quit_i])?;
@@ -192,7 +203,6 @@ pub fn run() {
                 }
             }
 
-            let app_handle = app.handle().clone();
             let widgets_dir = app
                 .path()
                 .resolve("widgets", tauri::path::BaseDirectory::AppData)
