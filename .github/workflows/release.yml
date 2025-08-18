@@ -2,8 +2,8 @@ name: "publish"
 
 on:
   push:
-    tags:
-      - "v*.*.*"
+    branches:
+      - release
 
 jobs:
   release:
@@ -49,7 +49,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "Release ${{ github.ref_name }}"
+          tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+          releaseName: "Release v__VERSION__"
           releaseBody: "See the assets to download this version and install."
+          releaseDraft: true
+          releasePreRelease: false
           args: ${{ matrix.args }}
