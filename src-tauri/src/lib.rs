@@ -109,6 +109,7 @@ pub fn run() {
     let port = portpicker::pick_unused_port().expect("failed to find unused port");
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             let _ = app
                 .get_webview_window("main")
@@ -140,6 +141,12 @@ pub fn run() {
             write_to_store_cmd,
         ])
         .setup(|app| {
+            if !cfg!(debug_assertions) {
+                app.handle()
+                    .plugin(tauri_plugin_updater::Builder::new().build())?;
+            } else {
+                println!("Updater disabled in dev mode");
+            }
             let app_handle = app.handle().clone();
             ensure_paths(&app_handle);
 
@@ -284,6 +291,7 @@ pub fn run() {
         .expect("error while running tauri application")
         .run(move |app_handle, event| match event {
             tauri::RunEvent::Ready => {
+                println!("Tauri application is ready");
                 GLOBAL_APP_HANDLE
                     .set(app_handle.clone())
                     .expect("Failed to set global app handle");

@@ -12,7 +12,6 @@ import {
   Menu,
   MenuButton,
   MenuItem,
-  MenuItemLink,
   MenuList,
   MenuPopover,
   MenuTrigger,
@@ -34,6 +33,7 @@ import { IWidget } from "../types/manifest";
 import * as autostart from "@tauri-apps/plugin-autostart";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
+import About from "./components/About";
 
 const useStyles = makeStyles({
   container: {
@@ -66,6 +66,8 @@ function App() {
     path: "",
   });
   const [autostartEnabled, setAutostartEnabled] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+
   const widgetsList = useMemo(
     () =>
       Object.values(widgets).sort((a, b) =>
@@ -190,16 +192,17 @@ function App() {
               <MenuItem onClick={toggleAutostart}>
                 {`${autostartEnabled ? "Disable" : "Enable"} autostart`}
               </MenuItem>
-              <MenuItemLink
-                href="https://github.com/amaan-mohib/delta-widgets"
-                target="_blank">
+              <MenuItem
+                onClick={() => {
+                  setAboutOpen(true);
+                }}>
                 About
-              </MenuItemLink>
+              </MenuItem>
             </MenuList>
           </MenuPopover>
         </Menu>
       </header>
-
+      <About open={aboutOpen} setOpen={setAboutOpen} />
       <Title3>Installed</Title3>
       <div className={styles.container} role="list">
         {widgetsList.map((widget) => {
