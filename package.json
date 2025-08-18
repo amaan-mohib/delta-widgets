@@ -8,12 +8,12 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "bump": "npm version patch && node scripts/bump-version.js",
+    "bump": "npm version patch && node scripts/bump-version.cjs",
     "build:tauri": "$env:TAURI_SIGNING_PRIVATE_KEY=\"./.key/private.key\" && npm run tauri build",
     "serve:update": "npx http-server -p 3000 .",
-    "gen:latest": "node scripts/generate-latest-json.js",
+    "gen:latest": "node scripts/generate-latest-json.cjs",
     "test:update": "npm run build:tauri && npm run gen:latest && npm run serve:update",
-    "downgrade": "node scripts/downgrade.js"
+    "downgrade": "node scripts/downgrade.cjs"
   },
   "dependencies": {
     "@ctrl/tinycolor": "^4.1.0",
