@@ -42,9 +42,8 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ0NTI5MjI3RUMxMjc4NEQKUldSTmVCTHNKNUpTMU9TeC93R2JhR0t5aUdhUDFjUzJFOC9mVTlBNTBiUmp3Y2lCZ3BLWk9OcTQK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRBRUZCNzU1MUZBOUNDNTQKUldSVXpLa2ZWYmZ2U2lBVW1jTVhIeEtLZFRQNnB2QmtsUVNQRnFqYlBrcmJrWlNLY0hDbGFLMDAK",
       "endpoints": [
-        "http://localhost:3000/latest.json",
         "https://github.com/amaan-mohib/delta-widgets/releases/latest/download/latest.json"
       ]
     }

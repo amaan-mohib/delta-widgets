@@ -4,7 +4,11 @@ const path = require("path");
 const version = require("../package.json").version;
 const bundleDir = path.join("src-tauri", "target", "release", "bundle", "msi");
 
-const msiFile = fs.readdirSync(bundleDir).find((f) => f.endsWith(".msi"));
+const msiFile = fs
+  .readdirSync(bundleDir)
+  .sort()
+  .reverse()
+  .find((f) => f.endsWith(".msi"));
 const sigFile = msiFile + ".sig";
 
 const manifest = {

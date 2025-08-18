@@ -6,6 +6,7 @@ import {
   getAllWidgets,
 } from "./utils/widgets";
 import {
+  Badge,
   Card,
   Divider,
   makeStyles,
@@ -18,6 +19,7 @@ import {
   Text,
   Title3,
   Toaster,
+  Tooltip,
 } from "@fluentui/react-components";
 import {
   AddRegular,
@@ -34,6 +36,7 @@ import * as autostart from "@tauri-apps/plugin-autostart";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import About from "./components/About";
+import { check } from "@tauri-apps/plugin-updater";
 
 const useStyles = makeStyles({
   container: {
@@ -67,6 +70,7 @@ function App() {
   });
   const [autostartEnabled, setAutostartEnabled] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
 
   const widgetsList = useMemo(
     () =>
@@ -96,8 +100,14 @@ function App() {
     getAndSetSavedWidgets();
   }, []);
 
+  const checkForUpdates = useCallback(async () => {
+    const update = await check();
+    setUpdateAvailable(!!update);
+  }, []);
+
   useEffect(() => {
     updateAllWidgets();
+    checkForUpdates();
   }, []);
 
   useEffect(() => {
@@ -201,6 +211,17 @@ function App() {
             </MenuList>
           </MenuPopover>
         </Menu>
+        {updateAvailable && (
+          <Tooltip content="Update available" relationship="label">
+            <Badge
+              color="warning"
+              onClick={() => {
+                setAboutOpen(true);
+              }}>
+              !
+            </Badge>
+          </Tooltip>
+        )}
       </header>
       <About open={aboutOpen} setOpen={setAboutOpen} />
       <Title3>Installed</Title3>
