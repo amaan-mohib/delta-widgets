@@ -24,6 +24,8 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required due to the way Git works, without it this action won't be able to find any or the correct tags
 
       - name: Get previous tag
         id: prev
