@@ -12,6 +12,8 @@ Widget maker for Windows (for now).
 - Expressions – Format text, embed variables.
 - Built with Tauri – Fast, secure, native feel.
 
+\* This app collects anonymous usage statistics (install and widget enable events) via Mixpanel. No personal data is tracked. Data is only used to measure installs and improve the app.
+
 # Screenshots
 
 Desktop

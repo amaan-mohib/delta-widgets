@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Button,
+  Caption2,
   Dialog,
   DialogActions,
   DialogBody,
@@ -89,6 +90,11 @@ const About: React.FC<AboutProps> = ({ open, setOpen }) => {
                 target="_blank">
                 Source code
               </Link>
+              <Caption2>
+                This app collects anonymous usage statistics (install and widget
+                enable events) via Mixpanel. No personal data is tracked. Data
+                is only used to measure installs and improve the app.
+              </Caption2>
               {updateData && (
                 <Button appearance="primary" onClick={() => handleUpdate()}>
                   Update available (v{updateData.version})
