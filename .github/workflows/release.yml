@@ -27,7 +27,9 @@ jobs:
 
       - name: Get previous tag
         id: prev
-        run: echo "tag=$(git describe --tags --abbrev=0 HEAD^)" >> $GITHUB_OUTPUT
+        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+        with:
+          fallback: 0.0.1
 
       - name: setup node
         uses: actions/setup-node@v4
