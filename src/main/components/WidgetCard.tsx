@@ -34,6 +34,7 @@ import {
   MoreHorizontal20Regular,
 } from "@fluentui/react-icons";
 import { IWidget } from "../../types/manifest";
+import { sendMixpanelEvent } from "../utils/analytics";
 
 interface WidgetCardProps {
   widget: IWidget;
@@ -158,6 +159,12 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
             onChange={async (_, { checked }) => {
               if (checked) {
                 await createWidgetWindow(widget.path, false, true);
+
+                sendMixpanelEvent("widget_enabled", {
+                  label: widget.label,
+                  widgetType: widget.widgetType,
+                }).catch(console.error);
+
                 if (!alwaysOnTop) {
                   notify();
                 }

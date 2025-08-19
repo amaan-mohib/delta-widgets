@@ -37,6 +37,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import About from "./components/About";
 import { check } from "@tauri-apps/plugin-updater";
+import { sendMixpanelEvent, trackInstall } from "./utils/analytics";
 
 const useStyles = makeStyles({
   container: {
@@ -108,6 +109,7 @@ function App() {
   useEffect(() => {
     updateAllWidgets();
     checkForUpdates();
+    trackInstall();
   }, []);
 
   useEffect(() => {
@@ -240,6 +242,7 @@ function App() {
           className={styles.card}
           style={{ justifyContent: "center" }}
           onClick={async () => {
+            sendMixpanelEvent("created_new", {}).catch(console.error);
             await createCreatorWindow();
             updateAllWidgets();
           }}>

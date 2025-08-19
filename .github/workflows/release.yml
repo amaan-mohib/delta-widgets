@@ -25,6 +25,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Get previous tag
+        id: prev
+        run: echo "tag=$(git describe --tags --abbrev=0 HEAD^)" >> $GITHUB_OUTPUT
+
       - name: setup node
         uses: actions/setup-node@v4
         with:
@@ -50,10 +54,23 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          VITE_WEATHER_API_KEY: ${{ secrets.VITE_WEATHER_API_KEY }}
+          MIXPANEL_TOKEN: ${{ secrets.MIXPANEL_TOKEN }}
         with:
           tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: "Release v__VERSION__"
-          releaseBody: "See the assets to download this version and install."
+          releaseName: "v__VERSION__"
+          releaseBody: |
+            **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.prev.outputs.tag }}...v__VERSION__
+
+            **⚠️ Heads up**
+            You might see a warning when running the installer. Don't worry - it's expected and totally safe. You can go ahead and continue the installation.
+
+            **💡 Which file to download?**
+
+            - `Delta.Widgets___VERSION___x64-setup.exe` -> Recommended for most users
+            - `Delta.Widgets___VERSION___x64_en-US.msi` -> For advanced users/IT admins
+
+            \* This app collects anonymous usage statistics (install and widget enable events) via Mixpanel. No personal data is tracked. Data is only used to measure installs and improve the app.
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
