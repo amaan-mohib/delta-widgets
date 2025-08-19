@@ -114,7 +114,7 @@ async fn track_analytics_event(
     extra_properties: Option<HashMap<String, Value>>,
 ) -> Result<(), String> {
     let client = Client::new();
-    let token = env::var("MIXPANEL_TOKEN").map_err(|_| "Missing MIXPANEL_TOKEN".to_string())?;
+    let token = option_env!("MIXPANEL_TOKEN").unwrap_or("");
 
     let mut properties = serde_json::Map::new();
     properties.insert("distinct_id".to_string(), json!(distinct_id));
