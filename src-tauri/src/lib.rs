@@ -157,6 +157,7 @@ pub fn run() {
     let port = portpicker::pick_unused_port().expect("failed to find unused port");
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             let _ = app
@@ -193,6 +194,24 @@ pub fn run() {
             if !cfg!(debug_assertions) {
                 app.handle()
                     .plugin(tauri_plugin_updater::Builder::new().build())?;
+                let app_handle = app.handle().clone();
+                tauri::async_runtime::spawn(async move {
+                    use tauri_plugin_notification::NotificationExt;
+                    use tauri_plugin_updater::UpdaterExt;
+
+                    if let Ok(Some(update)) = app_handle.updater().unwrap().check().await {
+                        app_handle
+                            .notification()
+                            .builder()
+                            .title("An update is available!")
+                            .body(format!(
+                                "A new version (v{}) of the app is available to download.",
+                                update.version
+                            ))
+                            .show()
+                            .unwrap();
+                    }
+                });
             } else {
                 println!("Updater disabled in dev mode");
             }

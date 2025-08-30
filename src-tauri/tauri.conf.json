@@ -22,9 +22,7 @@
     "security": {
       "csp": null,
       "assetProtocol": {
-        "scope": [
-          "$APPCACHE/**"
-        ],
+        "scope": ["$APPCACHE/**"],
         "enable": true
       }
     },

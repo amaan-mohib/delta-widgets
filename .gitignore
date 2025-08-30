@@ -26,3 +26,4 @@ dist-ssr
 *.env*
 .key
 latest.json
+tauri.conf.dev.json

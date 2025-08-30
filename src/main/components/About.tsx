@@ -58,8 +58,12 @@ const About: React.FC<AboutProps> = ({ open, setOpen }) => {
   const handleUpdate = useCallback(async () => {
     if (updateData) {
       setUpdateLoading(true);
-      await updateData.downloadAndInstall();
-      await relaunch();
+      try {
+        await updateData.downloadAndInstall();
+        await relaunch();
+      } catch (error) {
+        console.error("Update failed:", error);
+      }
       setUpdateLoading(false);
     }
   }, [updateData]);
