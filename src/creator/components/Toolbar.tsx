@@ -24,14 +24,13 @@ import { useDataTrackStore } from "../stores/useDataTrackStore";
 import {
   closeWidgetWindow,
   createWidgetWindow,
-  getManifestPath,
+  openManifestFolder,
   publishWidget,
   updateManifest,
 } from "../../main/utils/widgets";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import CustomVariablesDialog from "./CustomVariablesDialog";
 import { useShallow } from "zustand/shallow";
-import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import CancelZone from "./DnD/CancelZone";
 import { useToolbarActions } from "../hooks/useToolbarActions";
 import { Webview } from "@tauri-apps/api/webview";
@@ -206,10 +205,7 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
           <ToolbarButton
             icon={<FolderRegular />}
             onClick={async () => {
-              if (manifest?.path) {
-                const path = await getManifestPath(manifest.path);
-                revealItemInDir(path);
-              }
+              openManifestFolder(manifest!);
             }}
           />
         </Tooltip>

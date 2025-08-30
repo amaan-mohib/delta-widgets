@@ -25,12 +25,14 @@ interface AddWidgetDialogProps {
   title?: string;
   dialogState: IDialogState;
   resetDialogState: React.Dispatch<React.SetStateAction<IDialogState>>;
+  updateAllWidgets: () => void;
 }
 
 const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({
   title,
   dialogState,
   resetDialogState,
+  updateAllWidgets,
 }) => {
   const [label, setLabel] = useState("");
   const [url, setUrl] = useState("");
@@ -101,6 +103,7 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({
         path: dialogState.path,
         url,
       });
+      updateAllWidgets();
       onDialogClose();
     } catch (error) {
       console.error(error);

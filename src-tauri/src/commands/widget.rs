@@ -303,6 +303,9 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
     new_window.show().unwrap();
     if !is_preview.unwrap_or(false) {
         new_window.set_skip_taskbar(true).unwrap();
+        new_window.set_maximizable(false).unwrap();
+        new_window.set_minimizable(false).unwrap();
+        new_window.set_closable(false).unwrap();
         let always_on_top = manifest.always_on_top.unwrap_or(false);
         if always_on_top {
             new_window.set_always_on_top(always_on_top).unwrap();
@@ -415,8 +418,9 @@ fn attach_window_events(new_window: tauri::WebviewWindow, clean_path: String) {
 
 #[tauri::command]
 pub async fn close_widget_window(app: tauri::AppHandle, label: String) {
-    let window = app.get_webview_window(&label).expect("window should exist");
-    window.close().unwrap();
+    if let Some(window) = app.get_webview_window(&label) {
+        window.close().unwrap();
+    }
 }
 
 #[tauri::command]

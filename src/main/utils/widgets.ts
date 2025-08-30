@@ -13,6 +13,7 @@ import {
 } from "@tauri-apps/plugin-fs";
 import { nanoid } from "nanoid";
 import { IWidget } from "../../types/manifest";
+import { revealItemInDir } from "@tauri-apps/plugin-opener";
 
 export const getWidgetsDirPath = async (saves?: boolean) => {
   const appDataDir = await path.appDataDir();
@@ -380,5 +381,12 @@ export const toggleAlwaysOnTop = async (
       title: "Error",
       kind: "error",
     });
+  }
+};
+
+export const openManifestFolder = async (manifest: IWidget) => {
+  if (manifest.path) {
+    const path = await getManifestPath(manifest.path);
+    revealItemInDir(path);
   }
 };

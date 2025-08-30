@@ -27,6 +27,7 @@ const About: React.FC<AboutProps> = ({ open, setOpen }) => {
   const [version, setVersion] = useState<string>("v0.0.1");
   const [updateData, setUpdateData] = useState<Update | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [updateLoading, setUpdateLoading] = useState<boolean>(false);
 
   const checkForUpdates = useCallback(async () => {
     setLoading(true);
@@ -56,8 +57,10 @@ const About: React.FC<AboutProps> = ({ open, setOpen }) => {
 
   const handleUpdate = useCallback(async () => {
     if (updateData) {
+      setUpdateLoading(true);
       await updateData.downloadAndInstall();
       await relaunch();
+      setUpdateLoading(false);
     }
   }, [updateData]);
 
@@ -96,7 +99,11 @@ const About: React.FC<AboutProps> = ({ open, setOpen }) => {
                 is only used to measure installs and improve the app.
               </Caption2>
               {updateData && (
-                <Button appearance="primary" onClick={() => handleUpdate()}>
+                <Button
+                  icon={updateLoading ? <Spinner size="tiny" /> : null}
+                  appearance="primary"
+                  onClick={() => handleUpdate()}
+                  disabled={updateLoading}>
                   Update available (v{updateData.version})
                 </Button>
               )}
