@@ -284,6 +284,7 @@ function App() {
       <AddWidgetDialog
         dialogState={dialogState}
         resetDialogState={setDialogState}
+        updateAllWidgets={updateAllWidgets}
       />
 
       <Toaster toasterId={"toaster"} />

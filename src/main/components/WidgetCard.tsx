@@ -23,6 +23,7 @@ import {
   createCreatorWindow,
   createWidgetWindow,
   duplicateWidget,
+  openManifestFolder,
   removeWidget,
   toggleAlwaysOnTop,
 } from "../utils/widgets";
@@ -31,6 +32,7 @@ import {
   CopyRegular,
   DeleteRegular,
   EditRegular,
+  FolderRegular,
   MoreHorizontal20Regular,
 } from "@fluentui/react-icons";
 import { IWidget } from "../../types/manifest";
@@ -117,6 +119,14 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
                     updateAllWidgets();
                   }}>
                   Remove
+                </MenuItem>
+                <MenuItem
+                  icon={<FolderRegular />}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    openManifestFolder(widget);
+                  }}>
+                  Show manifest
                 </MenuItem>
                 {!saves && (
                   <MenuItem
