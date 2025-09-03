@@ -1,0 +1,67 @@
+# https://github.com/squidfunk/mkdocs-material/blob/master/mkdocs.yml
+
+site_name: Delta Widgets
+site_url: https://delta-widgets.vercel.app/
+repo_name: amaan-mohib/delta-widgets
+repo_url: https://github.com/amaan-mohib/delta-widgets
+edit_uri: edit/main/docs/
+
+plugins:
+  - search
+
+theme:
+  name: material
+  logo: img/icon.png
+  features:
+    - announce.dismiss
+    - content.action.edit
+    - content.action.view
+    - content.code.annotate
+    - content.code.copy
+    # - content.code.select
+    # - content.footnote.tooltips
+    # - content.tabs.link
+    - content.tooltips
+    # - header.autohide
+    # - navigation.expand
+    - navigation.footer
+    - navigation.indexes
+    # - navigation.instant
+    # - navigation.instant.prefetch
+    # - navigation.instant.progress
+    # - navigation.prune
+    - navigation.sections
+    - navigation.tabs
+    # - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+    # - toc.integrate
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/link
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch-off
+        name: Switch to system preference
+  favicon: img/favicon.ico
+  icon:
+    logo: logo
+    repo: fontawesome/brands/github
+  font:
+    text: Inter
