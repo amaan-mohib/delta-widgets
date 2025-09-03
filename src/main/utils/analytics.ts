@@ -1,4 +1,5 @@
 import { path } from "@tauri-apps/api";
+import { getVersion } from "@tauri-apps/api/app";
 import { invoke } from "@tauri-apps/api/core";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { nanoid } from "nanoid";
@@ -35,12 +36,16 @@ export const sendMixpanelEvent = async (
     console.log("Mixpanel event (dev mode):", { event, properties });
     return;
   }
-  const clientId = await getOrCreateClientId();
-  await invoke("track_analytics_event", {
-    event,
-    distinctId: clientId,
-    extraProperties: properties,
-  });
+  try {
+    const clientId = await getOrCreateClientId();
+    await invoke("track_analytics_event", {
+      event,
+      distinctId: clientId,
+      extraProperties: properties,
+    });
+  } catch (error) {
+    console.error("Error sending Mixpanel event:", error);
+  }
 };
 
 export const trackInstall = async () => {
@@ -55,5 +60,32 @@ export const trackInstall = async () => {
     });
   } catch (error) {
     console.error("Error tracking install:", error);
+  }
+};
+
+export const trackUpdated = async () => {
+  try {
+    const [store, currentVersion] = await Promise.all([
+      getStore(),
+      getVersion(),
+    ]);
+
+    const lastUpdatedVersion = store.lastUpdatedVersion as string | undefined;
+
+    if (!lastUpdatedVersion || lastUpdatedVersion !== currentVersion) {
+      if (lastUpdatedVersion) {
+        await sendMixpanelEvent("updated", {
+          from: lastUpdatedVersion,
+          to: currentVersion,
+        });
+      }
+
+      await invoke("write_to_store_cmd", {
+        key: "lastUpdatedVersion",
+        value: currentVersion,
+      });
+    }
+  } catch (error) {
+    console.error("Error tracking update:", error);
   }
 };

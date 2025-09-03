@@ -37,7 +37,11 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import About from "./components/About";
 import { check } from "@tauri-apps/plugin-updater";
-import { sendMixpanelEvent, trackInstall } from "./utils/analytics";
+import {
+  sendMixpanelEvent,
+  trackInstall,
+  trackUpdated,
+} from "./utils/analytics";
 
 const useStyles = makeStyles({
   container: {
@@ -110,6 +114,7 @@ function App() {
     updateAllWidgets();
     checkForUpdates();
     trackInstall();
+    trackUpdated();
   }, []);
 
   useEffect(() => {
