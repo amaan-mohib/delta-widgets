@@ -7,12 +7,14 @@ import {
 } from "./utils/widgets";
 import {
   Badge,
+  Button,
   Card,
   Divider,
   makeStyles,
   Menu,
   MenuButton,
   MenuItem,
+  MenuItemLink,
   MenuList,
   MenuPopover,
   MenuTrigger,
@@ -28,6 +30,7 @@ import {
   CodeRegular,
   LinkRegular,
   MoreHorizontal20Regular,
+  QuestionCircleRegular,
 } from "@fluentui/react-icons";
 import AddWidgetDialog, { IDialogState } from "./components/AddWidgetDialog";
 import WidgetCard from "./components/WidgetCard";
@@ -197,6 +200,15 @@ function App() {
             </MenuList>
           </MenuPopover>
         </Menu>
+        <Tooltip content="Help / Documentation" relationship="label">
+          <Button
+            as="a"
+            href="https://github.com/amaan-mohib/delta-widgets/wiki"
+            target="_blank"
+            icon={<QuestionCircleRegular />}
+            appearance="subtle"
+          />
+        </Tooltip>
         <Menu>
           <MenuTrigger disableButtonEnhancement>
             <MenuButton
@@ -215,6 +227,11 @@ function App() {
                 }}>
                 About
               </MenuItem>
+              <MenuItemLink
+                href="https://www.buymeacoffee.com/amaan.mohib"
+                target="_blank">
+                Support
+              </MenuItemLink>
             </MenuList>
           </MenuPopover>
         </Menu>
