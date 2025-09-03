@@ -63,8 +63,8 @@ const App: React.FC<AppProps> = () => {
   return (
     <div
       style={{
-        width: manifest?.dimensions?.width,
-        height: manifest?.dimensions?.height,
+        width: "100%",
+        height: "100vh",
         display: "flex",
       }}>
       {fontsToLoad.length > 0 && (

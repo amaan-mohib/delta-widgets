@@ -254,7 +254,6 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
             );
             window_builder = window_builder
                 .transparent(true)
-                .resizable(false)
                 .decorations(false)
                 .shadow(false)
                 .initialization_script(init_script);
@@ -339,12 +338,6 @@ fn save_window_state(window: &tauri::WebviewWindow, config_path: String) {
             Err(_) => json!({}),
         };
 
-        let widget_type = config
-            .get("widgetType")
-            .and_then(Value::as_str)
-            .unwrap_or("json")
-            .to_string();
-
         // Update only the window position and size fields
         if let Value::Object(ref mut map) = config {
             map.insert(
@@ -355,15 +348,13 @@ fn save_window_state(window: &tauri::WebviewWindow, config_path: String) {
                 }),
             );
 
-            if widget_type != "json" {
-                map.insert(
-                    String::from("dimensions"),
-                    json!({
-                        "width": size.width,
-                        "height": size.height
-                    }),
-                );
-            }
+            map.insert(
+                String::from("dimensions"),
+                json!({
+                    "width": size.width,
+                    "height": size.height
+                }),
+            );
         }
 
         // Write the updated JSON back to the file
