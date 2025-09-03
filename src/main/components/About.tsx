@@ -16,6 +16,7 @@ import {
 import { getVersion, getName } from "@tauri-apps/api/app";
 import { check as checkUpdate, Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
+import { sendMixpanelEvent } from "../utils/analytics";
 
 interface AboutProps {
   open: boolean;
@@ -59,6 +60,10 @@ const About: React.FC<AboutProps> = ({ open, setOpen }) => {
     if (updateData) {
       setUpdateLoading(true);
       try {
+        await sendMixpanelEvent("update_clicked", {
+          from: version,
+          to: updateData.version,
+        });
         await updateData.downloadAndInstall();
         await relaunch();
       } catch (error) {
@@ -66,7 +71,7 @@ const About: React.FC<AboutProps> = ({ open, setOpen }) => {
       }
       setUpdateLoading(false);
     }
-  }, [updateData]);
+  }, [version, updateData]);
 
   return (
     <Dialog open={open} onOpenChange={(_, { open }) => setOpen(open)}>

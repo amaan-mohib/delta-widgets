@@ -17,6 +17,7 @@ import {
   DismissRegular,
   EditRegular,
   FolderRegular,
+  QuestionCircleRegular,
   SaveRegular,
 } from "@fluentui/react-icons";
 import { message } from "@tauri-apps/plugin-dialog";
@@ -207,6 +208,15 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
             onClick={async () => {
               openManifestFolder(manifest!);
             }}
+          />
+        </Tooltip>
+        <Tooltip content="Help / Documentation" relationship="label">
+          <Button
+            as="a"
+            href="https://github.com/amaan-mohib/delta-widgets/wiki"
+            target="_blank"
+            icon={<QuestionCircleRegular />}
+            appearance="subtle"
           />
         </Tooltip>
         <Button size="small" disabled={isSaving} onClick={togglePreview}>
