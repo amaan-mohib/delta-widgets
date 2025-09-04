@@ -25,7 +25,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Required due to the way Git works, without it this action won't be able to find any or the correct tags
+          # Required due to the way Git works, without it this action won't be able to find any or the correct tags
+          fetch-depth: 0
 
       - name: Get previous tag
         id: prev
@@ -37,6 +38,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
+          cache: "npm"
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -50,7 +52,28 @@ jobs:
       #     sudo apt-get update
       #     sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      # need to create custom cache key to avoid only version changes to package.json causing cache misses
+      # - name: Cache node modules
+      #   id: cache-nodemodules
+      #   uses: actions/cache@v4
+      #   env:
+      #     cache-name: cache-node-modules
+      #   with:
+      #     # caching node_modules
+      #     path: node_modules
+      #     key: ${{ matrix.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+      #     restore-keys: |
+      #       ${{ matrix.os }}-build-${{ env.cache-name }}-
+      #       ${{ matrix.os }}-build-
+      #       ${{ matrix.os }}-
+
       - name: install frontend dependencies
+        # if: steps.cache-nodemodules.outputs.cache-hit != 'true'
         run: npm ci
 
       - uses: tauri-apps/tauri-action@v0

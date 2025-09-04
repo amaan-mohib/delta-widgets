@@ -325,7 +325,11 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
 }
 
 fn save_window_state(window: &tauri::WebviewWindow, config_path: String) {
-    if let (Ok(position), Ok(size)) = (window.inner_position(), window.inner_size()) {
+    if let (Ok(position), Ok(size), Ok(scale_factor)) = (
+        window.inner_position(),
+        window.inner_size(),
+        window.scale_factor(),
+    ) {
         // Try to read the existing config file
         let config_content = match fs::read_to_string(&config_path) {
             Ok(content) => content,
@@ -337,6 +341,11 @@ fn save_window_state(window: &tauri::WebviewWindow, config_path: String) {
             Ok(json) => json,
             Err(_) => json!({}),
         };
+        let widget_type = config
+            .get("widgetType")
+            .and_then(Value::as_str)
+            .unwrap_or("json")
+            .to_string();
 
         // Update only the window position and size fields
         if let Value::Object(ref mut map) = config {
@@ -347,12 +356,14 @@ fn save_window_state(window: &tauri::WebviewWindow, config_path: String) {
                     "y": position.y
                 }),
             );
+            let is_json = widget_type == "json";
+            let logical_size = size.to_logical::<u32>(scale_factor);
 
             map.insert(
                 String::from("dimensions"),
                 json!({
-                    "width": size.width,
-                    "height": size.height
+                    "width": if is_json { logical_size.width } else { size.width },
+                    "height": if is_json { logical_size.height } else { size.height }
                 }),
             );
         }
