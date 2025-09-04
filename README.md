@@ -32,6 +32,10 @@ Templates
 
 ![templates](./ss-templates.png)
 
+# Documentation
+
+Visit the full documentation [here](https://amaan-mohib.github.io/delta-widgets)
+
 # Build
 
 ## Tauri + React + Typescript
