@@ -20,7 +20,7 @@ It lets you create desktop widgets with **drag & drop**, **custom HTML/CSS**, an
 
 ## 📚 What’s Inside the Wiki
 
-- [Getting Started](./getting-started) – Install and create your first widget
+- [Getting Started](./getting_started.md) – Install and create your first widget
 - [Using the Builder](./Using-the-Builder) – Drag & drop basics
 - [Templates & Examples](./Templates-and-Examples) – Pre-made widgets to try
 - [Dynamic Data & Expressions](./Dynamic-Data-and-Expressions) – Insert system info & logic
