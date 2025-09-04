@@ -37,7 +37,7 @@ jobs:
       - name: setup node
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22
           cache: "npm"
 
       - name: install Rust stable
@@ -57,23 +57,27 @@ jobs:
         with:
           workspaces: "./src-tauri -> target"
 
-      # need to create custom cache key to avoid only version changes to package.json causing cache misses
-      # - name: Cache node modules
-      #   id: cache-nodemodules
-      #   uses: actions/cache@v4
-      #   env:
-      #     cache-name: cache-node-modules
-      #   with:
-      #     # caching node_modules
-      #     path: node_modules
-      #     key: ${{ matrix.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-      #     restore-keys: |
-      #       ${{ matrix.os }}-build-${{ env.cache-name }}-
-      #       ${{ matrix.os }}-build-
-      #       ${{ matrix.os }}-
+      - name: Generate dependency hash
+        id: deps
+        shell: bash
+        # env:
+        #   RUNNER_OS is already present
+        #   RUNNER_OS: ${{ runner.os }}
+        run: |
+          echo "Runner OS: $RUNNER_OS"
+          node hash-deps.cjs >> $GITHUB_OUTPUT
+
+      - name: Cache node_modules
+        id: cache-nodemodules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ steps.deps.outputs.cache-key }}
+          restore-keys: |
+            cache-nodemodules-${{ runner.os }}-
 
       - name: install frontend dependencies
-        # if: steps.cache-nodemodules.outputs.cache-hit != 'true'
+        if: steps.cache-nodemodules.outputs.cache-hit != 'true'
         run: npm ci
 
       - uses: tauri-apps/tauri-action@v0
