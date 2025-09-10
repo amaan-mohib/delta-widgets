@@ -233,6 +233,22 @@ function App() {
                 Support
               </MenuItemLink>
             </MenuList>
+            {import.meta.env.MODE === "development" && (
+              <>
+                <MenuItem
+                  onClick={() => {
+                    invoke("migrate", { direction: "up" });
+                  }}>
+                  Migrate Up
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    invoke("migrate", { direction: "down" });
+                  }}>
+                  Migrate Down
+                </MenuItem>
+              </>
+            )}
           </MenuPopover>
         </Menu>
         {updateAvailable && (

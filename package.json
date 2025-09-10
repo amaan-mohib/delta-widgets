@@ -12,7 +12,8 @@
     "serve:update": "npx http-server -p 3000 .",
     "gen:latest": "node scripts/generate-latest-json.cjs",
     "test:update": "npm run build:tauri && npm run gen:latest && npm run serve:update",
-    "downgrade": "node scripts/downgrade.cjs"
+    "downgrade": "node scripts/downgrade.cjs",
+    "create:migration": "node scripts/create-migration.cjs"
   },
   "dependencies": {
     "@ctrl/tinycolor": "^4.1.0",
