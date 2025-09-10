@@ -9,7 +9,6 @@ import {
   Badge,
   Button,
   Card,
-  Divider,
   makeStyles,
   Menu,
   MenuButton,
@@ -18,8 +17,10 @@ import {
   MenuList,
   MenuPopover,
   MenuTrigger,
+  Tab,
+  TabList,
+  TabValue,
   Text,
-  Title3,
   Toaster,
   Tooltip,
 } from "@fluentui/react-components";
@@ -54,7 +55,6 @@ const useStyles = makeStyles({
     gap: "16px",
   },
   header: {
-    paddingBottom: "16px",
     display: "flex",
     alignItems: "center",
     justifyContent: "end",
@@ -79,6 +79,7 @@ function App() {
   const [autostartEnabled, setAutostartEnabled] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [selectedTab, setSelectedTab] = useState<TabValue>("installed");
 
   const widgetsList = useMemo(
     () =>
@@ -173,6 +174,30 @@ function App() {
     setAutostartEnabled((prev) => !prev);
   }, [autostartEnabled]);
 
+  const createNew = (
+    <Card
+      className={styles.card}
+      style={{ justifyContent: "center" }}
+      onClick={async () => {
+        sendMixpanelEvent("created_new", {}).catch(console.error);
+        await createCreatorWindow();
+        updateAllWidgets();
+      }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+          gap: "3px",
+        }}>
+        <AppsAddInRegular fontSize="32px" />
+        <Text weight="semibold">Create new</Text>
+      </div>
+    </Card>
+  );
+
   return (
     <main className="container">
       <header className={styles.header}>
@@ -233,6 +258,22 @@ function App() {
                 Support
               </MenuItemLink>
             </MenuList>
+            {import.meta.env.MODE === "development" && (
+              <>
+                <MenuItem
+                  onClick={() => {
+                    invoke("migrate", { direction: "up" });
+                  }}>
+                  Migrate Up
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    invoke("migrate", { direction: "down" });
+                  }}>
+                  Migrate Down
+                </MenuItem>
+              </>
+            )}
           </MenuPopover>
         </Menu>
         {updateAvailable && (
@@ -248,46 +289,41 @@ function App() {
         )}
       </header>
       <About open={aboutOpen} setOpen={setAboutOpen} />
-      <Title3>Installed</Title3>
+      <TabList
+        size="small"
+        selectedValue={selectedTab}
+        onTabSelect={(_, { value }) => setSelectedTab(value)}>
+        {["Installed", "Drafts"].map((value) => (
+          <Tab key={value} value={value.toLowerCase()}>
+            <Text
+              size={500}
+              weight={
+                selectedTab === value.toLowerCase() ? "semibold" : "regular"
+              }>
+              {value}
+            </Text>
+          </Tab>
+        ))}
+      </TabList>
       <div className={styles.container} role="list">
-        {widgetsList.map((widget) => {
-          return (
-            <WidgetCard
-              key={widget.key}
-              widget={widget}
-              cardStyle={styles.card}
-              updateAllWidgets={updateAllWidgets}
-            />
-          );
-        })}
-        <Card
-          className={styles.card}
-          style={{ justifyContent: "center" }}
-          onClick={async () => {
-            sendMixpanelEvent("created_new", {}).catch(console.error);
-            await createCreatorWindow();
-            updateAllWidgets();
-          }}>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "100%",
-              gap: "3px",
-            }}>
-            <AppsAddInRegular fontSize="32px" />
-            <Text weight="semibold">Create new</Text>
-          </div>
-        </Card>
-      </div>
-
-      {savedWidgetsList.length > 0 ? (
-        <>
-          <Divider style={{ marginBottom: "16px" }} />
-          <Title3>Drafts</Title3>
-          <div className={styles.container} role="list">
+        {selectedTab === "installed" && (
+          <>
+            {createNew}
+            {widgetsList.map((widget) => {
+              return (
+                <WidgetCard
+                  key={widget.key}
+                  widget={widget}
+                  cardStyle={styles.card}
+                  updateAllWidgets={updateAllWidgets}
+                />
+              );
+            })}
+          </>
+        )}
+        {selectedTab === "drafts" && (
+          <>
+            {savedWidgetsList.length === 0 && createNew}
             {savedWidgetsList.map((widget) => {
               return (
                 <WidgetCard
@@ -299,9 +335,9 @@ function App() {
                 />
               );
             })}
-          </div>
-        </>
-      ) : null}
+          </>
+        )}
+      </div>
 
       <AddWidgetDialog
         dialogState={dialogState}

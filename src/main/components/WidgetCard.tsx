@@ -143,7 +143,11 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
             </MenuPopover>
           </Menu>
         }
-        header={<Text weight="semibold">{widget.label}</Text>}
+        header={
+          <Text weight="semibold" style={{ wordBreak: "break-all" }}>
+            {widget.label}
+          </Text>
+        }
       />
       {widget.description && <p>{widget.description}</p>}
       <CardFooter className={styles.cardFooter}>

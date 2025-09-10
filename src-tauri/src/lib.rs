@@ -1,4 +1,6 @@
 mod commands;
+pub mod migration;
+pub mod migrations;
 mod plugins;
 
 use commands::{media, system, widget};
@@ -17,6 +19,8 @@ use tauri::{AppHandle, Emitter};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 
 use crate::commands::widget::create_widget_window;
+use crate::migration::{run_migrations, Direction};
+use crate::migrations::all_migrations;
 
 static GLOBAL_APP_HANDLE: OnceLock<AppHandle> = OnceLock::new();
 static CUSTOM_SERVER_PORT: OnceLock<u16> = OnceLock::new();
@@ -152,6 +156,21 @@ async fn track_analytics_event(
     }
 }
 
+#[tauri::command]
+fn migrate(app: tauri::AppHandle, direction: String) -> Result<(), String> {
+    if !cfg!(debug_assertions) {
+        println!("Migrations can only be run in dev mode");
+        return Ok(());
+    }
+    let dir = match direction.as_str() {
+        "up" => Direction::Up,
+        "down" => Direction::Down,
+        _ => return Err("Invalid direction".into()),
+    };
+
+    run_migrations(&app, all_migrations(), dir).map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let port = portpicker::pick_unused_port().expect("failed to find unused port");
@@ -189,6 +208,7 @@ pub fn run() {
             system::get_system_info,
             write_to_store_cmd,
             track_analytics_event,
+            migrate,
         ])
         .setup(|app| {
             if !cfg!(debug_assertions) {
@@ -217,6 +237,10 @@ pub fn run() {
             }
             let app_handle = app.handle().clone();
             ensure_paths(&app_handle);
+
+            if let Err(e) = run_migrations(&app_handle, all_migrations(), Direction::Up) {
+                eprintln!("Migration failed: {:?}", e);
+            }
 
             let show_i = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
             let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;

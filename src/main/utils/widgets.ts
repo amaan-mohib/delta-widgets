@@ -124,6 +124,17 @@ export const fileOrFolderPicker = async (params: {
   return { path };
 };
 
+export const sanitizeString = (input: string) => {
+  const sanitized = input
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9\-_]/g, "");
+  if (!sanitized || sanitized.replace(/-+/g, "") === "") {
+    return nanoid();
+  }
+  return sanitized;
+};
+
 export const addWidget = async (
   type: IWidget["widgetType"] = "json",
   data: { url?: string; path?: string; manifest?: IWidget; label: string },
@@ -133,7 +144,7 @@ export const addWidget = async (
     if (!data.label) {
       throw new Error("Label is required");
     }
-    const key = data.manifest?.key || data.label.toLowerCase();
+    const key = sanitizeString(data.manifest?.key || data.label);
     const description = data.manifest?.description;
     const { widgetsDir, widgetsDirExists } = await getWidgetsDirPath(saves);
     if (!widgetsDirExists) {
