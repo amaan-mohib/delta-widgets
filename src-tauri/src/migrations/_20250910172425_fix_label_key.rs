@@ -1,22 +1,34 @@
 use crate::migration::Migration;
 use serde_json::Value;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct FixLabelKey;
 
 fn sanitize_string(input: &str) -> String {
-    input
+    let sanitized: String = input
         .to_lowercase()
         .chars()
         .filter_map(|c| {
             if c.is_whitespace() {
                 Some('-') // Replace space with hyphen
-            } else if c.is_alphanumeric() || "-_".contains(c) {
+            } else if c.is_ascii_alphanumeric() || "-_".contains(c) {
                 Some(c) // Keep valid characters
             } else {
                 None // Skip any other character
             }
         })
-        .collect()
+        .collect();
+    let non_hyphen_chars = sanitized.chars().filter(|&c| c != '-').count();
+    if non_hyphen_chars == 0 {
+        // fallback: timestamp in milliseconds
+        let start = SystemTime::now();
+        let since_epoch = start
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backwards");
+        since_epoch.as_millis().to_string()
+    } else {
+        sanitized
+    }
 }
 
 fn capitalize_first_letter(s: &str) -> String {

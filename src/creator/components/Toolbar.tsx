@@ -27,6 +27,7 @@ import {
   createWidgetWindow,
   openManifestFolder,
   publishWidget,
+  sanitizeString,
   updateManifest,
 } from "../../main/utils/widgets";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
@@ -136,7 +137,7 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
             onSubmit={(e) => {
               e.preventDefault();
               const label = nameInputRef.current?.value || "";
-              const key = label.replace(/ /g, "").toLowerCase();
+              const key = sanitizeString(label);
               onSubmit(key, label);
             }}>
             <Input size="small" ref={nameInputRef} defaultValue={projectName} />
