@@ -33,9 +33,9 @@ Visual Editor widgets support **handlebar-like** variables inside text and image
 Example:
 
 ```
-{{time}}         → Displays current system time
-{{system_info}}  → Displays CPU / RAM usage
-{{media_info}}   → Displays currently playing track
+{{time}}              → Displays current system time
+{{system:cpu_usage}}  → Displays CPU usage
+{{media:title}}       → Displays currently playing track title
 ```
 
 You can also format some variables:
