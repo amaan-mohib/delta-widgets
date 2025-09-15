@@ -82,7 +82,7 @@ You can call native [Tauri commands](/commands) to fetch live data:
 
 [useVariableUpdater.ts]: https://github.com/amaan-mohib/delta-widgets/blob/main/src/widget/useVariableUpdater.ts#L89
 
-### Example
+#### Example
 
 ```html
 <div class="widget">
@@ -96,6 +96,60 @@ You can call native [Tauri commands](/commands) to fetch live data:
   </script>
 </div>
 ```
+
+### Making a Widget Draggable
+
+If you want to move your widget across the desktop, you need to define an area that acts as a drag handle.
+
+Any element with the style `-webkit-app-region: drag;` becomes a draggable region for the whole widget window.
+
+#### Example: Draggable Top Bar
+
+=== "HTML"
+
+    ```html
+    <div class="widget">
+      <!-- Draggable area -->
+      <div class="titlebar">My Widget</div>
+
+      <!-- Normal content -->
+      <div class="content">
+        <p>Hello from Delta Widgets!</p>
+      </div>
+    </div>
+    ```
+
+=== "CSS"
+
+    ```css
+    .widget {
+      width: 200px;
+      background: #222;
+      color: white;
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+
+    /* This makes the top bar draggable */
+    .titlebar {
+      background: #444;
+      padding: 8px;
+      -webkit-app-region: drag;
+      cursor: move;
+    }
+
+    /* Content stays interactive (clickable) */
+    .content {
+      padding: 12px;
+      -webkit-app-region: no-drag; /* ensures buttons/links inside are clickable */
+    }
+    ```
+
+In this example:
+
+- The title bar is draggable.
+- The content area is interactive (you can click links, buttons, etc.).
 
 ### Limitations
 
