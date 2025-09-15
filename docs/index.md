@@ -1,4 +1,4 @@
-# Delta Widgets Wiki
+# Introduction
 
 Welcome to the **Delta Widgets Wiki**
 

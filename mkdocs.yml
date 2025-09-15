@@ -117,9 +117,9 @@ markdown_extensions:
 
 nav:
   - Home:
-      - Inroduction: index.md
+      - Introduction: index.md
       - Resources: resources.md
-      - Contrubution: contribution.md
+      - Contribution: contribution.md
   - Getting Started:
       - Installation: getting_started.md
       - Overview: overview.md
