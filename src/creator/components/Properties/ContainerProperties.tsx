@@ -1,4 +1,5 @@
 import {
+  Select,
   SpinButton,
   Toolbar,
   ToolbarRadioButton,
@@ -27,9 +28,10 @@ import {
   IUpdateElementProperties,
   useManifestStore,
 } from "../../stores/useManifestStore";
-import { ColorPickerPopup } from "./ColorPickerPopup";
 import { spinButtonOnChange } from "../../utils";
 import Panel from "./Panel";
+import NewColorPicker from "./NewColorPicker";
+import ImagePicker from "./ImagePicker";
 
 interface ContainerPropertiesProps {}
 
@@ -358,20 +360,44 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
             {
               label: "Color",
               control: (
-                <ColorPickerPopup
-                  color={
-                    elementMap[selectedId].styles.backgroundColor ||
-                    "transparent"
-                  }
+                <NewColorPicker
+                  color={elementMap[selectedId].styles}
                   setColor={(color) => {
                     updateProperties({
-                      styles: {
-                        backgroundColor: color,
-                      },
+                      styles: color,
                     });
                   }}
                 />
               ),
+            },
+            {
+              label: "Image",
+              control: (
+                <ImagePicker
+                  imageData={elementMap[selectedId].data?.imageData || null}
+                  setImage={(data) => {
+                    updateProperties({
+                      data: { imageData: data },
+                    });
+                  }}
+                />
+              ),
+            },
+            {
+              label: "Size",
+              control: elementMap[selectedId].data?.imageData ? (
+                <Select
+                  value={elementMap[selectedId].styles.backgroundSize || "auto"}
+                  onChange={(_, { value }) => {
+                    updateProperties({
+                      styles: { backgroundSize: value || "auto" },
+                    });
+                  }}>
+                  <option value="auto">Auto</option>
+                  <option value="cover">Cover</option>
+                  <option value="contain">Contain</option>
+                </Select>
+              ) : null,
             },
           ],
         },
