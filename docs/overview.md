@@ -70,7 +70,7 @@ This gives you complete control over layout and behavior.
 
 ### Tauri Commands
 
-You can call native [Tauri commands](/commands) to fetch live data:
+You can call native [Tauri commands](commands.md) to fetch live data:
 
 - `get_media` → Returns currently playing media info.
 - `get_system_info` → Returns system stats (CPU, memory, etc.).
@@ -154,7 +154,7 @@ In this example:
 ### Limitations
 
 - Dynamic variables (`{{time}}`, `{{media:title}}`, etc.) from the visual editor are not available here.
-- `window.__TAURI__` exists but [**not recommended**](/commands/#best-practices) (lost on redirects, fragile)
+- `window.__TAURI__` exists but [**not recommended**](commands.md#best-practices) (lost on redirects, fragile)
 
 #### Why don’t dynamic variables (`{{...}}`) work in HTML widgets?
 
@@ -169,7 +169,7 @@ This means:
 
 👉 If you want templating with `{{variables}}`, build your widget in the [Visual Editor](#visual-editor-widgets).
 
-👉 If you want full control with custom HTML/JS, use [**Tauri APIs**](/commands/#recommended-approach) directly.
+👉 If you want full control with custom HTML/JS, use [**Tauri APIs**](commands.md#recommended-approach) directly.
 
 ---
 
