@@ -1,38 +1,42 @@
-# Delta Widgets Wiki
+# Introduction
 
-Welcome to the **Delta Widgets Wiki** 🎉
+Welcome to the **Delta Widgets Wiki**
 
 Delta Widgets is a **widget maker for Windows** (for now), built with [Tauri](https://tauri.app/) and Rust.
 It lets you create desktop widgets with **drag & drop**, **custom HTML/CSS**, and **dynamic data** — all without needing to write code.
 
 ---
 
-## 🚀 Features
+## Features
 
-- **Drag and Drop Builder** – Create widgets without coding.
-- **Multiple Sources** – Use the builder, custom HTML, or load from a URL.
-- **Custom Templates** – Start from pre-made widgets or design your own.
-- **Dynamic Data** – Insert time, system info, or media playback data.
-- **Expressions** – Format text, use variables, and add logic.
-- **Lightweight & Secure** – Powered by Tauri, with a native feel.
-
----
-
-## 📚 What’s Inside the Wiki
-
-- [Getting Started](./getting_started.md) – Install and create your first widget
-- [Using the Builder](./Using-the-Builder) – Drag & drop basics
-- [Templates & Examples](./Templates-and-Examples) – Pre-made widgets to try
-- [Dynamic Data & Expressions](./Dynamic-Data-and-Expressions) – Insert system info & logic
-- [Advanced Customization](./Advanced-Customization) – Use HTML, CSS, or load external pages
-- [FAQ / Troubleshooting](./FAQ-and-Troubleshooting) – Common issues & fixes
-- [Contributing](./Contributing) – How to help improve Delta Widgets
+- **Drag-and-Drop Builder:** No coding needed; place components like containers, grids, text, images, progress bars, sliders, or media actions.
+- **Multiple Sources:** Choose between Visual Editor, HTML, or URL for widget creation.
+- **Custom Templates:** Start from pre-built widget layouts or design your own.
+- **Dynamic Data:** Widgets can display system info, current time, or media playback details.
+- **Expressions & Variables:** Use handlebar-like syntax to embed variables inside text or images.
+- **Extensibility:** Future plan includes custom buttons and more widget actions.
+- **Tauri Integration:** Access to native commands for system/media info inside HTML widgets.
 
 ---
 
-## 🔗 Links
+## Screenshots
 
-- 🌐 [Website](https://delta-widgets.vercel.app/)
-- 🐙 [GitHub Repo](https://github.com/amaan-mohib/delta-widgets)
+### Desktop
 
-Happy widget building 🎨
+![desktop](./img/ss-1.png)
+
+### Main window
+
+![main](./img/ss-2-new.png)
+
+### Creator window
+
+![creator](./img/ss-creator.png)
+
+### Templates
+
+![templates](./img/ss-templates.png)
+
+---
+
+Happy widget building!

@@ -22,7 +22,7 @@ Desktop
 
 Main window
 
-![main](./ss-2.png)
+![main](./ss-2-new.png)
 
 Creator window
 

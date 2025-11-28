@@ -228,7 +228,7 @@ function App() {
         <Tooltip content="Help / Documentation" relationship="label">
           <Button
             as="a"
-            href="https://github.com/amaan-mohib/delta-widgets/wiki"
+            href="https://amaan-mohib.github.io/delta-widgets/"
             target="_blank"
             icon={<QuestionCircleRegular />}
             appearance="subtle"

@@ -238,10 +238,6 @@ pub fn run() {
             let app_handle = app.handle().clone();
             ensure_paths(&app_handle);
 
-            if let Err(e) = run_migrations(&app_handle, all_migrations(), Direction::Up) {
-                eprintln!("Migration failed: {:?}", e);
-            }
-
             let show_i = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
             let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show_i, &quit_i])?;
@@ -324,33 +320,38 @@ pub fn run() {
                             .expect("Failed to create widgets directory");
                     });
 
-                if let Some(path_str) = widgets_dir.to_str() {
-                    let mut entries = std::fs::read_dir(path_str)
-                        .unwrap()
-                        .filter_map(|e| e.ok())
-                        .peekable();
-                    if entries.peek().is_none() {
-                        copy_embedded_dir(&TEMPLATES, &widgets_dir)
-                            .expect("Failed to copy widgets directory");
-                    }
-                    for entry in entries {
-                        let entry_path = entry.path();
-                        let manifest_path = entry_path.join("manifest.json");
-                        if manifest_path.exists() {
-                            if let Ok(json) = fs::read_to_string(&manifest_path)
-                                .and_then(|contents| {
-                                    Ok(serde_json::from_str::<serde_json::Value>(&contents))
-                                })
-                                .expect("Cannot read manifest")
-                            {
-                                let visible = json
-                                    .get("visible")
-                                    .and_then(Value::as_bool)
-                                    .unwrap_or_else(|| false);
+                let is_dir_empty = widgets_dir
+                    .read_dir()
+                    .map(|mut i| i.next().is_none())
+                    .unwrap_or(false);
+                if is_dir_empty {
+                    copy_embedded_dir(&TEMPLATES, &widgets_dir)
+                        .expect("Failed to copy widgets directory");
+                }
+                if let Err(e) = run_migrations(&app_handle, all_migrations(), Direction::Up) {
+                    eprintln!("Migration failed: {:?}", e);
+                }
 
-                                if visible {
-                                    paths.push(manifest_path.to_str().unwrap().to_string());
-                                }
+                let entries = widgets_dir
+                    .read_dir()
+                    .expect("Cannot read widgets directory");
+                for entry in entries {
+                    let entry_path = entry.unwrap().path();
+                    let manifest_path = entry_path.join("manifest.json");
+                    if manifest_path.exists() {
+                        if let Ok(json) = fs::read_to_string(&manifest_path)
+                            .and_then(|contents| {
+                                Ok(serde_json::from_str::<serde_json::Value>(&contents))
+                            })
+                            .expect("Cannot read manifest")
+                        {
+                            let visible = json
+                                .get("visible")
+                                .and_then(Value::as_bool)
+                                .unwrap_or_else(|| false);
+
+                            if visible {
+                                paths.push(manifest_path.to_str().unwrap().to_string());
                             }
                         }
                     }
