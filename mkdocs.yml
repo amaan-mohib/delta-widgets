@@ -6,6 +6,15 @@ repo_name: amaan-mohib/delta-widgets
 repo_url: https://github.com/amaan-mohib/delta-widgets
 edit_uri: edit/main/docs/
 
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/amaan-mohib
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/amaan-mohib/
+    - icon: simple/buymeacoffee
+      link: https://buymeacoffee.com/amaan.mohib
+
 plugins:
   - search
 

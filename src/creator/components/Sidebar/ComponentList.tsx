@@ -8,7 +8,6 @@ import {
 } from "@fluentui/react-components";
 import {
   Filmstrip24Regular,
-  // ButtonRegular,
   Image24Regular,
   LayoutCellFour24Regular,
   NextRegular,

@@ -18,19 +18,19 @@ Widget maker for Windows (for now).
 
 Desktop
 
-![desktop](./ss-1.png)
+![desktop](/ss-1.png)
 
 Main window
 
-![main](./ss-2-new.png)
+![main](/ss-2-new.png)
 
 Creator window
 
-![creator](./ss-creator.png)
+![creator](/ss-creator.png)
 
 Templates
 
-![templates](./ss-templates.png)
+![templates](/ss-templates.png)
 
 # Documentation
 

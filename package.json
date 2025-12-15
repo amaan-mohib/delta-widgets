@@ -1,7 +1,7 @@
 {
   "name": "delta-widgets",
   "private": true,
-  "version": "0.2.1",
+  "version": "0.2.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -22,7 +22,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@fluentui/react-color-picker-preview": "^0.3.0",
     "@fluentui/react-components": "^9.60.0",
-    "@fluentui/react-icons": "^2.0.274",
+    "@fluentui/react-icons": "^2.0.316",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-autostart": "^2.5.0",
     "@tauri-apps/plugin-dialog": "^2.2.0",

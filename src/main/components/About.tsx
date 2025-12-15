@@ -9,6 +9,7 @@ import {
   DialogSurface,
   DialogTitle,
   DialogTrigger,
+  Divider,
   Image,
   Link,
   Spinner,
@@ -18,6 +19,24 @@ import { check as checkUpdate, Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { sendMixpanelEvent } from "../utils/analytics";
 
+const links = [
+  {
+    label: "Changelog",
+    href: "https://github.com/amaan-mohib/delta-widgets/releases/latest",
+  },
+  {
+    label: "Source code",
+    href: "https://github.com/amaan-mohib/delta-widgets",
+  },
+  {
+    label: "Report an issue",
+    href: "https://github.com/amaan-mohib/delta-widgets/issues",
+  },
+  {
+    label: "License",
+    href: "https://github.com/amaan-mohib/delta-widgets/blob/main/LICENSE",
+  },
+];
 interface AboutProps {
   open: boolean;
   setOpen: (open: boolean) => void;
@@ -95,13 +114,22 @@ const About: React.FC<AboutProps> = ({ open, setOpen }) => {
               />
               <b>{appName}</b>
               <p>Version: {version}</p>
-              <Link
-                style={{ width: "fit-content" }}
-                as="a"
-                href="https://github.com/amaan-mohib/delta-widgets"
-                target="_blank">
-                Source code
-              </Link>
+              <div style={{ display: "flex", gap: "8px" }}>
+                {links.map((item, index) => (
+                  <React.Fragment key={item.label}>
+                    <Link
+                      style={{ fontSize: "12px" }}
+                      as="a"
+                      href={item.href}
+                      target="_blank">
+                      {item.label}
+                    </Link>
+                    {index < links.length - 1 && (
+                      <Divider vertical style={{ height: "100%" }} />
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
               <Caption2>
                 This app collects anonymous usage statistics (install and widget
                 enable events) via Mixpanel. No personal data is tracked. Data
