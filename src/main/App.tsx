@@ -6,7 +6,6 @@ import {
   getAllWidgets,
 } from "./utils/widgets";
 import {
-  Badge,
   Button,
   Card,
   makeStyles,
@@ -29,9 +28,11 @@ import {
   AppsAddInRegular,
   BracesRegular,
   CodeRegular,
+  ErrorCircleColor,
+  HeartColor,
   LinkRegular,
   MoreHorizontal20Regular,
-  QuestionCircleRegular,
+  QuestionCircleColor,
 } from "@fluentui/react-icons";
 import AddWidgetDialog, { IDialogState } from "./components/AddWidgetDialog";
 import WidgetCard from "./components/WidgetCard";
@@ -58,7 +59,7 @@ const useStyles = makeStyles({
     display: "flex",
     alignItems: "center",
     justifyContent: "end",
-    gap: "10px",
+    gap: "5px",
   },
   card: {
     width: "200px",
@@ -197,6 +198,7 @@ function App() {
       </div>
     </Card>
   );
+  console.log({ savedWidgetsList });
 
   return (
     <main className="container">
@@ -225,12 +227,20 @@ function App() {
             </MenuList>
           </MenuPopover>
         </Menu>
+        <Button
+          as="a"
+          href="https://buymeacoffee.com/amaan.mohib"
+          target="_blank"
+          appearance="subtle"
+          icon={<HeartColor />}>
+          Donate
+        </Button>
         <Tooltip content="Help / Documentation" relationship="label">
           <Button
             as="a"
             href="https://amaan-mohib.github.io/delta-widgets/"
             target="_blank"
-            icon={<QuestionCircleRegular />}
+            icon={<QuestionCircleColor />}
             appearance="subtle"
           />
         </Tooltip>
@@ -246,17 +256,17 @@ function App() {
               <MenuItem onClick={toggleAutostart}>
                 {`${autostartEnabled ? "Disable" : "Enable"} autostart`}
               </MenuItem>
+              <MenuItemLink
+                href="https://github.com/amaan-mohib/delta-widgets/issues"
+                target="_blank">
+                Report an issue
+              </MenuItemLink>
               <MenuItem
                 onClick={() => {
                   setAboutOpen(true);
                 }}>
                 About
               </MenuItem>
-              <MenuItemLink
-                href="https://www.buymeacoffee.com/amaan.mohib"
-                target="_blank">
-                Support
-              </MenuItemLink>
             </MenuList>
             {import.meta.env.MODE === "development" && (
               <>
@@ -278,13 +288,13 @@ function App() {
         </Menu>
         {updateAvailable && (
           <Tooltip content="Update available" relationship="label">
-            <Badge
-              color="warning"
+            <Button
+              appearance="subtle"
               onClick={() => {
                 setAboutOpen(true);
-              }}>
-              !
-            </Badge>
+              }}
+              icon={<ErrorCircleColor />}
+            />
           </Tooltip>
         )}
       </header>
@@ -293,14 +303,20 @@ function App() {
         size="small"
         selectedValue={selectedTab}
         onTabSelect={(_, { value }) => setSelectedTab(value)}>
-        {["Installed", "Drafts"].map((value) => (
-          <Tab key={value} value={value.toLowerCase()}>
+        {[
+          { label: "Installed", value: "installed" },
+          {
+            label: `Drafts${
+              savedWidgetsList.length > 0 ? ` (${savedWidgetsList.length})` : ""
+            }`,
+            value: "drafts",
+          },
+        ].map(({ label, value }) => (
+          <Tab key={value} value={value}>
             <Text
               size={500}
-              weight={
-                selectedTab === value.toLowerCase() ? "semibold" : "regular"
-              }>
-              {value}
+              weight={selectedTab === value ? "semibold" : "regular"}>
+              {label}
             </Text>
           </Tab>
         ))}

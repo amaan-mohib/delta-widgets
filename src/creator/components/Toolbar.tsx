@@ -214,7 +214,7 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
         <Tooltip content="Help / Documentation" relationship="label">
           <Button
             as="a"
-            href="https://github.com/amaan-mohib/delta-widgets/wiki"
+            href="https://amaan-mohib.github.io/delta-widgets/overview/"
             target="_blank"
             icon={<QuestionCircleRegular />}
             appearance="subtle"
