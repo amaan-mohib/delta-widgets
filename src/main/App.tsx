@@ -47,6 +47,7 @@ import {
   trackInstall,
   trackUpdated,
 } from "./utils/analytics";
+import Theme from "./theme/Theme";
 
 const useStyles = makeStyles({
   container: {
@@ -81,6 +82,7 @@ function App() {
   const [aboutOpen, setAboutOpen] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [selectedTab, setSelectedTab] = useState<TabValue>("installed");
+  const [themeOpen, setThemeOpen] = useState(false);
 
   const widgetsList = useMemo(
     () =>
@@ -253,6 +255,12 @@ function App() {
           </MenuTrigger>
           <MenuPopover>
             <MenuList>
+              <MenuItem
+                onClick={() => {
+                  setThemeOpen(true);
+                }}>
+                Theme
+              </MenuItem>
               <MenuItem onClick={toggleAutostart}>
                 {`${autostartEnabled ? "Disable" : "Enable"} autostart`}
               </MenuItem>
@@ -299,6 +307,7 @@ function App() {
         )}
       </header>
       <About open={aboutOpen} setOpen={setAboutOpen} />
+      <Theme open={themeOpen} setOpen={setThemeOpen} />
       <TabList
         size="small"
         selectedValue={selectedTab}

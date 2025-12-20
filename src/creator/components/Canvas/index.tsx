@@ -1,4 +1,5 @@
 import {
+  FluentProvider,
   makeStyles,
   Text,
   tokens,
@@ -26,6 +27,7 @@ import { useManifestStore } from "../../stores/useManifestStore";
 import ComponentRender from "./renderers";
 import { useShallow } from "zustand/shallow";
 import ContextMenu from "./ContextMenu";
+import { useTheme } from "../../theme/useTheme";
 
 const useStyles = makeStyles({
   canvas: {
@@ -44,6 +46,7 @@ const useStyles = makeStyles({
     position: "absolute",
     right: 0,
     top: 0,
+    background: tokens.colorNeutralBackground2,
   },
   widgetWindow: {
     border: `1px solid ${tokens.colorNeutralForeground1}`,
@@ -144,6 +147,7 @@ const Canvas: React.FC<CanvasProps> = () => {
   );
   const isDragging = useDataTrackStore((state) => state.isDragging);
   const [showWallpaper, setShowWallpaper] = useState(true);
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (initialStateLoading) return;
@@ -202,39 +206,43 @@ const Canvas: React.FC<CanvasProps> = () => {
           setShowWallpaper={setShowWallpaper}
         />
         <TransformComponent wrapperClass={styles.zoomWrapper}>
-          <ResizableBox
-            minConstraints={[50, 50]}
-            maxConstraints={[800, 600]}
-            transformScale={scale}
-            onResizeStart={() => {
-              useDataTrackStore.setState({ zoomDisabled: true });
-            }}
-            onResizeStop={() => {
-              useDataTrackStore.setState({ zoomDisabled: false });
-              centerRef.current && centerRef.current.click();
-            }}
-            onResize={(_, { size }) => {
-              useManifestStore
-                .getState()
-                .updateWidgetDimensions(size.width, size.height);
-            }}
-            resizeHandles={["se"]}
-            width={widgetDimension.width}
-            height={widgetDimension.height}
-            className={styles.widgetWindow}
-            draggableOpts={{ grid: [1, 1] }}>
-            <>
-              <div className={styles.windowInfo}>
-                {widgetDimension.width > 100 && <Text size={100}>Window</Text>}
-                <Text size={100}>{`${Math.round(
-                  widgetDimension.width
-                )}px X ${Math.round(widgetDimension.height)}px`}</Text>
-              </div>
-              {elements.map((element) => (
-                <ComponentRender key={element.id} component={element} />
-              ))}
-            </>
-          </ResizableBox>
+          <FluentProvider theme={theme}>
+            <ResizableBox
+              minConstraints={[50, 50]}
+              maxConstraints={[800, 600]}
+              transformScale={scale}
+              onResizeStart={() => {
+                useDataTrackStore.setState({ zoomDisabled: true });
+              }}
+              onResizeStop={() => {
+                useDataTrackStore.setState({ zoomDisabled: false });
+                centerRef.current && centerRef.current.click();
+              }}
+              onResize={(_, { size }) => {
+                useManifestStore
+                  .getState()
+                  .updateWidgetDimensions(size.width, size.height);
+              }}
+              resizeHandles={["se"]}
+              width={widgetDimension.width}
+              height={widgetDimension.height}
+              className={styles.widgetWindow}
+              draggableOpts={{ grid: [1, 1] }}>
+              <>
+                <div className={styles.windowInfo}>
+                  {widgetDimension.width > 100 && (
+                    <Text size={100}>Window</Text>
+                  )}
+                  <Text size={100}>{`${Math.round(
+                    widgetDimension.width
+                  )}px X ${Math.round(widgetDimension.height)}px`}</Text>
+                </div>
+                {elements.map((element) => (
+                  <ComponentRender key={element.id} component={element} />
+                ))}
+              </>
+            </ResizableBox>
+          </FluentProvider>
         </TransformComponent>
       </TransformWrapper>
       <ContextMenu />

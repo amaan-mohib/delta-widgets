@@ -39,6 +39,7 @@
     "lodash.unset": "^4.5.2",
     "nanoid": "^5.1.2",
     "react": "^18.3.1",
+    "react-best-gradient-color-picker": "^3.0.14",
     "react-dom": "^18.3.1",
     "react-fontpicker-ts": "^1.2.0",
     "react-quill": "^2.0.0",

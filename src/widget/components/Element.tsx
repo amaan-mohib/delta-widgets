@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ImageComponent from "./ImageComponent";
 import SliderComponent from "./SliderComponent";
 import { IWidgetElement } from "../../types/manifest";
@@ -11,6 +11,11 @@ import MediaSlider from "./media-components/MediaSlider";
 import MediaSelect from "./media-components/MediaSelect";
 import DiskComponent from "./DiskComponent";
 import ProgressComponent from "./ProgressComponent";
+import { parseDynamicText } from "../utils/utils";
+import { useDynamicTextStore } from "../stores/useVariableStore";
+import { path } from "@tauri-apps/api";
+import { appCacheDir } from "@tauri-apps/api/path";
+import { convertFileSrc } from "@tauri-apps/api/core";
 
 interface ElementProps {
   component: IWidgetElement;
@@ -83,7 +88,28 @@ const WrapperElement: React.FC<
 };
 
 const Element: React.FC<ElementProps> = ({ component }) => {
+  const textVariables = useDynamicTextStore();
+  const [bgImage, setBgImage] = useState("");
+
+  useEffect(() => {
+    const { data } = component;
+    if (!data?.imageData) return;
+    (async () => {
+      if (data.imageData.kind === "url") {
+        setBgImage(data.imageData.path);
+        return;
+      }
+      const dir = await path.resolve(
+        await appCacheDir(),
+        "assets",
+        data.imageData?.key || ""
+      );
+      setBgImage(convertFileSrc(dir));
+    })();
+  }, [JSON.stringify(component.data?.imageData || {})]);
+
   if (component.type === "container" || component.type === "container-grid") {
+    const hasImage = !!component.styles.backgroundImage || !!bgImage;
     return (
       <WrapperElement
         component={{
@@ -91,6 +117,19 @@ const Element: React.FC<ElementProps> = ({ component }) => {
           styles: {
             ...component.styles,
             borderRadius: component.styles.borderRadius || 2,
+            ...(hasImage
+              ? {
+                  backgroundImage: parseDynamicText(
+                    component.data?.imageData
+                      ? `url('${bgImage}')`
+                      : component.styles.backgroundImage || "",
+                    textVariables
+                  ),
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "center",
+                  backgroundSize: component.styles.backgroundSize || "auto",
+                }
+              : {}),
           },
         }}>
         {component.children &&
