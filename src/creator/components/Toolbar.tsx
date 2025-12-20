@@ -36,6 +36,7 @@ import { useShallow } from "zustand/shallow";
 import CancelZone from "./DnD/CancelZone";
 import { useToolbarActions } from "../hooks/useToolbarActions";
 import { Webview } from "@tauri-apps/api/webview";
+import { ThemePicker } from "../theme/Theme";
 
 interface ToolbarProps {}
 
@@ -220,6 +221,7 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
             appearance="subtle"
           />
         </Tooltip>
+        <ThemePicker />
         <Button size="small" disabled={isSaving} onClick={togglePreview}>
           {isPreviewing ? "Close preview" : "Preview"}
         </Button>
