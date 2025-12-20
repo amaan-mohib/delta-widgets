@@ -1,5 +1,4 @@
 import {
-  Select,
   SpinButton,
   Toolbar,
   ToolbarRadioButton,
@@ -30,8 +29,7 @@ import {
 } from "../../stores/useManifestStore";
 import { spinButtonOnChange } from "../../utils";
 import Panel from "./Panel";
-import NewColorPicker from "./NewColorPicker";
-import ImagePicker from "./ImagePicker";
+import { useBackgroundProperties } from "./BackgroundProperties";
 
 interface ContainerPropertiesProps {}
 
@@ -43,6 +41,12 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
     if (!selectedId) return;
     useManifestStore.getState().updateElementProperties(selectedId, value);
   };
+
+  const backgroundProperties = useBackgroundProperties({
+    elementMap,
+    selectedId,
+    updateProperties,
+  });
 
   if (!selectedId || !elementMap[selectedId]) return null;
 
@@ -353,54 +357,7 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
             },
           ],
         },
-        {
-          label: "Background",
-          value: "background",
-          fields: [
-            {
-              label: "Color",
-              control: (
-                <NewColorPicker
-                  color={elementMap[selectedId].styles}
-                  setColor={(color) => {
-                    updateProperties({
-                      styles: color,
-                    });
-                  }}
-                />
-              ),
-            },
-            {
-              label: "Image",
-              control: (
-                <ImagePicker
-                  imageData={elementMap[selectedId].data?.imageData || null}
-                  setImage={(data) => {
-                    updateProperties({
-                      data: { imageData: data },
-                    });
-                  }}
-                />
-              ),
-            },
-            {
-              label: "Size",
-              control: elementMap[selectedId].data?.imageData ? (
-                <Select
-                  value={elementMap[selectedId].styles.backgroundSize || "auto"}
-                  onChange={(_, { value }) => {
-                    updateProperties({
-                      styles: { backgroundSize: value || "auto" },
-                    });
-                  }}>
-                  <option value="auto">Auto</option>
-                  <option value="cover">Cover</option>
-                  <option value="contain">Contain</option>
-                </Select>
-              ) : null,
-            },
-          ],
-        },
+        backgroundProperties!,
       ]}
     />
   );
