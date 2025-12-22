@@ -1,4 +1,3 @@
-import { webDarkTheme, webLightTheme } from "@fluentui/react-components";
 import {
   color as colorBlue,
   darkTheme as darkThemeBlue,
@@ -19,6 +18,11 @@ import {
   darkTheme as darkThemeYellow,
   lightTheme as lightThemeYellow,
 } from "./yellow";
+import {
+  color as colorDefault,
+  darkTheme as darkThemeDefault,
+  lightTheme as lightThemeDefault,
+} from "./default";
 
 const blue = {
   lightTheme: lightThemeBlue,
@@ -45,13 +49,13 @@ const red = {
 };
 
 const defaultTheme = {
-  lightTheme: webLightTheme,
-  darkTheme: webDarkTheme,
-  color: "#0F6CBD",
+  lightTheme: lightThemeDefault,
+  darkTheme: darkThemeDefault,
+  color: colorDefault,
 };
 
 export const getResolvedTheme = (mode: string, color: string) => {
-  let theme = webDarkTheme;
+  let theme = darkThemeDefault;
   let modeValue = mode;
   if (mode === "system") {
     const isSysDark =
@@ -68,6 +72,8 @@ export const getResolvedTheme = (mode: string, color: string) => {
     theme = isDark ? green.darkTheme : green.lightTheme;
   } else if (color === "yellow") {
     theme = isDark ? yellow.darkTheme : yellow.lightTheme;
+  } else {
+    theme = isDark ? defaultTheme.darkTheme : defaultTheme.lightTheme;
   }
   if (isDark) {
     document.documentElement.classList.remove("light");

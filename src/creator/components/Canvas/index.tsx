@@ -206,7 +206,7 @@ const Canvas: React.FC<CanvasProps> = () => {
           setShowWallpaper={setShowWallpaper}
         />
         <TransformComponent wrapperClass={styles.zoomWrapper}>
-          <FluentProvider theme={theme}>
+          <FluentProvider id="widget-preview-window" theme={theme}>
             <ResizableBox
               minConstraints={[50, 50]}
               maxConstraints={[800, 600]}

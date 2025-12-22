@@ -14,7 +14,7 @@ use tauri::{
     Manager,
 };
 use tauri::{AppHandle, Emitter};
-use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
+use tauri_plugin_autostart::ManagerExt;
 
 use crate::commands::widget::create_widget_window;
 use crate::migration::{run_migrations, Direction};
@@ -74,15 +74,17 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-            let _ = app
-                .get_webview_window("main")
-                .expect("no main window")
-                .set_focus();
+            if let Some(webview_window) = app.get_webview_window("main") {
+                let _ = webview_window.show();
+                let _ = webview_window.set_focus();
+            }
         }))
-        .plugin(tauri_plugin_autostart::init(
-            MacosLauncher::LaunchAgent,
-            Some(vec!["--autostart"]),
-        ))
+        .plugin(
+            tauri_plugin_autostart::Builder::new()
+                .arg("--autostart")
+                .app_name("Delta Widgets")
+                .build(),
+        )
         .plugin(tauri_plugin_system_info::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
@@ -139,6 +141,8 @@ pub fn run() {
             let tray = TrayIconBuilder::new()
                 .menu(&menu)
                 .icon(app.default_window_icon().unwrap().clone())
+                .tooltip("Delta Widgets")
+                .title("Delta Widgets")
                 .build(app)?;
 
             tray.on_menu_event(|app, event| match event.id.as_ref() {
