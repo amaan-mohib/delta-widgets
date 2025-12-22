@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { IWidgetElement } from "../../../../types/manifest";
 import Dropable from "../../DnD/Dropable";
 import ImageComponent from "./ImageComponent";
@@ -11,6 +11,9 @@ import ProgressComponent from "./ProgressComponent";
 import FontPicker from "react-fontpicker-ts";
 import { tokens } from "@fluentui/react-components";
 import DropZone from "../../DnD/DropZone";
+import { convertFileSrc } from "@tauri-apps/api/core";
+import { appCacheDir } from "@tauri-apps/api/path";
+import { path } from "@tauri-apps/api";
 
 interface ComponentRenderProps {
   component: IWidgetElement;
@@ -21,9 +24,18 @@ const getComponentStyles = (
 ): React.CSSProperties => {
   const rowSpan = styles.gridItem?.rowSpan || 1;
   const colSpan = styles.gridItem?.columnSpan || 1;
+  const hasImage = !!styles.backgroundImage;
 
   return {
     ...styles,
+    ...(hasImage
+      ? {
+          backgroundImage: parseDynamicText(styles.backgroundImage || ""),
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+          backgroundSize: styles.backgroundSize || "auto",
+        }
+      : {}),
     ...(styles.gridSize
       ? {
           gridTemplateColumns:
@@ -48,14 +60,38 @@ const getComponentStyles = (
 };
 
 const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
-  const { id, type, styles, children = [] } = component;
+  const { id, type, styles, children = [], data } = component;
+  const [bgImage, setBgImage] = useState("");
+
+  useEffect(() => {
+    if (!data?.imageData) return;
+    (async () => {
+      if (data.imageData.kind === "url") {
+        setBgImage(data.imageData.path);
+        return;
+      }
+      const dir = await path.resolve(
+        await appCacheDir(),
+        "assets",
+        data.imageData?.key || ""
+      );
+      setBgImage(convertFileSrc(dir));
+    })();
+  }, [JSON.stringify(data?.imageData || {})]);
+
   if (type === "container" || type === "container-grid") {
     const flexDirection =
       (styles.flexDirection || "row") === "row" ? "row" : "column";
+
     return (
       <Dropable
         id={id}
-        styles={getComponentStyles(styles)}
+        styles={getComponentStyles({
+          ...styles,
+          backgroundImage: data?.imageData
+            ? `url('${bgImage}')`
+            : styles.backgroundImage,
+        })}
         disableDrop={children.length !== 0}>
         {children.length !== 0 && (
           <DropZone id={id} index={0} direction={flexDirection} />

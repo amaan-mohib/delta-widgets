@@ -52,7 +52,7 @@ const Panel: React.FC<PanelProps> = ({ title, items, selectedId }) => {
       </div>
       <Divider appearance="subtle" style={{ flex: "none" }} />
       <Accordion
-        style={{ overflow: "auto", flex: 1 }}
+        style={{ overflow: "auto", flex: 1, paddingBottom: "1rem" }}
         collapsible
         multiple
         defaultOpenItems={items.map((item) => item.value)}>
@@ -63,14 +63,16 @@ const Panel: React.FC<PanelProps> = ({ title, items, selectedId }) => {
               {item.label}
             </AccordionHeader>
             <AccordionPanel className={styles.panel}>
-              {item.fields.map((field) => (
-                <Field
-                  key={field.label}
-                  orientation="horizontal"
-                  label={field.label}>
-                  {field.control}
-                </Field>
-              ))}
+              {item.fields.map((field) =>
+                field.control ? (
+                  <Field
+                    key={field.label}
+                    orientation="horizontal"
+                    label={field.label}>
+                    {field.control}
+                  </Field>
+                ) : null
+              )}
             </AccordionPanel>
           </AccordionItem>
         ))}

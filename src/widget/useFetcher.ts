@@ -19,7 +19,26 @@ const extractDynamicVariables = (
     if (element.styles?.fontFamily) {
       fontsSet.add(element.styles.fontFamily);
     }
+    const values: string[] = [];
+
     Object.values(element.data || {}).forEach((value) => {
+      if (typeof value === "string") {
+        values.push(value);
+      } else if (Array.isArray(value)) {
+        value.forEach((v) => {
+          if (typeof v === "string") {
+            values.push(v);
+          }
+        });
+      } else if (typeof value === "object" && value !== null) {
+        Object.values(value).forEach((v) => {
+          if (typeof v === "string") {
+            values.push(v);
+          }
+        });
+      }
+    });
+    values.forEach((value) => {
       if (typeof value === "string") {
         const matches = [...value.matchAll(/\{\{([^}]+)\}\}/g)];
         matches.forEach((match) => {
