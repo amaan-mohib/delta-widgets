@@ -21,6 +21,10 @@
   color-scheme: light;
 }
 
+#widget-preview-window {
+  background: transparent;
+}
+
 .container {
   background-color: var(--colorNeutralBackground2);
   display: flex;
