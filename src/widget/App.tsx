@@ -8,6 +8,7 @@ import FontPicker from "react-fontpicker-ts";
 import { useCustomAssets } from "../creator/hooks/useCustomAssets";
 
 import "./index.css";
+import { createThumb } from "./utils/utils";
 
 interface AppProps {}
 
@@ -58,10 +59,23 @@ const App: React.FC<AppProps> = () => {
     }
   }, [initialStateLoading]);
 
+  useEffect(() => {
+    if (initialStateLoading || !manifest) return;
+
+    const timeout = setTimeout(() => {
+      createThumb(manifest);
+    }, 500);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [initialStateLoading, manifest]);
+
   if (initialStateLoading || !manifest) return null;
 
   return (
     <div
+      id="widget-window"
       style={{
         width: "100%",
         height: "100vh",

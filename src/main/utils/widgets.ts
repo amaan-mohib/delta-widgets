@@ -9,11 +9,13 @@ import {
   remove,
   UnwatchFn,
   watch,
+  writeFile,
   writeTextFile,
 } from "@tauri-apps/plugin-fs";
 import { nanoid } from "nanoid";
 import { IWidget } from "../../types/manifest";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { toBlob } from "html-to-image";
 
 export const getWidgetsDirPath = async (saves?: boolean) => {
   const appDataDir = await path.appDataDir();
@@ -358,12 +360,28 @@ export const getManifestFromPath = async (manifestPath: string) => {
   return JSON.parse(manifest) as Omit<IWidget, "path">;
 };
 
+const createThumb = async (manifest: IWidget) => {
+  document.querySelectorAll("link").forEach((link) => {
+    link.setAttribute("crossorigin", "anonymous");
+  });
+  const blob = await toBlob(document.getElementById("widget-preview-window")!);
+  if (blob) {
+    const arrayBuffer = await blob.arrayBuffer();
+    const buffer = new Uint8Array(arrayBuffer);
+    const thumbPath = await path.resolve(manifest.path, "thumb.png");
+    await writeFile(thumbPath, buffer);
+  }
+};
+
 export const updateManifest = async (manifest: IWidget) => {
   const manifestPath = await path.resolve(manifest.path, "manifest.json");
-  await writeTextFile(
-    manifestPath,
-    JSON.stringify({ ...manifest, path: undefined }, null, 2)
-  );
+  await Promise.all([
+    writeTextFile(
+      manifestPath,
+      JSON.stringify({ ...manifest, path: undefined }, null, 2)
+    ),
+    createThumb(manifest),
+  ]);
 };
 
 export const publishWidget = async (manifestPath: string) => {

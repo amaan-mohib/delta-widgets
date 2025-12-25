@@ -1,60 +1,32 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import "./App.css";
 import {
-  createCreatorWindow,
-  fileOrFolderPicker,
-  getAllWidgets,
-} from "./utils/widgets";
-import {
-  Button,
   Card,
   makeStyles,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItemLink,
-  MenuList,
-  MenuPopover,
-  MenuTrigger,
-  Tab,
-  TabList,
-  TabValue,
+  Spinner,
   Text,
   Toaster,
-  Tooltip,
+  tokens,
 } from "@fluentui/react-components";
-import {
-  AddRegular,
-  AppsAddInRegular,
-  BracesRegular,
-  CodeRegular,
-  ErrorCircleColor,
-  HeartColor,
-  LinkRegular,
-  MoreHorizontal20Regular,
-  QuestionCircleColor,
-} from "@fluentui/react-icons";
-import AddWidgetDialog, { IDialogState } from "./components/AddWidgetDialog";
+import { AppsAddInRegular } from "@fluentui/react-icons";
 import WidgetCard from "./components/WidgetCard";
-import { IWidget } from "../types/manifest";
 import * as autostart from "@tauri-apps/plugin-autostart";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import About from "./components/About";
-import { check } from "@tauri-apps/plugin-updater";
-import {
-  sendMixpanelEvent,
-  trackInstall,
-  trackUpdated,
-} from "./utils/analytics";
+import { trackInstall, trackUpdated } from "./utils/analytics";
 import Theme from "./theme/Theme";
+import Sidebar, { sidebarWidth } from "./components/Sidebar";
+import { useDataStore } from "./stores/useDataStore";
 
 const useStyles = makeStyles({
   container: {
-    display: "flex",
-    flexWrap: "wrap",
-    padding: "16px 0",
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
+    padding: "16px",
     gap: "16px",
+    paddingLeft: `${sidebarWidth + 16}px`,
+    width: "100%",
   },
   header: {
     display: "flex",
@@ -63,63 +35,32 @@ const useStyles = makeStyles({
     gap: "5px",
   },
   card: {
-    width: "200px",
     minHeight: "130px",
     height: "100%",
+    backgroundColor: `color-mix(in srgb,${tokens.colorNeutralBackground1},transparent 45%)`,
+    ":hover": {
+      backgroundColor: `color-mix(in srgb,${tokens.colorNeutralBackground1Hover},transparent 25%)`,
+    },
   },
 });
 
 function App() {
   const styles = useStyles();
-  const [widgets, setWidgets] = useState<Record<string, IWidget>>({});
-  const [savedWidgets, setSavedWidgets] = useState<Record<string, IWidget>>({});
-  const [dialogState, setDialogState] = useState<IDialogState>({
-    open: false,
-    type: "none",
-    path: "",
-  });
   const [autostartEnabled, setAutostartEnabled] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
-  const [updateAvailable, setUpdateAvailable] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<TabValue>("installed");
+
   const [themeOpen, setThemeOpen] = useState(false);
-
-  const widgetsList = useMemo(
-    () =>
-      Object.values(widgets).sort((a, b) =>
-        a.label > b.label ? 1 : b.label > a.label ? -1 : 0
-      ),
-    [JSON.stringify(widgets)]
-  );
-  const savedWidgetsList = useMemo(
-    () =>
-      Object.values(savedWidgets).sort((a, b) =>
-        a.label > b.label ? 1 : b.label > a.label ? -1 : 0
-      ),
-    [JSON.stringify(savedWidgets)]
-  );
-
-  const getAndSetWidgets = useCallback(async () => {
-    getAllWidgets().then((widgets) => setWidgets(widgets));
-  }, []);
-
-  const getAndSetSavedWidgets = useCallback(async () => {
-    getAllWidgets(true).then((widgets) => setSavedWidgets(widgets));
-  }, []);
-
-  const updateAllWidgets = useCallback(() => {
-    getAndSetWidgets();
-    getAndSetSavedWidgets();
-  }, []);
-
-  const checkForUpdates = useCallback(async () => {
-    const update = await check();
-    setUpdateAvailable(!!update);
-  }, []);
+  const {
+    installedWidgets,
+    draftWidgets,
+    createWidget,
+    updateAllWidgets,
+    activeTab,
+    loading,
+  } = useDataStore();
 
   useEffect(() => {
     updateAllWidgets();
-    checkForUpdates();
     trackInstall();
     trackUpdated();
   }, []);
@@ -142,28 +83,6 @@ function App() {
     });
   }, []);
 
-  const importHTML = useCallback(async () => {
-    const { path } = await fileOrFolderPicker({
-      directory: true,
-      title: "Select HTML folder",
-    });
-    if (path) setDialogState({ open: true, type: "folder", path });
-  }, []);
-
-  const importJSON = useCallback(async () => {
-    const { path, manifest } = await fileOrFolderPicker({
-      title: "Select JSON file",
-      extensions: ["json"],
-    });
-    if (path && manifest)
-      setDialogState({
-        open: true,
-        type: "file",
-        path,
-        manifest,
-      });
-  }, []);
-
   const toggleAutostart = useCallback(async () => {
     if (autostartEnabled) {
       await autostart.disable();
@@ -181,11 +100,7 @@ function App() {
     <Card
       className={styles.card}
       style={{ justifyContent: "center" }}
-      onClick={async () => {
-        sendMixpanelEvent("created_new", {}).catch(console.error);
-        await createCreatorWindow();
-        updateAllWidgets();
-      }}>
+      onClick={createWidget}>
       <div
         style={{
           display: "flex",
@@ -196,39 +111,23 @@ function App() {
           gap: "3px",
         }}>
         <AppsAddInRegular fontSize="32px" />
-        <Text weight="semibold">Create new</Text>
+        <Text weight="semibold">Create new widget</Text>
+        <Text
+          align="center"
+          size={200}
+          style={{ marginTop: 5, color: tokens.colorNeutralForeground2 }}>
+          Build a custom widget for your desktop
+        </Text>
       </div>
     </Card>
   );
-  console.log({ savedWidgetsList });
 
   return (
     <main className="container">
-      <header className={styles.header}>
-        <Menu>
-          <MenuTrigger disableButtonEnhancement>
-            <MenuButton appearance="primary" icon={<AddRegular />}>
-              Add
-            </MenuButton>
-          </MenuTrigger>
-          <MenuPopover>
-            <MenuList>
-              <MenuItem icon={<CodeRegular />} onClick={importHTML}>
-                HTML
-              </MenuItem>
-              <MenuItem
-                icon={<LinkRegular />}
-                onClick={() => {
-                  setDialogState({ open: true, type: "url", path: "" });
-                }}>
-                URL
-              </MenuItem>
-              <MenuItem icon={<BracesRegular />} onClick={importJSON}>
-                Import JSON
-              </MenuItem>
-            </MenuList>
-          </MenuPopover>
-        </Menu>
+      <Sidebar />
+
+      {/* <header className={styles.header}>
+
         <Button
           as="a"
           href="https://buymeacoffee.com/amaan.mohib"
@@ -305,70 +204,52 @@ function App() {
             />
           </Tooltip>
         )}
-      </header>
+      </header> */}
       <About open={aboutOpen} setOpen={setAboutOpen} />
       <Theme open={themeOpen} setOpen={setThemeOpen} />
-      <TabList
-        size="small"
-        selectedValue={selectedTab}
-        onTabSelect={(_, { value }) => setSelectedTab(value)}>
-        {[
-          { label: "Installed", value: "installed" },
-          {
-            label: `Drafts${
-              savedWidgetsList.length > 0 ? ` (${savedWidgetsList.length})` : ""
-            }`,
-            value: "drafts",
-          },
-        ].map(({ label, value }) => (
-          <Tab key={value} value={value}>
-            <Text
-              size={500}
-              weight={selectedTab === value ? "semibold" : "regular"}>
-              {label}
-            </Text>
-          </Tab>
-        ))}
-      </TabList>
-      <div className={styles.container} role="list">
-        {selectedTab === "installed" && (
-          <>
-            {createNew}
-            {widgetsList.map((widget) => {
-              return (
-                <WidgetCard
-                  key={widget.key}
-                  widget={widget}
-                  cardStyle={styles.card}
-                  updateAllWidgets={updateAllWidgets}
-                />
-              );
-            })}
-          </>
-        )}
-        {selectedTab === "drafts" && (
-          <>
-            {savedWidgetsList.length === 0 && createNew}
-            {savedWidgetsList.map((widget) => {
-              return (
-                <WidgetCard
-                  key={widget.key}
-                  widget={widget}
-                  cardStyle={styles.card}
-                  saves
-                  updateAllWidgets={updateAllWidgets}
-                />
-              );
-            })}
-          </>
+      <div style={{ flex: 1 }}>
+        {loading ? (
+          <div className={styles.container} role="list">
+            <Spinner />
+          </div>
+        ) : (
+          <div className={styles.container} role="list">
+            {activeTab === "installed" && (
+              <>
+                {createNew}
+                {installedWidgets.map((widget) => {
+                  return (
+                    <WidgetCard
+                      key={widget.key}
+                      widget={widget}
+                      cardStyle={styles.card}
+                      updateAllWidgets={updateAllWidgets}
+                    />
+                  );
+                })}
+              </>
+            )}
+            {activeTab === "drafts" && (
+              <>
+                {draftWidgets.length === 0 && (
+                  <div style={{ width: 200 }}>{createNew}</div>
+                )}
+                {draftWidgets.map((widget) => {
+                  return (
+                    <WidgetCard
+                      key={widget.key}
+                      widget={widget}
+                      cardStyle={styles.card}
+                      saves
+                      updateAllWidgets={updateAllWidgets}
+                    />
+                  );
+                })}
+              </>
+            )}
+          </div>
         )}
       </div>
-
-      <AddWidgetDialog
-        dialogState={dialogState}
-        resetDialogState={setDialogState}
-        updateAllWidgets={updateAllWidgets}
-      />
 
       <Toaster toasterId={"toaster"} />
     </main>

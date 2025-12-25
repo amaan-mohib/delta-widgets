@@ -10,6 +10,8 @@ use std::{
 use serde_json::{json, Value};
 use tauri::{Emitter, Manager, PhysicalPosition, PhysicalSize};
 use tokio::time::{sleep, Instant};
+#[cfg(target_os = "windows")]
+use window_vibrancy::apply_mica;
 
 use crate::get_custom_server_port;
 
@@ -586,4 +588,31 @@ pub async fn toggle_always_on_top(
         let _ = fs::write(&clean_path, json_string);
     }
     Ok(())
+}
+
+#[tauri::command]
+pub async fn apply_blur_theme(
+    app: tauri::AppHandle,
+    mode: String,
+    label: String,
+) -> Result<bool, String> {
+    #[cfg(not(target_os = "windows"))]
+    return Ok(false);
+
+    let mut theme_applied = true;
+    if let Some(window) = app.get_webview_window(&label) {
+        let mode_type = match mode.as_str() {
+            "dark" => Some(true),
+            "light" => Some(false),
+            _ => None,
+        };
+        #[cfg(target_os = "windows")]
+        if let Err(e) = apply_mica(&window, mode_type) {
+            theme_applied = false;
+            eprintln!("Failed to apply mica effect: {}", e);
+        }
+    } else {
+        theme_applied = false;
+    };
+    Ok(theme_applied)
 }

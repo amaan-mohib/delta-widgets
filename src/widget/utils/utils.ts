@@ -1,4 +1,8 @@
+import { path } from "@tauri-apps/api";
+import { exists, writeFile } from "@tauri-apps/plugin-fs";
 import { intervalToDuration } from "date-fns";
+import { toBlob } from "html-to-image";
+import { IWidget } from "../../types/manifest";
 
 export const parseDynamicText = (
   text: string,
@@ -62,3 +66,19 @@ export function humanStorageSize(bytes: number, si = false, dp = 1) {
 
   return bytes.toFixed(dp) + " " + units[u];
 }
+
+export const createThumb = async (manifest: IWidget) => {
+  document.querySelectorAll("link").forEach((link) => {
+    link.setAttribute("crossorigin", "anonymous");
+  });
+  const thumbPath = await path.resolve(manifest.path, "..", "thumb.png");
+  const thumbExists = await exists(thumbPath);
+  if (thumbExists) return;
+
+  const blob = await toBlob(document.getElementById("widget-window")!);
+  if (blob) {
+    const arrayBuffer = await blob.arrayBuffer();
+    const buffer = new Uint8Array(arrayBuffer);
+    await writeFile(thumbPath, buffer);
+  }
+};

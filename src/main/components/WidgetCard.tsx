@@ -3,6 +3,7 @@ import {
   Card,
   CardFooter,
   CardHeader,
+  CardPreview,
   makeStyles,
   Menu,
   MenuButton,
@@ -149,6 +150,13 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
           </Text>
         }
       />
+      <CardPreview>
+        <img
+          style={{ padding: 10, maxHeight: 150, objectFit: "contain" }}
+          src={`templates/${widget.key}/thumb.png`}
+          alt="thumb"
+        />
+      </CardPreview>
       {widget.description && <p>{widget.description}</p>}
       <CardFooter className={styles.cardFooter}>
         {saves ? (
