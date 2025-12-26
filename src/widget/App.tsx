@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDataTrackStore } from "./stores/useDataTrackStore";
 import { getManifestFromPath } from "../main/utils/widgets";
 import Element from "./components/Element";
@@ -9,6 +9,7 @@ import { useCustomAssets } from "../creator/hooks/useCustomAssets";
 
 import "./index.css";
 import { createThumb } from "./utils/utils";
+import { listen, UnlistenFn } from "@tauri-apps/api/event";
 
 interface AppProps {}
 
@@ -20,6 +21,7 @@ const App: React.FC<AppProps> = () => {
     manifest,
     fontsToLoad,
   } = useDataTrackStore();
+  const [key, setKey] = useState(0);
 
   const { elements, customFields } = useMemo(
     () => ({
@@ -47,17 +49,35 @@ const App: React.FC<AppProps> = () => {
     };
   }, [initialStateLoadCounter]);
 
-  useEffect(() => {
-    if (initialStateLoading) return;
+  const initManifest = (update?: boolean) => {
     const manifestPath = window.__INITIAL_WIDGET_STATE__?.manifestPath;
-    if (manifestPath && manifest === null) {
+    if (manifestPath && (update || manifest === null)) {
       getManifestFromPath(manifestPath).then((manifest) => {
         useDataTrackStore.setState({
           manifest: { ...manifest, path: manifestPath },
         });
+        setKey((prev) => prev + 1);
       });
     }
+  };
+
+  useEffect(() => {
+    if (initialStateLoading) return;
+    initManifest();
   }, [initialStateLoading]);
+
+  useEffect(() => {
+    let unsub: UnlistenFn;
+    (async () => {
+      unsub = await listen("update-manifest", () => {
+        initManifest(true);
+      });
+    })();
+
+    return () => {
+      unsub && unsub();
+    };
+  }, []);
 
   useEffect(() => {
     if (initialStateLoading || !manifest) return;
@@ -75,6 +95,7 @@ const App: React.FC<AppProps> = () => {
 
   return (
     <div
+      key={key}
       id="widget-window"
       style={{
         width: "100%",

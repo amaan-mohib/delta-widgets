@@ -517,15 +517,36 @@ pub async fn publish_widget(app: tauri::AppHandle, path: String) -> Result<u128,
     if let Ok(json_string) = serde_json::to_string_pretty(&config) {
         let _ = fs::write(&clean_path, json_string);
     }
+    let manifest_path = widgets_path.join(&key);
+    if !manifest_path.exists() {
+        fs::create_dir_all(&manifest_path).unwrap();
+    } else {
+        if let Value::Object(ref mut map) = config {
+            let old_config_content =
+                fs::read_to_string(&manifest_path.join("manifest.json")).unwrap();
+            let old_config: Value = match serde_json::from_str(&old_config_content) {
+                Ok(json) => json,
+                Err(_) => json!({}),
+            };
+            map.insert(
+                String::from("visible"),
+                old_config.get("visible").unwrap_or(&json!(false)).clone(),
+            );
+            map.insert(
+                String::from("dimensions"),
+                old_config.get("dimensions").unwrap_or(&json!({})).clone(),
+            );
+            map.insert(
+                String::from("position"),
+                old_config.get("position").unwrap_or(&json!({})).clone(),
+            );
+        }
+    }
     // Copy the widget to the published directory
     if let Ok(json_string) = serde_json::to_string_pretty(&config) {
-        println!("{:?}", key);
-        let manifest_path = widgets_path.join(&key);
-        if !manifest_path.exists() {
-            fs::create_dir_all(&manifest_path).unwrap();
-        }
         let _ = fs::write(&manifest_path.join("manifest.json"), json_string);
     }
+    let _ = app.emit_to(format!("widget-{}", key), "update-manifest", 1);
     Ok(published_time)
 }
 
