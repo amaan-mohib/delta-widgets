@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
 import "./App.css";
 import {
   Card,
@@ -10,21 +10,24 @@ import {
 } from "@fluentui/react-components";
 import { AppsAddInRegular } from "@fluentui/react-icons";
 import WidgetCard from "./components/WidgetCard";
-import * as autostart from "@tauri-apps/plugin-autostart";
-import { invoke } from "@tauri-apps/api/core";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
-import About from "./components/About";
 import { trackInstall, trackUpdated } from "./utils/analytics";
-import Theme from "./theme/Theme";
 import Sidebar, { sidebarWidth } from "./components/Sidebar";
 import { useDataStore } from "./stores/useDataStore";
+import SettingsSidebar from "./components/Settings/Sidebar";
+import Settings from "./components/Settings";
 
 const useStyles = makeStyles({
   container: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, 200px)",
     padding: "16px",
     gap: "16px",
+    paddingLeft: `${sidebarWidth + 16}px`,
+    width: "100%",
+  },
+  container2: {
+    padding: "16px",
     paddingLeft: `${sidebarWidth + 16}px`,
     width: "100%",
   },
@@ -46,10 +49,6 @@ const useStyles = makeStyles({
 
 function App() {
   const styles = useStyles();
-  const [autostartEnabled, setAutostartEnabled] = useState(false);
-  const [aboutOpen, setAboutOpen] = useState(false);
-
-  const [themeOpen, setThemeOpen] = useState(false);
   const {
     installedWidgets,
     draftWidgets,
@@ -57,6 +56,7 @@ function App() {
     updateAllWidgets,
     activeTab,
     loading,
+    showSettings,
   } = useDataStore();
 
   useEffect(() => {
@@ -76,25 +76,6 @@ function App() {
       unsub && unsub();
     };
   }, []);
-
-  useEffect(() => {
-    autostart.isEnabled().then((enabled) => {
-      setAutostartEnabled(enabled);
-    });
-  }, []);
-
-  const toggleAutostart = useCallback(async () => {
-    if (autostartEnabled) {
-      await autostart.disable();
-    } else {
-      await autostart.enable();
-    }
-    await invoke("write_to_store_cmd", {
-      key: "autostart",
-      value: !autostartEnabled,
-    });
-    setAutostartEnabled((prev) => !prev);
-  }, [autostartEnabled]);
 
   const createNew = (
     <Card
@@ -124,93 +105,16 @@ function App() {
 
   return (
     <main className="container">
-      <Sidebar />
+      {showSettings ? <SettingsSidebar /> : <Sidebar />}
 
-      {/* <header className={styles.header}>
-
-        <Button
-          as="a"
-          href="https://buymeacoffee.com/amaan.mohib"
-          target="_blank"
-          appearance="subtle"
-          icon={<HeartColor />}>
-          Donate
-        </Button>
-        <Tooltip content="Help / Documentation" relationship="label">
-          <Button
-            as="a"
-            href="https://amaan-mohib.github.io/delta-widgets/"
-            target="_blank"
-            icon={<QuestionCircleColor />}
-            appearance="subtle"
-          />
-        </Tooltip>
-        <Menu>
-          <MenuTrigger disableButtonEnhancement>
-            <MenuButton
-              appearance="subtle"
-              icon={<MoreHorizontal20Regular />}
-            />
-          </MenuTrigger>
-          <MenuPopover>
-            <MenuList>
-              <MenuItem
-                onClick={() => {
-                  setThemeOpen(true);
-                }}>
-                Theme
-              </MenuItem>
-              <MenuItem onClick={toggleAutostart}>
-                {`${autostartEnabled ? "Disable" : "Enable"} autostart`}
-              </MenuItem>
-              <MenuItemLink
-                href="https://github.com/amaan-mohib/delta-widgets/issues"
-                target="_blank">
-                Report an issue
-              </MenuItemLink>
-              <MenuItem
-                onClick={() => {
-                  setAboutOpen(true);
-                }}>
-                About
-              </MenuItem>
-            </MenuList>
-            {import.meta.env.MODE === "development" && (
-              <>
-                <MenuItem
-                  onClick={() => {
-                    invoke("migrate", { direction: "up" });
-                  }}>
-                  Migrate Up
-                </MenuItem>
-                <MenuItem
-                  onClick={() => {
-                    invoke("migrate", { direction: "down" });
-                  }}>
-                  Migrate Down
-                </MenuItem>
-              </>
-            )}
-          </MenuPopover>
-        </Menu>
-        {updateAvailable && (
-          <Tooltip content="Update available" relationship="label">
-            <Button
-              appearance="subtle"
-              onClick={() => {
-                setAboutOpen(true);
-              }}
-              icon={<ErrorCircleColor />}
-            />
-          </Tooltip>
-        )}
-      </header> */}
-      <About open={aboutOpen} setOpen={setAboutOpen} />
-      <Theme open={themeOpen} setOpen={setThemeOpen} />
       <div style={{ flex: 1 }}>
         {loading ? (
           <div className={styles.container} role="list">
             <Spinner />
+          </div>
+        ) : showSettings ? (
+          <div className={styles.container2}>
+            <Settings />
           </div>
         ) : (
           <div className={styles.container} role="list">
@@ -231,9 +135,7 @@ function App() {
             )}
             {activeTab === "drafts" && (
               <>
-                {draftWidgets.length === 0 && (
-                  <div style={{ width: 200 }}>{createNew}</div>
-                )}
+                {draftWidgets.length === 0 && createNew}
                 {draftWidgets.map((widget) => {
                   return (
                     <WidgetCard

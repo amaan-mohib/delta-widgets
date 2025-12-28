@@ -4,12 +4,16 @@ import { createCreatorWindow, getAllWidgets } from "../utils/widgets";
 import { sendMixpanelEvent } from "../utils/analytics";
 
 export type TActiveTab = "installed" | "drafts";
+export type TSettingsActiveTab = "general" | "theme" | "about";
 interface IDataStore {
   installedWidgets: IWidget[];
   draftWidgets: IWidget[];
   activeTab: TActiveTab;
+  settingsActiveTab: TSettingsActiveTab;
   loading: boolean;
+  showSettings: boolean;
   setActiveTab: (tab: TActiveTab) => void;
+  setSettingsActiveTab: (tab: TSettingsActiveTab) => void;
   updateAllWidgets: () => Promise<void>;
   createWidget: () => Promise<void>;
 }
@@ -42,4 +46,9 @@ export const useDataStore = create<IDataStore>((set, get) => ({
     await createCreatorWindow();
     get().updateAllWidgets();
   },
+  settingsActiveTab: "about",
+  setSettingsActiveTab(tab) {
+    set({ settingsActiveTab: tab });
+  },
+  showSettings: false,
 }));

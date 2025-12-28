@@ -98,9 +98,13 @@ const Sidebar: React.FC<SidebarProps> = () => {
             <NavItem
               className={styles.navItem}
               value={"help"}
-              href="https://amaan-mohib.github.io/delta-widgets/"
-              target="_blank"
-              icon={<ErrorCircle20Color />}>
+              icon={<ErrorCircle20Color />}
+              onClick={() => {
+                useDataStore.setState({
+                  showSettings: true,
+                  settingsActiveTab: "about",
+                });
+              }}>
               Update available
             </NavItem>
           )}
@@ -123,7 +127,12 @@ const Sidebar: React.FC<SidebarProps> = () => {
           <NavItem
             className={styles.navItem}
             value={"settings"}
-            onClick={() => {}}
+            onClick={() => {
+              useDataStore.setState({
+                showSettings: true,
+                settingsActiveTab: "general",
+              });
+            }}
             icon={<Settings20Color />}>
             Settings
           </NavItem>

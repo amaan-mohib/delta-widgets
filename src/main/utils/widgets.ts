@@ -360,7 +360,7 @@ export const getManifestFromPath = async (manifestPath: string) => {
   return JSON.parse(manifest) as Omit<IWidget, "path">;
 };
 
-const createThumb = async (manifest: IWidget) => {
+export const createThumb = async (manifest: IWidget) => {
   document.querySelectorAll("link").forEach((link) => {
     link.setAttribute("crossorigin", "anonymous");
   });
@@ -375,13 +375,10 @@ const createThumb = async (manifest: IWidget) => {
 
 export const updateManifest = async (manifest: IWidget) => {
   const manifestPath = await path.resolve(manifest.path, "manifest.json");
-  await Promise.all([
-    writeTextFile(
-      manifestPath,
-      JSON.stringify({ ...manifest, path: undefined }, null, 2)
-    ),
-    createThumb(manifest),
-  ]);
+  await writeTextFile(
+    manifestPath,
+    JSON.stringify({ ...manifest, path: undefined }, null, 2)
+  );
 };
 
 export const publishWidget = async (manifestPath: string) => {
