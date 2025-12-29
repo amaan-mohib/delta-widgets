@@ -4,6 +4,7 @@ import {
   CardFooter,
   CardHeader,
   CardPreview,
+  Link,
   Tooltip,
 } from "@fluentui/react-components";
 import { ArrowRight16Regular } from "@fluentui/react-icons";
@@ -17,9 +18,9 @@ const templates = [
     description: (
       <span>
         A widget that current date and time. Please{" "}
-        <a href="https://date-fns.org/docs/format" target="_blank">
+        <Link href="https://date-fns.org/docs/format" target="_blank">
           refer
-        </a>{" "}
+        </Link>{" "}
         for formatting options.
       </span>
     ),

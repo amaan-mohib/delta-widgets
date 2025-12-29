@@ -7,6 +7,7 @@ import {
   Image,
   Link,
   Spinner,
+  tokens,
 } from "@fluentui/react-components";
 import { getVersion, getName } from "@tauri-apps/api/app";
 import { check as checkUpdate, Update } from "@tauri-apps/plugin-updater";
@@ -116,7 +117,7 @@ const About: React.FC<AboutProps> = () => {
             </React.Fragment>
           ))}
         </div>
-        <Caption2>
+        <Caption2 style={{ color: tokens.colorNeutralForeground2 }}>
           This app collects anonymous usage statistics (install and widget
           enable events) via Mixpanel. No personal data is tracked. Data is only
           used to measure installs and improve the app.

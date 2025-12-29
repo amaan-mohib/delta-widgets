@@ -38,6 +38,7 @@ import {
 } from "@fluentui/react-icons";
 import { IWidget } from "../../types/manifest";
 import { sendMixpanelEvent } from "../utils/analytics";
+import WidgetPreview, { templateWidgets } from "./WidgetPreview";
 
 interface WidgetCardProps {
   widget: IWidget;
@@ -97,7 +98,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
               <MenuButton
                 onClick={(e) => e.stopPropagation()}
                 size="small"
-                appearance="transparent"
+                appearance="subtle"
                 icon={<MoreHorizontal20Regular />}
               />
             </MenuTrigger>
@@ -112,15 +113,17 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
                   }}>
                   {saves ? "Clone" : "Duplicate"}
                 </MenuItem>
-                <MenuItem
-                  icon={<DeleteRegular />}
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    await removeWidget(widget.path);
-                    updateAllWidgets();
-                  }}>
-                  Remove
-                </MenuItem>
+                {widget.key in templateWidgets ? null : (
+                  <MenuItem
+                    icon={<DeleteRegular />}
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      await removeWidget(widget.path);
+                      updateAllWidgets();
+                    }}>
+                    Remove
+                  </MenuItem>
+                )}
                 <MenuItem
                   icon={<FolderRegular />}
                   onClick={async (e) => {
@@ -150,12 +153,8 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
           </Text>
         }
       />
-      <CardPreview>
-        <img
-          style={{ padding: 10, maxHeight: 150, objectFit: "contain" }}
-          src={`templates/${widget.key}/thumb.png`}
-          alt="thumb"
-        />
+      <CardPreview style={{ height: "100%", minHeight: 100 }}>
+        <WidgetPreview widget={widget} isDraft={saves} />
       </CardPreview>
       {widget.description && <p>{widget.description}</p>}
       <CardFooter className={styles.cardFooter}>

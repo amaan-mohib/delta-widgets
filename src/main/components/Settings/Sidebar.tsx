@@ -86,7 +86,7 @@ const SettingsSidebar: React.FC<SidebarProps> = () => {
                 marginLeft: -16,
                 gap: 10,
               }}
-              appearance="subtle"
+              appearance="transparent"
               icon={<ArrowLeftRegular />}
               onClick={() => {
                 useDataStore.setState({

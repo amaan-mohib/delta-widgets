@@ -11,12 +11,15 @@ import {
   tokens,
 } from "@fluentui/react-components";
 import {
-  Apps20Color,
-  Drafts20Color,
+  Apps20Filled,
+  Apps20Regular,
+  bundleIcon,
+  Drafts20Filled,
+  Drafts20Regular,
   ErrorCircle20Color,
   Heart20Color,
-  QuestionCircle20Color,
-  Settings20Color,
+  QuestionCircle20Regular,
+  Settings20Regular,
 } from "@fluentui/react-icons";
 import AddMenu from "./AddMenu";
 import { check } from "@tauri-apps/plugin-updater";
@@ -53,6 +56,8 @@ const Sidebar: React.FC<SidebarProps> = () => {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const styles = useStyles();
   const { draftWidgets, activeTab, setActiveTab } = useDataStore();
+  const InstalledIcon = bundleIcon(Apps20Filled, Apps20Regular);
+  const DraftIcon = bundleIcon(Drafts20Filled, Drafts20Regular);
 
   const checkForUpdates = useCallback(async () => {
     const update = await check();
@@ -80,14 +85,14 @@ const Sidebar: React.FC<SidebarProps> = () => {
             className={styles.navItem}
             onClick={() => setActiveTab("installed")}
             value={"installed"}
-            icon={<Apps20Color />}>
+            icon={<InstalledIcon />}>
             Installed
           </NavItem>
           <NavItem
             className={styles.navItem}
             onClick={() => setActiveTab("drafts")}
             value={"drafts"}
-            icon={<Drafts20Color />}>
+            icon={<DraftIcon />}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               Drafts
               <CounterBadge showZero={false} count={draftWidgets.length} />
@@ -110,20 +115,21 @@ const Sidebar: React.FC<SidebarProps> = () => {
           )}
           <NavItem
             className={styles.navItem}
-            value={"help"}
-            href="https://amaan-mohib.github.io/delta-widgets/"
-            target="_blank"
-            icon={<QuestionCircle20Color />}>
-            Help
-          </NavItem>
-          <NavItem
-            className={styles.navItem}
             value={"donate"}
             href="https://buymeacoffee.com/amaan.mohib"
             target="_blank"
             icon={<Heart20Color />}>
             Donate
           </NavItem>
+          <NavItem
+            className={styles.navItem}
+            value={"help"}
+            href="https://amaan-mohib.github.io/delta-widgets/"
+            target="_blank"
+            icon={<QuestionCircle20Regular />}>
+            Help
+          </NavItem>
+
           <NavItem
             className={styles.navItem}
             value={"settings"}
@@ -133,7 +139,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
                 settingsActiveTab: "general",
               });
             }}
-            icon={<Settings20Color />}>
+            icon={<Settings20Regular />}>
             Settings
           </NavItem>
         </NavDrawerBody>

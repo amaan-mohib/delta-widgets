@@ -40,10 +40,6 @@ const useStyles = makeStyles({
   card: {
     minHeight: "130px",
     height: "100%",
-    backgroundColor: `color-mix(in srgb,${tokens.colorNeutralBackground1},transparent 45%)`,
-    ":hover": {
-      backgroundColor: `color-mix(in srgb,${tokens.colorNeutralBackground1Hover},transparent 25%)`,
-    },
   },
 });
 
