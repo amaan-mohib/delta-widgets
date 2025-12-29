@@ -32,15 +32,13 @@ const useStyles = makeStyles({
     alignItems: "center",
     justifyContent: "center",
     height: "100%",
-    background: tokens.colorBrandBackground2Hover,
     padding: "10px",
   },
   url: {
     display: "flex",
     flexDirection: "column",
-    gap: "5px",
+    gap: "3px",
     alignItems: "center",
-    border: `1px dashed ${tokens.colorBrandBackground}`,
     color: tokens.colorNeutralForeground2,
     width: "fit-content",
     padding: "10px 20px",
@@ -93,7 +91,7 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({ widget, isDraft }) => {
     return (
       <div className={styles.container}>
         <div className={styles.url}>
-          <LinkColor fontSize={32} />
+          <LinkColor fontSize={48} />
           <Caption1 className={styles.urlText}>{location.hostname}</Caption1>
         </div>
       </div>
@@ -104,7 +102,7 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({ widget, isDraft }) => {
     return (
       <div className={styles.container}>
         <div className={styles.url}>
-          <DocumentColor fontSize={32} />
+          <DocumentColor fontSize={48} />
           <Caption1 className={styles.urlText}>
             {(file || "").split(/\/|\\/).at(-1) || ""}
           </Caption1>

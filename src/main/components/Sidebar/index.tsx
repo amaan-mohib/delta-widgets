@@ -11,10 +11,10 @@ import {
   tokens,
 } from "@fluentui/react-components";
 import {
-  Apps20Filled,
+  Apps20Color,
   Apps20Regular,
   bundleIcon,
-  Drafts20Filled,
+  Drafts20Color,
   Drafts20Regular,
   ErrorCircle20Color,
   Heart20Color,
@@ -56,8 +56,8 @@ const Sidebar: React.FC<SidebarProps> = () => {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const styles = useStyles();
   const { draftWidgets, activeTab, setActiveTab } = useDataStore();
-  const InstalledIcon = bundleIcon(Apps20Filled, Apps20Regular);
-  const DraftIcon = bundleIcon(Drafts20Filled, Drafts20Regular);
+  const InstalledIcon = bundleIcon(Apps20Color, Apps20Regular);
+  const DraftIcon = bundleIcon(Drafts20Color, Drafts20Regular);
 
   const checkForUpdates = useCallback(async () => {
     const update = await check();
