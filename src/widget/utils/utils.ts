@@ -1,8 +1,11 @@
 import { path } from "@tauri-apps/api";
 import { exists, writeFile } from "@tauri-apps/plugin-fs";
-import { intervalToDuration } from "date-fns";
+import { format, intervalToDuration } from "date-fns";
 import { toBlob } from "html-to-image";
 import { IWidget } from "../../types/manifest";
+import { formatInTimeZone } from "date-fns-tz";
+
+const DATE_REGEX = /^(.+?)(?::\[(.+?)\])?$/g;
 
 export const parseDynamicText = (
   text: string,
@@ -14,6 +17,26 @@ export const parseDynamicText = (
     }
     return "Loading...";
   });
+};
+
+const getMatches = (str: string, regex: RegExp) => {
+  let matches: string[] = [];
+  str.replace(regex, (_, dateStr, timezone) => {
+    matches = [dateStr, timezone];
+    return "";
+  });
+  if (matches.length === 0) {
+    return [str];
+  }
+  return matches;
+};
+
+export const formatDate = (date: Date, formatStr: string) => {
+  const [dateStr, timezone] = getMatches(formatStr, DATE_REGEX);
+  if (timezone) {
+    return formatInTimeZone(date, timezone, dateStr);
+  }
+  return format(date, dateStr);
 };
 
 export const formatDuration = (duration: number) => {
