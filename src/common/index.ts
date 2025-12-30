@@ -10,3 +10,13 @@ export const getStore = async () => {
     return {};
   }
 };
+
+export const templateWidgets: Record<string, string> = {
+  battery: "templates/battery/thumb.png",
+  system: "templates/cpu/thumb.png",
+  datetime: "templates/datetime/thumb.png",
+  disk: "templates/disks/thumb.png",
+  media: "templates/media/thumb.png",
+  ram: "templates/ram/thumb.png",
+  weather: "templates/weather/thumb.png",
+};

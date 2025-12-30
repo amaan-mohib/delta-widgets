@@ -4,6 +4,7 @@ import { format, intervalToDuration } from "date-fns";
 import { toBlob } from "html-to-image";
 import { IWidget } from "../../types/manifest";
 import { formatInTimeZone } from "date-fns-tz";
+import { emitTo } from "@tauri-apps/api/event";
 
 const DATE_REGEX = /^(.+?)(?::\[(.+?)\])?$/g;
 
@@ -90,19 +91,28 @@ export function humanStorageSize(bytes: number, si = false, dp = 1) {
   return bytes.toFixed(dp) + " " + units[u];
 }
 
-export const createThumb = async (manifest: IWidget) => {
-  document.querySelectorAll("link").forEach((link) => {
-    link.setAttribute("crossorigin", "anonymous");
-  });
-  const thumbPath = await path.resolve(manifest.path, "..", "thumb.png");
-  const thumbExists = await exists(thumbPath);
-  if (thumbExists) return;
+export const createThumb = async (manifest: IWidget, refresh = false) => {
+  try {
+    document.querySelectorAll("link").forEach((link) => {
+      link.setAttribute("crossorigin", "anonymous");
+    });
+    const thumbPath = await path.resolve(manifest.path, "..", "thumb.png");
 
-  const blob = await toBlob(document.getElementById("widget-window")!);
-  if (blob) {
-    const arrayBuffer = await blob.arrayBuffer();
-    const buffer = new Uint8Array(arrayBuffer);
-    await writeFile(thumbPath, buffer);
+    if (!refresh) {
+      const thumbExists = await exists(thumbPath);
+      if (thumbExists) return;
+    }
+
+    const blob = await toBlob(document.getElementById("widget-window")!);
+    if (blob) {
+      const arrayBuffer = await blob.arrayBuffer();
+      const buffer = new Uint8Array(arrayBuffer);
+      await writeFile(thumbPath, buffer);
+      await emitTo("main", "creator-close", {});
+    }
+  } catch (error) {
+    //skip logging error
+    console.log(error);
   }
 };
 

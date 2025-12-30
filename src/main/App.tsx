@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 import {
   Card,
@@ -10,7 +10,7 @@ import {
 } from "@fluentui/react-components";
 import { AppsAddInRegular } from "@fluentui/react-icons";
 import WidgetCard from "./components/WidgetCard";
-import { listen, UnlistenFn } from "@tauri-apps/api/event";
+import { listen } from "@tauri-apps/api/event";
 import { trackInstall, trackUpdated } from "./utils/analytics";
 import Sidebar, { sidebarWidth } from "./components/Sidebar";
 import { useDataStore } from "./stores/useDataStore";
@@ -54,6 +54,7 @@ function App() {
     loading,
     showSettings,
   } = useDataStore();
+  const [key, setKey] = useState(0);
 
   useEffect(() => {
     updateAllWidgets();
@@ -62,14 +63,14 @@ function App() {
   }, []);
 
   useEffect(() => {
-    let unsub: UnlistenFn;
-    (async () => {
-      unsub = await listen<string>("creator-close", () => {
-        updateAllWidgets();
+    const unsub = listen<string>("creator-close", () => {
+      updateAllWidgets().then(() => {
+        setKey((prev) => prev + 1);
       });
-    })();
+    });
+
     return () => {
-      unsub && unsub();
+      unsub.then((f) => f());
     };
   }, []);
 
@@ -113,10 +114,9 @@ function App() {
             <Settings />
           </div>
         ) : (
-          <div className={styles.container} role="list">
+          <div className={styles.container} role="list" key={key}>
             {activeTab === "installed" && (
               <>
-                {createNew}
                 {installedWidgets.map((widget) => {
                   return (
                     <WidgetCard
@@ -127,6 +127,7 @@ function App() {
                     />
                   );
                 })}
+                {createNew}
               </>
             )}
             {activeTab === "drafts" && (

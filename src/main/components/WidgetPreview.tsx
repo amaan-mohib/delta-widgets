@@ -10,16 +10,8 @@ import { Caption1, makeStyles, tokens } from "@fluentui/react-components";
 import { path } from "@tauri-apps/api";
 import { exists } from "@tauri-apps/plugin-fs";
 import { convertFileSrc } from "@tauri-apps/api/core";
-
-export const templateWidgets: Record<string, string> = {
-  battery: "templates/battery/thumb.png",
-  system: "templates/cpu/thumb.png",
-  datetime: "templates/datetime/thumb.png",
-  disk: "templates/disks/thumb.png",
-  media: "templates/media/thumb.png",
-  ram: "templates/ram/thumb.png",
-  weather: "templates/weather/thumb.png",
-};
+import { nanoid } from "nanoid";
+import { templateWidgets } from "../../common";
 
 interface WidgetPreviewProps {
   widget: IWidget;
@@ -61,7 +53,7 @@ const checkThumbnailExists = async (manifestPath: string) => {
     thumbPath = await path.resolve(manifestPath, "thumb.png");
   }
   if (await exists(thumbPath)) {
-    return convertFileSrc(thumbPath);
+    return convertFileSrc(thumbPath) + `?key=${nanoid()}`;
   }
   return "";
 };

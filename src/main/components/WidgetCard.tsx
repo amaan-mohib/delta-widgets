@@ -18,7 +18,7 @@ import {
   ToastTitle,
   useToastController,
 } from "@fluentui/react-components";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   closeWidgetWindow,
   createCreatorWindow,
@@ -34,11 +34,14 @@ import {
   DeleteRegular,
   EditRegular,
   FolderRegular,
+  ImageArrowCounterclockwiseRegular,
   MoreHorizontal20Regular,
 } from "@fluentui/react-icons";
 import { IWidget } from "../../types/manifest";
 import { sendMixpanelEvent } from "../utils/analytics";
-import WidgetPreview, { templateWidgets } from "./WidgetPreview";
+import WidgetPreview from "./WidgetPreview";
+import { emitTo } from "@tauri-apps/api/event";
+import { templateWidgets } from "../../common";
 
 interface WidgetCardProps {
   widget: IWidget;
@@ -78,6 +81,15 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       </Toast>,
       { toastId: widget.key, intent: "info" }
     );
+
+  useEffect(() => {
+    setVisible(widget.visible ?? false);
+  }, [widget]);
+
+  const showRefreshThumbnail =
+    widget.widgetType === "json" &&
+    visible &&
+    (import.meta.env.MODE === "development" || widget.key in templateWidgets);
 
   return (
     <Card
@@ -133,15 +145,29 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
                   Show manifest
                 </MenuItem>
                 {!saves && (
-                  <MenuItem
-                    icon={alwaysOnTop ? <CheckmarkRegular /> : undefined}
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      await toggleAlwaysOnTop(widget.path, !alwaysOnTop);
-                      setAlwaysOnTop((prev) => !prev);
-                    }}>
-                    Always on Top
-                  </MenuItem>
+                  <>
+                    {showRefreshThumbnail && (
+                      <MenuItem
+                        icon={<ImageArrowCounterclockwiseRegular />}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          await emitTo(`widget-${widget.key}`, "update-thumb", {
+                            key: widget.key,
+                          });
+                        }}>
+                        Refresh thumbnail
+                      </MenuItem>
+                    )}
+                    <MenuItem
+                      icon={alwaysOnTop ? <CheckmarkRegular /> : undefined}
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await toggleAlwaysOnTop(widget.path, !alwaysOnTop);
+                        setAlwaysOnTop((prev) => !prev);
+                      }}>
+                      Always on Top
+                    </MenuItem>
+                  </>
                 )}
               </MenuList>
             </MenuPopover>

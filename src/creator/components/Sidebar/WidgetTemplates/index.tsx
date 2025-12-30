@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardPreview,
   Link,
+  tokens,
   Tooltip,
 } from "@fluentui/react-components";
 import { ArrowRight16Regular } from "@fluentui/react-icons";
@@ -97,7 +98,14 @@ const WidgetTemplates: React.FC<WidgetTemplatesProps> = () => {
       {templates.map((item) => (
         <Card key={item.name} appearance="outline">
           <CardPreview>
-            <img src={item.image} alt={item.name} />
+            <img
+              src={item.image}
+              alt={item.name}
+              style={{
+                padding: 5,
+                background: tokens.colorBrandBackground2Hover,
+              }}
+            />
           </CardPreview>
           <CardHeader header={item.name}></CardHeader>
           <p>{item.description}</p>

@@ -9,7 +9,8 @@ import { useCustomAssets } from "../creator/hooks/useCustomAssets";
 
 import "./index.css";
 import { createThumb } from "./utils/utils";
-import { listen, UnlistenFn } from "@tauri-apps/api/event";
+import { listen } from "@tauri-apps/api/event";
+import { templateWidgets } from "../common";
 
 interface AppProps {}
 
@@ -67,23 +68,46 @@ const App: React.FC<AppProps> = () => {
   }, [initialStateLoading]);
 
   useEffect(() => {
-    let unsub: UnlistenFn;
-    (async () => {
-      unsub = await listen("update-manifest", () => {
-        initManifest(true);
-      });
-    })();
+    const unsub = listen("update-manifest", () => {
+      initManifest(true);
+    });
 
     return () => {
-      unsub && unsub();
+      unsub.then((f) => f());
     };
   }, []);
 
   useEffect(() => {
-    if (initialStateLoading || !manifest) return;
+    if (!manifest?.published) {
+      return;
+    }
+    const unsub = listen<{ key: string }>(
+      "update-thumb",
+      ({ payload: { key } }) => {
+        if (!manifest) return;
+        if (key === manifest.key) {
+          createThumb(manifest, true).catch(console.error);
+        }
+      }
+    );
+
+    return () => {
+      unsub.then((f) => f());
+    };
+  }, [manifest]);
+
+  useEffect(() => {
+    if (
+      initialStateLoading ||
+      !manifest ||
+      !manifest.published ||
+      manifest.key in templateWidgets
+    ) {
+      return;
+    }
 
     const timeout = setTimeout(() => {
-      createThumb(manifest);
+      createThumb(manifest).catch(console.error);
     }, 500);
 
     return () => {
