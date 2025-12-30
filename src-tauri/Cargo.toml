@@ -41,6 +41,8 @@ tauri-plugin-process = "=2.2.0"
 reqwest = { version = "0.12.23", features = ["json"] }
 tauri-plugin-notification = "2"
 window-vibrancy = "0.7.1"
+tauri-plugin-log = "2"
+log = "0.4.29"
 
 [profile.release]
 opt-level = 'z'     # Optimize for size

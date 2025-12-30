@@ -95,7 +95,7 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
             useVariableStore.setState({ currentMedia: null });
           }
         })
-        .catch(console.log);
+        .catch(console.error);
     }, 300);
 
     getMedia();

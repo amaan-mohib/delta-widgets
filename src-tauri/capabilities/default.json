@@ -20,6 +20,7 @@
     "core:window:allow-show",
     "core:window:allow-set-always-on-bottom",
     "core:window:allow-set-always-on-top",
-    "system-info:allow-all"
+    "system-info:allow-all",
+    "log:default"
   ]
 }
