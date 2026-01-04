@@ -1,52 +1,91 @@
 {
   "dimensions": {
-    "height": 222,
-    "width": 288
+    "height": 100,
+    "width": 270
   },
   "elements": [
     {
       "children": [
         {
           "data": {
-            "text": "<p><strong>F: {{weather:temperature_fahrenheit}}</strong></p><p><strong>C: {{weather:temperature_celsius}}</strong></p><p><br></p><p>City: {{weather:city}}</p><p>Country: {{weather:country}}</p><p>Region: {{weather:region}}</p><p>UV Index: {{weather:uv_index}}</p><p>Pressure: {{weather:pressure_mb}}</p><p>Precipitation: {{weather:precip_mm}}</p><p>Description: {{weather:description}}</p><p>Humidity: {{weather:humidity}}</p><p>Country: {{weather:country}}</p>"
-          },
-          "id": "text-hJJR",
-          "label": "text-hJJR",
-          "styles": {
-            "fontSize": "16px",
-            "lineHeight": "16px"
-          },
-          "type": "text"
-        },
-        {
-          "data": {
             "alt": "image",
             "src": "{{weather:icon}}"
           },
           "id": "image-mvbh",
+          "label": "image-mvbh",
           "styles": {
-            "height": "100px",
-            "width": "100px"
+            "height": "80px",
+            "width": "80px"
           },
           "type": "image"
+        },
+        {
+          "children": [
+            {
+              "data": {
+                "text": "<h2><strong>{{weather:temperature_celsius}}</strong></h2>"
+              },
+              "id": "text-hJJR",
+              "label": "text-hJJR",
+              "styles": {
+                "fontSize": "16px",
+                "lineHeight": "16px",
+                "textAlign": "left"
+              },
+              "type": "text"
+            },
+            {
+              "data": {
+                "text": "<p>{{weather:city}}, {{weather:country}}</p>"
+              },
+              "id": "text-DIX2",
+              "label": "text-DIX2",
+              "styles": {
+                "fontSize": "14px",
+                "lineHeight": "14px"
+              },
+              "type": "text"
+            }
+          ],
+          "data": {},
+          "id": "container-h6Jt",
+          "label": "container-h6Jt",
+          "styles": {
+            "background": "transparent",
+            "borderRadius": 2,
+            "display": "flex",
+            "flex": 1,
+            "flexDirection": "column",
+            "gap": "10px",
+            "height": "100%",
+            "justifyContent": "center",
+            "padding": 5,
+            "width": "100%"
+          },
+          "type": "container"
         }
       ],
       "data": {},
       "id": "container",
       "label": "container",
       "styles": {
+        "alignItems": "center",
         "background": "transparent",
-        "backgroundColor": "#000000bd",
+        "backgroundColor": "rgba(0, 0, 0, 1)",
+        "backgroundImage": "",
+        "borderRadius": "10px",
         "display": "flex",
         "flex": 1,
-        "padding": "5px",
+        "gap": "10px",
+        "justifyContent": "center",
+        "padding": "10px",
         "width": "100%"
       },
       "type": "container"
     }
   ],
   "key": "weather",
-  "label": "weather",
+  "label": "Weather",
   "position": {
     "x": 30,
     "y": 30

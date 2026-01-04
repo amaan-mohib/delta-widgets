@@ -27,7 +27,7 @@ It lets you create desktop widgets with **drag & drop**, **custom HTML/CSS**, an
 
 ### Main window
 
-![main](./img/ss-2-new.png)
+![main](./img/ss-2.png)
 
 ### Creator window
 

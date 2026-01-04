@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDataTrackStore } from "./stores/useDataTrackStore";
-import { getManifestFromPath } from "../main/utils/widgets";
+import { disableWindowDrag, getManifestFromPath } from "../main/utils/widgets";
 import Element from "./components/Element";
 import useFetcher from "./useFetcher";
 import useVariableUpdater from "./useVariableUpdater";
@@ -8,6 +8,10 @@ import FontPicker from "react-fontpicker-ts";
 import { useCustomAssets } from "../creator/hooks/useCustomAssets";
 
 import "./index.css";
+import { createThumb } from "./utils/utils";
+import { listen } from "@tauri-apps/api/event";
+import { templateWidgets } from "../common";
+import Toolbar from "./components/Toolbar";
 
 interface AppProps {}
 
@@ -19,6 +23,7 @@ const App: React.FC<AppProps> = () => {
     manifest,
     fontsToLoad,
   } = useDataTrackStore();
+  const [key, setKey] = useState(0);
 
   const { elements, customFields } = useMemo(
     () => ({
@@ -46,27 +51,92 @@ const App: React.FC<AppProps> = () => {
     };
   }, [initialStateLoadCounter]);
 
-  useEffect(() => {
-    if (initialStateLoading) return;
+  const initManifest = (update?: boolean) => {
     const manifestPath = window.__INITIAL_WIDGET_STATE__?.manifestPath;
-    if (manifestPath && manifest === null) {
+    if (manifestPath && (update || manifest === null)) {
       getManifestFromPath(manifestPath).then((manifest) => {
         useDataTrackStore.setState({
           manifest: { ...manifest, path: manifestPath },
         });
+        setKey((prev) => prev + 1);
       });
     }
+  };
+
+  useEffect(() => {
+    if (initialStateLoading) return;
+    initManifest();
   }, [initialStateLoading]);
+
+  useEffect(() => {
+    const unsub = listen("update-manifest", () => {
+      initManifest(true);
+    });
+
+    return () => {
+      unsub.then((f) => f());
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!manifest?.published) {
+      return;
+    }
+    const unsub = listen<{ key: string }>(
+      "update-thumb",
+      ({ payload: { key } }) => {
+        if (!manifest) return;
+        if (key === manifest.key) {
+          createThumb(manifest, true).catch(console.error);
+        }
+      }
+    );
+
+    return () => {
+      unsub.then((f) => f());
+    };
+  }, [manifest]);
+
+  useEffect(() => {
+    if (
+      initialStateLoading ||
+      !manifest ||
+      !manifest.published ||
+      manifest.key in templateWidgets
+    ) {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      createThumb(manifest).catch(console.error);
+    }, 500);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [initialStateLoading, manifest]);
+
+  useEffect(() => {
+    if (!manifest) {
+      return;
+    }
+    if (manifest.pinned) {
+      disableWindowDrag();
+    }
+  }, [manifest]);
 
   if (initialStateLoading || !manifest) return null;
 
   return (
     <div
+      key={key}
+      id="widget-window"
       style={{
         width: "100%",
         height: "100vh",
         display: "flex",
       }}>
+      {manifest.published && <Toolbar />}
       {fontsToLoad.length > 0 && (
         <FontPicker loadFonts={fontsToLoad} loaderOnly />
       )}

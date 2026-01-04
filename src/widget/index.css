@@ -27,9 +27,28 @@
 .no-drag,
 button,
 input {
-  -webkit-app-region: no-drag;
+  -webkit-app-region: no-drag !important;
 }
 
 .fui-FluentProvider {
   background-color: transparent !important;
+}
+
+.floating-btns {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  opacity: 0;
+  transition: 0.4s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5px 10px;
+  gap: 5px;
+}
+
+.floating-btns:hover {
+  opacity: 1;
+  transition: 0.4s;
 }

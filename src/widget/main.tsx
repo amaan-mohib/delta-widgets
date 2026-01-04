@@ -3,6 +3,10 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import { FluentProvider } from "@fluentui/react-components";
 import { useTheme } from "./theme/useTheme";
+import { error } from "@tauri-apps/plugin-log";
+import { forwardConsole } from "./utils/utils";
+
+forwardConsole("error", error);
 
 const Main: React.FC = () => {
   const { theme } = useTheme();

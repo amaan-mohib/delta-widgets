@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Delta Widgets",
-  "version": "0.2.3",
+  "version": "1.0.0",
   "identifier": "com.delta-widgets.app",
   "mainBinaryName": "delta-widgets",
   "build": {
@@ -13,8 +13,9 @@
   "app": {
     "windows": [
       {
+        "transparent": true,
         "title": "Delta Widgets",
-        "width": 800,
+        "width": 930,
         "height": 600,
         "visible": false
       }
@@ -23,12 +24,15 @@
       "csp": null,
       "assetProtocol": {
         "scope": [
-          "$APPCACHE/**"
+          "$APPCACHE/**",
+          "$APPDATA/**",
+          "$APPLOCALDATA/**"
         ],
         "enable": true
       }
     },
-    "withGlobalTauri": true
+    "withGlobalTauri": true,
+    "macOSPrivateApi": true
   },
   "bundle": {
     "active": true,

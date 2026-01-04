@@ -20,10 +20,11 @@ const PrevButton: React.FC<PrevButtonProps> = ({ component }) => {
 
   const onClick = useCallback(async () => {
     if (!currentMedia) return;
+
     await invoke("media_action", {
       playerId: currentMedia?.player_id,
       action: "prev",
-    }).catch(console.log);
+    }).catch(console.error);
   }, [currentMedia]);
 
   return (

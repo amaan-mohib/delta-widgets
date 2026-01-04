@@ -30,13 +30,13 @@ import {
   sanitizeString,
   updateManifest,
 } from "../../main/utils/widgets";
-import { listen, UnlistenFn } from "@tauri-apps/api/event";
+import { listen } from "@tauri-apps/api/event";
 import CustomVariablesDialog from "./CustomVariablesDialog";
 import { useShallow } from "zustand/shallow";
 import CancelZone from "./DnD/CancelZone";
 import { useToolbarActions } from "../hooks/useToolbarActions";
-import { Webview } from "@tauri-apps/api/webview";
 import { ThemePicker } from "../theme/Theme";
+import { Webview } from "@tauri-apps/api/webview";
 
 interface ToolbarProps {}
 
@@ -55,32 +55,36 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
   const selectedElement = selectedId ? elementMap[selectedId] : null;
   const actions = useToolbarActions(selectedElement);
 
-  const { projectName, isPublished } = useMemo(
+  const { projectName, isPublished, manifestKey } = useMemo(
     () => ({
       projectName: manifest?.label,
       isPublished: !!manifest?.published,
+      manifestKey: manifest?.key || "",
     }),
     [manifest]
   );
 
   useEffect(() => {
-    if (!manifest) return;
-    let unsub: UnlistenFn;
-    (async () => {
-      const previewWindow = await Webview.getByLabel(
-        `widget-preview-${manifest.key}`
-      );
-      setIsPreviewing(!!previewWindow);
+    if (!manifestKey) return;
+    Webview.getByLabel(`widget-preview-${manifestKey}`).then(
+      (previewWindow) => {
+        setIsPreviewing(!!previewWindow);
+      }
+    );
+  }, [manifestKey]);
 
-      unsub = await listen<string>("widget-close", ({ payload }) => {
-        const path = manifest.path;
-        if (path && payload.startsWith(path)) {
-          setIsPreviewing(false);
-        }
-      });
-    })();
+  useEffect(() => {
+    if (!manifest) return;
+
+    const unsub = listen<string>("widget-close", ({ payload }) => {
+      const path = manifest.path;
+      if (path && payload.startsWith(path)) {
+        setIsPreviewing(false);
+      }
+    });
+
     return () => {
-      unsub && unsub();
+      unsub.then((f) => f());
     };
   }, [manifest]);
 

@@ -12,6 +12,8 @@ export interface ITemplate {
   label: string;
   value: string;
   description: string;
+  helpLink?: string;
+  helpLinkText?: string;
 }
 export interface ITemplateCategory {
   id: string;
@@ -64,6 +66,16 @@ const getTemplateCategories = (
         description: "Time in 12-hour format (default) (hh:mm AM/PM)",
       },
       {
+        id: "timetz",
+        label: "Time with timezone",
+        value: "{{time:[UTC]}}",
+        description:
+          "Time in 12-hour format with timezone as UTC (hh:mm AM/PM)",
+        helpLink:
+          "https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List",
+        helpLinkText: "Supported timezone identifiers",
+      },
+      {
         id: "time-12",
         label: "12h Time",
         value: "{{time:hh:mm aa}}",
@@ -86,6 +98,15 @@ const getTemplateCategories = (
         label: "Date & Time",
         value: "{{datetime:MMMM d yyyy, h:mm aa}}",
         description: "Date and time combined",
+      },
+      {
+        id: "datetz",
+        label: "Date & Time with timezone",
+        value: "{{datetime:MMMM d yyyy, h:mm aa:[UTC]}}",
+        description: "Date and time (with timezone as UTC) combined",
+        helpLink:
+          "https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List",
+        helpLinkText: "Supported timezone identifiers",
       },
     ],
   },

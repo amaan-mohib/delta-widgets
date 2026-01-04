@@ -1,4 +1,7 @@
-{
+use crate::migration::Migration;
+use serde_json::Value;
+
+static NEW_JSON: &str = r#"{
   "dimensions": {
     "height": 238,
     "width": 420
@@ -330,15 +333,38 @@
       },
       "type": "container"
     }
-  ],
-  "key": "media",
-  "label": "Media",
-  "position": {
-    "x": 30,
-    "y": 30
-  },
-  "published": true,
-  "publishedAt": 1755283522629,
-  "visible": false,
-  "widgetType": "json"
+  ]
+}"#;
+
+pub struct UpdateMedia;
+
+impl Migration for UpdateMedia {
+    fn name(&self) -> &'static str {
+        "20260104192742_update_media"
+    }
+
+    fn up(&self, json: &mut Value) {
+        let key = json
+            .get("key")
+            .and_then(|k| k.as_str())
+            .unwrap_or("")
+            .to_string();
+        if key != "media" {
+            return;
+        }
+        if let Ok(new_json_value) = serde_json::from_str::<serde_json::Value>(NEW_JSON) {
+            if let Some(elements) = new_json_value.get("elements") {
+                json["elements"] = elements.clone();
+            }
+            if let Some(dimensions) = new_json_value.get("dimensions") {
+                json["dimensions"] = dimensions.clone();
+            }
+        } else {
+            println!("JSON syntax error");
+        }
+    }
+
+    fn down(&self, _json: &mut Value) {
+        // TODO: implement rollback
+    }
 }

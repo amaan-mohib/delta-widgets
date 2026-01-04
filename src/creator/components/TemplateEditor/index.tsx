@@ -11,6 +11,7 @@ import {
   DialogTrigger,
   InfoLabel,
   Input,
+  Link,
   SearchBox,
   Textarea,
   Tooltip,
@@ -59,7 +60,18 @@ export const TemplateCard: React.FC<{
         }
       />
       <code>{template.value}</code>
-      {template.description && <p>{template.description}</p>}
+      {template.description && (
+        <p>
+          {template.description}
+          {template.helpLink && (
+            <div>
+              <Link href={template.helpLink} target="_blank">
+                {template.helpLinkText || "Learn more"}
+              </Link>
+            </div>
+          )}
+        </p>
+      )}
     </Card>
   );
 };

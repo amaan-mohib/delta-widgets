@@ -20,10 +20,11 @@ const NextButton: React.FC<NextButtonProps> = ({ component }) => {
 
   const onClick = useCallback(async () => {
     if (!currentMedia) return;
+
     await invoke("media_action", {
       playerId: currentMedia?.player_id,
       action: "next",
-    }).catch(console.log);
+    }).catch(console.error);
   }, [currentMedia]);
 
   return (

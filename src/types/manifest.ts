@@ -45,4 +45,5 @@ export interface IWidget {
     mode: "light" | "dark" | "system";
     color: string;
   } | null;
+  pinned?: boolean;
 }
