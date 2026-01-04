@@ -181,6 +181,7 @@ struct WidgetManifest {
     file: Option<String>,
     visible: Option<bool>,
     always_on_top: Option<bool>,
+    pinned: Option<bool>,
     #[serde(default = "default_widget_type")]
     widget_type: WidgetType,
 }
@@ -307,6 +308,10 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
         new_window.set_maximizable(false).unwrap();
         new_window.set_minimizable(false).unwrap();
         new_window.set_closable(false).unwrap();
+
+        let pinned = manifest.pinned.unwrap_or(false);
+        new_window.set_resizable(!pinned).unwrap();
+
         let always_on_top = manifest.always_on_top.unwrap_or(false);
         if always_on_top {
             new_window.set_always_on_top(always_on_top).unwrap();
@@ -636,4 +641,12 @@ pub async fn apply_blur_theme(
         theme_applied = false;
     };
     Ok(theme_applied)
+}
+
+#[tauri::command]
+pub async fn open_devtools(app: tauri::AppHandle, label: String) {
+    if let Some(window) = app.get_webview_window(&label) {
+        #[cfg(debug_assertions)]
+        window.open_devtools();
+    }
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDataTrackStore } from "./stores/useDataTrackStore";
-import { getManifestFromPath } from "../main/utils/widgets";
+import { disableWindowDrag, getManifestFromPath } from "../main/utils/widgets";
 import Element from "./components/Element";
 import useFetcher from "./useFetcher";
 import useVariableUpdater from "./useVariableUpdater";
@@ -11,6 +11,7 @@ import "./index.css";
 import { createThumb } from "./utils/utils";
 import { listen } from "@tauri-apps/api/event";
 import { templateWidgets } from "../common";
+import Toolbar from "./components/Toolbar";
 
 interface AppProps {}
 
@@ -115,6 +116,15 @@ const App: React.FC<AppProps> = () => {
     };
   }, [initialStateLoading, manifest]);
 
+  useEffect(() => {
+    if (!manifest) {
+      return;
+    }
+    if (manifest.pinned) {
+      disableWindowDrag();
+    }
+  }, [manifest]);
+
   if (initialStateLoading || !manifest) return null;
 
   return (
@@ -126,6 +136,7 @@ const App: React.FC<AppProps> = () => {
         height: "100vh",
         display: "flex",
       }}>
+      <Toolbar />
       {fontsToLoad.length > 0 && (
         <FontPicker loadFonts={fontsToLoad} loaderOnly />
       )}

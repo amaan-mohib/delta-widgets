@@ -117,6 +117,7 @@ pub fn run() {
             widget::toggle_always_on_top,
             widget::copy_custom_assets_dir,
             widget::apply_blur_theme,
+            widget::open_devtools,
             system::get_system_info,
             analytics::track_analytics_event,
             store::write_to_store_cmd,

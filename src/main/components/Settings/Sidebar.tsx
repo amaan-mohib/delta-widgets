@@ -16,8 +16,10 @@ import {
   Color20Filled,
   Color20Regular,
   Flag20Regular,
+  Heart20Color,
   Info20Filled,
   Info20Regular,
+  QuestionCircle20Regular,
   Settings20Filled,
   Settings20Regular,
 } from "@fluentui/react-icons";
@@ -111,6 +113,22 @@ const SettingsSidebar: React.FC<SidebarProps> = () => {
             </NavItem>
           ))}
           <NavDivider style={{ marginTop: "auto" }} />
+          <NavItem
+            className={styles.navItem}
+            value={"donate"}
+            href="https://buymeacoffee.com/amaan.mohib"
+            target="_blank"
+            icon={<Heart20Color />}>
+            Donate
+          </NavItem>
+          <NavItem
+            className={styles.navItem}
+            value={"help"}
+            href="https://amaan-mohib.github.io/delta-widgets/"
+            target="_blank"
+            icon={<QuestionCircle20Regular />}>
+            Help
+          </NavItem>
           <NavItem
             className={styles.navItem}
             value={"report"}
