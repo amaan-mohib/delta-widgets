@@ -136,7 +136,7 @@ const App: React.FC<AppProps> = () => {
         height: "100vh",
         display: "flex",
       }}>
-      <Toolbar />
+      {manifest.published && <Toolbar />}
       {fontsToLoad.length > 0 && (
         <FontPicker loadFonts={fontsToLoad} loaderOnly />
       )}

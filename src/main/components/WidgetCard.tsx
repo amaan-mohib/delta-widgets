@@ -87,9 +87,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   }, [widget]);
 
   const showRefreshThumbnail =
-    widget.widgetType === "json" &&
-    visible &&
-    (import.meta.env.MODE === "development" || widget.key in templateWidgets);
+    widget.widgetType === "json" && visible && !(widget.key in templateWidgets);
 
   return (
     <Card

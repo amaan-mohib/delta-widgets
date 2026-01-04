@@ -87,6 +87,7 @@ function App() {
           justifyContent: "center",
           height: "100%",
           gap: "3px",
+          minHeight: 150,
         }}>
         <AppsAddInRegular fontSize="32px" />
         <Text weight="semibold">Create new widget</Text>

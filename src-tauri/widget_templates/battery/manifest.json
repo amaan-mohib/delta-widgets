@@ -1,7 +1,7 @@
 {
   "dimensions": {
-    "height": 232,
-    "width": 335
+    "height": 135,
+    "width": 315
   },
   "elements": [
     {
@@ -20,74 +20,130 @@
           "type": "text"
         },
         {
-          "data": {
-            "text": "<p>Technology: {{system:battery_technology}}</p><p>Cycles: {{system:battery_cycles}}</p><p>Charge: {{system:battery_charge}}%</p><p>Health: {{system:battery_health}}%</p><p>Vendor: {{system:battery_vendor}}</p><p>Model: {{system:battery_model}}</p>"
-          },
-          "id": "text-0LFf",
-          "label": "text-0LFf",
+          "children": [
+            {
+              "data": {
+                "text": "<p>Charge ({{system:battery_charge}}%)</p>"
+              },
+              "id": "text-Vnhb",
+              "label": "text-Vnhb",
+              "styles": {
+                "fontSize": "16px",
+                "lineHeight": "16px"
+              },
+              "type": "text"
+            },
+            {
+              "data": {
+                "maxValue": "100",
+                "thickness": "large",
+                "value": "{{system:battery_charge}}"
+              },
+              "id": "progress-WxKK",
+              "styles": {
+                "padding": 0
+              },
+              "type": "progress"
+            },
+            {
+              "children": [
+                {
+                  "data": {
+                    "text": "<p>Health ({{system:battery_health}}%)</p>"
+                  },
+                  "id": "text-vEEY",
+                  "label": "text-vEEY",
+                  "styles": {
+                    "fontSize": "16px",
+                    "lineHeight": "16px"
+                  },
+                  "type": "text"
+                },
+                {
+                  "data": {
+                    "text": "<p>{{system:battery_cycles}} cycles</p>"
+                  },
+                  "id": "text-0LFf",
+                  "label": "text-0LFf",
+                  "styles": {
+                    "fontSize": "12px",
+                    "lineHeight": "12px"
+                  },
+                  "type": "text"
+                }
+              ],
+              "data": {},
+              "id": "container-QcYa",
+              "label": "container-QcYa",
+              "styles": {
+                "alignItems": "center",
+                "background": "transparent",
+                "borderRadius": 2,
+                "display": "flex",
+                "flex": 1,
+                "height": "100%",
+                "justifyContent": "space-between",
+                "padding": "0px",
+                "width": "100%"
+              },
+              "type": "container"
+            },
+            {
+              "data": {
+                "maxValue": "100",
+                "thickness": "large",
+                "value": "{{system:battery_health}}"
+              },
+              "id": "progress-wqK8",
+              "label": "progress-wqK8",
+              "styles": {
+                "padding": 0
+              },
+              "type": "progress"
+            },
+            {
+              "children": [],
+              "id": "container-DlyG",
+              "styles": {
+                "background": "transparent",
+                "borderRadius": 2,
+                "display": "flex",
+                "flex": 1,
+                "height": "100%",
+                "padding": 5,
+                "width": "100%"
+              },
+              "type": "container"
+            }
+          ],
+          "data": {},
+          "id": "container-VT9w",
+          "label": "container-VT9w",
           "styles": {
-            "fontSize": "16px",
-            "lineHeight": "16px"
+            "background": "transparent",
+            "borderRadius": 2,
+            "display": "flex",
+            "flex": 1,
+            "flexDirection": "column",
+            "gap": "10px",
+            "height": "100%",
+            "padding": "0px",
+            "width": "100%"
           },
-          "type": "text"
-        },
-        {
-          "data": {
-            "text": "<p>Charge ({{system:battery_charge}}%)</p>"
-          },
-          "id": "text-Vnhb",
-          "label": "text-Vnhb",
-          "styles": {
-            "fontSize": "16px",
-            "lineHeight": "16px"
-          },
-          "type": "text"
-        },
-        {
-          "data": {
-            "maxValue": "100",
-            "thickness": "large",
-            "value": "{{system:battery_charge}}"
-          },
-          "id": "progress-WxKK",
-          "styles": {
-            "padding": 0
-          },
-          "type": "progress"
-        },
-        {
-          "data": {
-            "text": "<p>Health ({{system:battery_health}}%)</p>"
-          },
-          "id": "text-vEEY",
-          "label": "text-vEEY",
-          "styles": {
-            "fontSize": "16px",
-            "lineHeight": "16px"
-          },
-          "type": "text"
-        },
-        {
-          "data": {
-            "maxValue": "100",
-            "value": "{{system:battery_health}}"
-          },
-          "id": "progress-wqK8",
-          "styles": {
-            "padding": 0
-          },
-          "type": "progress"
+          "type": "container"
         }
       ],
       "data": {},
       "id": "container",
+      "label": "container",
       "styles": {
         "background": "transparent",
         "backgroundColor": "#000000ff",
+        "borderRadius": "10px",
         "display": "flex",
         "flex": 1,
         "flexDirection": "column",
-        "gap": "10px",
+        "gap": "15px",
         "padding": "10px",
         "width": "100%"
       },
@@ -95,7 +151,7 @@
     }
   ],
   "key": "battery",
-  "label": "battery",
+  "label": "Battery",
   "position": {
     "x": 30,
     "y": 30
