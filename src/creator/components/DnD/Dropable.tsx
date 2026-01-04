@@ -14,6 +14,10 @@ const Dropable: React.FC<DropableProps & PropsWithChildren> = ({
   disableDrop,
   styles,
 }) => {
+  const { isOver, setNodeRef, active } = useDroppable({
+    id: id,
+  });
+
   if (disableDrop) {
     return (
       <Element id={id} styles={styles}>
@@ -21,9 +25,7 @@ const Dropable: React.FC<DropableProps & PropsWithChildren> = ({
       </Element>
     );
   }
-  const { isOver, setNodeRef, active } = useDroppable({
-    id: id,
-  });
+
   return (
     <Element
       id={id}

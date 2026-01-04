@@ -27,9 +27,9 @@ import {
   IUpdateElementProperties,
   useManifestStore,
 } from "../../stores/useManifestStore";
-import { ColorPickerPopup } from "./ColorPickerPopup";
 import { spinButtonOnChange } from "../../utils";
 import Panel from "./Panel";
+import { useBackgroundProperties } from "./BackgroundProperties";
 
 interface ContainerPropertiesProps {}
 
@@ -41,6 +41,12 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
     if (!selectedId) return;
     useManifestStore.getState().updateElementProperties(selectedId, value);
   };
+
+  const backgroundProperties = useBackgroundProperties({
+    elementMap,
+    selectedId,
+    updateProperties,
+  });
 
   if (!selectedId || !elementMap[selectedId]) return null;
 
@@ -351,30 +357,7 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
             },
           ],
         },
-        {
-          label: "Background",
-          value: "background",
-          fields: [
-            {
-              label: "Color",
-              control: (
-                <ColorPickerPopup
-                  color={
-                    elementMap[selectedId].styles.backgroundColor ||
-                    "transparent"
-                  }
-                  setColor={(color) => {
-                    updateProperties({
-                      styles: {
-                        backgroundColor: color,
-                      },
-                    });
-                  }}
-                />
-              ),
-            },
-          ],
-        },
+        backgroundProperties!,
       ]}
     />
   );

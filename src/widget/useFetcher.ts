@@ -1,4 +1,4 @@
-import { listen, UnlistenFn } from "@tauri-apps/api/event";
+import { listen } from "@tauri-apps/api/event";
 import { useEffect, useMemo, useState } from "react";
 import { IWidgetElement, TCustomFields } from "../types/manifest";
 import { invoke } from "@tauri-apps/api/core";
@@ -19,7 +19,26 @@ const extractDynamicVariables = (
     if (element.styles?.fontFamily) {
       fontsSet.add(element.styles.fontFamily);
     }
+    const values: string[] = [];
+
     Object.values(element.data || {}).forEach((value) => {
+      if (typeof value === "string") {
+        values.push(value);
+      } else if (Array.isArray(value)) {
+        value.forEach((v) => {
+          if (typeof v === "string") {
+            values.push(v);
+          }
+        });
+      } else if (typeof value === "object" && value !== null) {
+        Object.values(value).forEach((v) => {
+          if (typeof v === "string") {
+            values.push(v);
+          }
+        });
+      }
+    });
+    values.forEach((value) => {
       if (typeof value === "string") {
         const matches = [...value.matchAll(/\{\{([^}]+)\}\}/g)];
         matches.forEach((match) => {
@@ -76,20 +95,17 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
             useVariableStore.setState({ currentMedia: null });
           }
         })
-        .catch(console.log);
+        .catch(console.error);
     }, 300);
 
     getMedia();
 
-    let unsub: UnlistenFn;
-    (async () => {
-      unsub = await listen("media_updated", () => {
-        getMedia();
-      });
-    })();
+    const unsub = listen("media_updated", () => {
+      getMedia();
+    });
     return () => {
       getMedia.cancel();
-      unsub && unsub();
+      unsub.then((f) => f());
     };
   }, [dynamicVariables]);
 

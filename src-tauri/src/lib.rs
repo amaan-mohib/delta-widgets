@@ -3,12 +3,11 @@ pub mod migration;
 pub mod migrations;
 mod plugins;
 
-use commands::{media, system, widget};
+use commands::{analytics, media, migrate, store, system, widget};
 use include_dir::{include_dir, Dir, DirEntry};
+use log::LevelFilter;
 use plugins::localhost;
-use reqwest::Client;
-use serde_json::{json, Value};
-use std::collections::HashMap;
+use serde_json::Value;
 use std::{env, fs, sync::OnceLock};
 use tauri::{
     menu::{Menu, MenuItem},
@@ -16,7 +15,8 @@ use tauri::{
     Manager,
 };
 use tauri::{AppHandle, Emitter};
-use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
+use tauri_plugin_autostart::ManagerExt;
+use tauri_plugin_log::{Target, TargetKind};
 
 use crate::commands::widget::create_widget_window;
 use crate::migration::{run_migrations, Direction};
@@ -47,37 +47,6 @@ pub fn get_custom_server_port() -> u16 {
     }
 }
 
-pub fn get_or_create_store(app_handle: &AppHandle) -> Result<serde_json::Value, serde_json::Error> {
-    let store_path = app_handle
-        .path()
-        .resolve("store.json", tauri::path::BaseDirectory::AppData)
-        .unwrap();
-
-    if !store_path.exists() {
-        fs::write(&store_path, "{}").expect("Failed to create store file");
-    }
-    fs::read_to_string(&store_path)
-        .and_then(|contents| Ok(serde_json::from_str::<serde_json::Value>(&contents)))
-        .expect("Cannot read store file")
-}
-
-pub fn write_to_store(
-    app_handle: &AppHandle,
-    key: &str,
-    value: serde_json::Value,
-) -> Result<(), std::io::Error> {
-    let store_path = app_handle
-        .path()
-        .resolve("store.json", tauri::path::BaseDirectory::AppData)
-        .unwrap();
-
-    let mut store = get_or_create_store(app_handle)?;
-    store[key] = value;
-
-    fs::write(store_path, serde_json::to_string(&store).unwrap())?;
-    Ok(())
-}
-
 fn copy_embedded_dir(dir: &Dir, target: &std::path::Path) -> std::io::Result<()> {
     fs::create_dir_all(target)?;
 
@@ -99,95 +68,37 @@ fn copy_embedded_dir(dir: &Dir, target: &std::path::Path) -> std::io::Result<()>
     Ok(())
 }
 
-#[tauri::command]
-async fn write_to_store_cmd(
-    app: tauri::AppHandle,
-    key: String,
-    value: Value,
-) -> Result<(), String> {
-    let value = serde_json::to_value(value).map_err(|e| e.to_string())?;
-    write_to_store(&app, &key, value).map_err(|e| e.to_string())?;
-    Ok(())
-}
-
-#[tauri::command]
-async fn track_analytics_event(
-    app: tauri::AppHandle,
-    event: &str,
-    distinct_id: &str,
-    extra_properties: Option<HashMap<String, Value>>,
-) -> Result<(), String> {
-    let client = Client::new();
-    let token = option_env!("MIXPANEL_TOKEN").unwrap_or("");
-
-    let mut properties = serde_json::Map::new();
-    properties.insert("distinct_id".to_string(), json!(distinct_id));
-    properties.insert("token".to_string(), json!(token));
-    properties.insert(
-        "version".to_string(),
-        json!(app.package_info().version.to_string()),
-    );
-    properties.insert("os".to_string(), json!("windows"));
-
-    if let Some(extra) = extra_properties {
-        for (k, v) in extra {
-            properties.insert(k, v);
-        }
-    }
-
-    let event_data = json!([{
-        "event": event,
-        "properties": properties,
-    }]);
-
-    let res = client
-        .post("https://api.mixpanel.com/track?ip=0")
-        .header("accept", "text/plain")
-        .header("content-type", "application/json")
-        .json(&event_data)
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
-
-    if res.status().is_success() {
-        Ok(())
-    } else {
-        Err(format!("Mixpanel error: {}", res.status()))
-    }
-}
-
-#[tauri::command]
-fn migrate(app: tauri::AppHandle, direction: String) -> Result<(), String> {
-    if !cfg!(debug_assertions) {
-        println!("Migrations can only be run in dev mode");
-        return Ok(());
-    }
-    let dir = match direction.as_str() {
-        "up" => Direction::Up,
-        "down" => Direction::Down,
-        _ => return Err("Invalid direction".into()),
-    };
-
-    run_migrations(&app, all_migrations(), dir).map_err(|e| e.to_string())
-}
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let port = portpicker::pick_unused_port().expect("failed to find unused port");
 
     tauri::Builder::default()
+        .plugin(
+            tauri_plugin_log::Builder::default()
+                .targets([
+                    Target::new(TargetKind::Stdout),
+                    Target::new(TargetKind::Webview),
+                    Target::new(TargetKind::LogDir {
+                        file_name: Some(String::from("logs")),
+                    }),
+                ])
+                .level(LevelFilter::Error)
+                .build(),
+        )
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-            let _ = app
-                .get_webview_window("main")
-                .expect("no main window")
-                .set_focus();
+            if let Some(webview_window) = app.get_webview_window("main") {
+                let _ = webview_window.show();
+                let _ = webview_window.set_focus();
+            }
         }))
-        .plugin(tauri_plugin_autostart::init(
-            MacosLauncher::LaunchAgent,
-            Some(vec!["--autostart"]),
-        ))
+        .plugin(
+            tauri_plugin_autostart::Builder::new()
+                .arg("--autostart")
+                .app_name("Delta Widgets")
+                .build(),
+        )
         .plugin(tauri_plugin_system_info::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
@@ -205,10 +116,12 @@ pub fn run() {
             widget::toggle_widget_visibility,
             widget::toggle_always_on_top,
             widget::copy_custom_assets_dir,
+            widget::apply_blur_theme,
+            widget::open_devtools,
             system::get_system_info,
-            write_to_store_cmd,
-            track_analytics_event,
-            migrate,
+            analytics::track_analytics_event,
+            store::write_to_store_cmd,
+            migrate::migrate,
         ])
         .setup(|app| {
             if !cfg!(debug_assertions) {
@@ -238,16 +151,14 @@ pub fn run() {
             let app_handle = app.handle().clone();
             ensure_paths(&app_handle);
 
-            if let Err(e) = run_migrations(&app_handle, all_migrations(), Direction::Up) {
-                eprintln!("Migration failed: {:?}", e);
-            }
-
             let show_i = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
             let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show_i, &quit_i])?;
             let tray = TrayIconBuilder::new()
                 .menu(&menu)
                 .icon(app.default_window_icon().unwrap().clone())
+                .tooltip("Delta Widgets")
+                .title("Delta Widgets")
                 .build(app)?;
 
             tray.on_menu_event(|app, event| match event.id.as_ref() {
@@ -282,7 +193,7 @@ pub fn run() {
             }
             let autostart_manager = app.autolaunch();
             let autostart_enabled = autostart_manager.is_enabled().unwrap_or(false);
-            let store = get_or_create_store(app.handle()).unwrap();
+            let store = store::get_or_create_store(app.handle()).unwrap();
 
             let store_autostart = store.get("autostart").and_then(Value::as_bool);
             match store_autostart {
@@ -295,7 +206,8 @@ pub fn run() {
                 }
                 None => {
                     // Default to enabled if not set
-                    let _ = write_to_store(app.handle(), "autostart", serde_json::json!(true));
+                    let _ =
+                        store::write_to_store(app.handle(), "autostart", serde_json::json!(true));
                     if !autostart_enabled {
                         autostart_manager.enable().unwrap();
                     }
@@ -324,33 +236,38 @@ pub fn run() {
                             .expect("Failed to create widgets directory");
                     });
 
-                if let Some(path_str) = widgets_dir.to_str() {
-                    let mut entries = std::fs::read_dir(path_str)
-                        .unwrap()
-                        .filter_map(|e| e.ok())
-                        .peekable();
-                    if entries.peek().is_none() {
-                        copy_embedded_dir(&TEMPLATES, &widgets_dir)
-                            .expect("Failed to copy widgets directory");
-                    }
-                    for entry in entries {
-                        let entry_path = entry.path();
-                        let manifest_path = entry_path.join("manifest.json");
-                        if manifest_path.exists() {
-                            if let Ok(json) = fs::read_to_string(&manifest_path)
-                                .and_then(|contents| {
-                                    Ok(serde_json::from_str::<serde_json::Value>(&contents))
-                                })
-                                .expect("Cannot read manifest")
-                            {
-                                let visible = json
-                                    .get("visible")
-                                    .and_then(Value::as_bool)
-                                    .unwrap_or_else(|| false);
+                let is_dir_empty = widgets_dir
+                    .read_dir()
+                    .map(|mut i| i.next().is_none())
+                    .unwrap_or(false);
+                if is_dir_empty {
+                    copy_embedded_dir(&TEMPLATES, &widgets_dir)
+                        .expect("Failed to copy widgets directory");
+                }
+                if let Err(e) = run_migrations(&app_handle, all_migrations(), Direction::Up) {
+                    eprintln!("Migration failed: {:?}", e);
+                }
 
-                                if visible {
-                                    paths.push(manifest_path.to_str().unwrap().to_string());
-                                }
+                let entries = widgets_dir
+                    .read_dir()
+                    .expect("Cannot read widgets directory");
+                for entry in entries {
+                    let entry_path = entry.unwrap().path();
+                    let manifest_path = entry_path.join("manifest.json");
+                    if manifest_path.exists() {
+                        if let Ok(json) = fs::read_to_string(&manifest_path)
+                            .and_then(|contents| {
+                                Ok(serde_json::from_str::<serde_json::Value>(&contents))
+                            })
+                            .expect("Cannot read manifest")
+                        {
+                            let visible = json
+                                .get("visible")
+                                .and_then(Value::as_bool)
+                                .unwrap_or_else(|| false);
+
+                            if visible {
+                                paths.push(manifest_path.to_str().unwrap().to_string());
                             }
                         }
                     }

@@ -18,13 +18,12 @@ const MediaSlider: React.FC<MediaSliderProps> = ({ component }) => {
   const onToggle = useCallback(
     async (value: number) => {
       if (!currentMedia) return;
-      console.log("Slider value:", value);
 
       await invoke("media_action", {
         playerId: currentMedia?.player_id,
         action: "position",
         position: value,
-      }).catch(console.log);
+      }).catch(console.error);
     },
     [currentMedia]
   );

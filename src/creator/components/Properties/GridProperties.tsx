@@ -7,8 +7,8 @@ import {
   useManifestStore,
 } from "../../stores/useManifestStore";
 import { spinButtonOnChange } from "../../utils";
-import { ColorPickerPopup } from "./ColorPickerPopup";
 import Panel from "./Panel";
+import { useBackgroundProperties } from "./BackgroundProperties";
 
 interface GridPropertiesProps {}
 
@@ -20,6 +20,12 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
     if (!selectedId) return;
     useManifestStore.getState().updateElementProperties(selectedId, value);
   };
+
+  const backgroundProperties = useBackgroundProperties({
+    elementMap,
+    selectedId,
+    updateProperties,
+  });
 
   if (!selectedId || !elementMap[selectedId]) return null;
 
@@ -228,23 +234,9 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
                 </div>
               ),
             },
-            {
-              label: "Background",
-              control: (
-                <ColorPickerPopup
-                  color={gridStyles.backgroundColor || "transparent"}
-                  setColor={(color) => {
-                    updateProperties({
-                      styles: {
-                        backgroundColor: color,
-                      },
-                    });
-                  }}
-                />
-              ),
-            },
           ],
         },
+        backgroundProperties!,
       ]}
       selectedId={selectedId}
     />

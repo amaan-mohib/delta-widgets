@@ -1,0 +1,370 @@
+use crate::migration::Migration;
+use serde_json::Value;
+
+static NEW_JSON: &str = r#"{
+  "dimensions": {
+    "height": 238,
+    "width": 420
+  },
+  "elements": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "data": {
+                    "alt": "media thumbnail",
+                    "shadow": true,
+                    "src": "{{media:thumbnail}}"
+                  },
+                  "id": "image-HbHf",
+                  "label": "image-HbHf",
+                  "styles": {
+                    "height": "120px",
+                    "width": "120px"
+                  },
+                  "type": "image"
+                },
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "data": {
+                            "previousFont": "Open Sans",
+                            "text": "<p>{{media:title}}</p>"
+                          },
+                          "id": "text-nUok",
+                          "label": "text-nUok",
+                          "styles": {
+                            "fontFamily": "Patua One",
+                            "fontSize": "22px",
+                            "fontWeight": "bold",
+                            "lineHeight": "22px",
+                            "textShadow": "1px 1px black"
+                          },
+                          "type": "text"
+                        },
+                        {
+                          "data": {
+                            "text": "<p>{{media:artist}}</p>"
+                          },
+                          "id": "text-kMcn",
+                          "label": "text-kMcn",
+                          "styles": {
+                            "fontFamily": "Open Sans",
+                            "fontSize": "16px",
+                            "lineHeight": "16px",
+                            "textShadow": "1px 1px black"
+                          },
+                          "type": "text"
+                        }
+                      ],
+                      "data": {},
+                      "id": "container-VCI4",
+                      "label": "container-VCI4",
+                      "styles": {
+                        "background": "transparent",
+                        "borderRadius": 2,
+                        "display": "flex",
+                        "flex": 0.5,
+                        "flexDirection": "column",
+                        "gap": "5px",
+                        "height": "100%",
+                        "padding": "8px",
+                        "width": "100%"
+                      },
+                      "type": "container"
+                    },
+                    {
+                      "data": {
+                        "current": "{{media:position}}",
+                        "iconPosition": "before",
+                        "max": "{{media:duration}}",
+                        "min": "0",
+                        "shape": "rounded",
+                        "size": "small",
+                        "type": "transparent"
+                      },
+                      "id": "select-kduW",
+                      "label": "select-kduW",
+                      "styles": {},
+                      "type": "media-select"
+                    }
+                  ],
+                  "data": {},
+                  "id": "container-GrMt",
+                  "label": "container-GrMt",
+                  "styles": {
+                    "alignItems": "flex-start",
+                    "background": "transparent",
+                    "borderRadius": 2,
+                    "display": "flex",
+                    "flex": 1,
+                    "flexDirection": "column",
+                    "gap": "0px",
+                    "height": "100%",
+                    "justifyContent": "flex-start",
+                    "padding": "0px",
+                    "width": "100%"
+                  },
+                  "type": "container"
+                }
+              ],
+              "data": {},
+              "id": "container-kTad",
+              "label": "container-kTad",
+              "styles": {
+                "background": "transparent",
+                "borderRadius": 2,
+                "display": "flex",
+                "flex": 1,
+                "gap": "10px",
+                "height": "100%",
+                "padding": "5px",
+                "width": "100%"
+              },
+              "type": "container"
+            },
+            {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "data": {
+                        "shape": "circular",
+                        "size": "medium",
+                        "type": "subtle"
+                      },
+                      "id": "button-4I1Y",
+                      "label": "button-4I1Y",
+                      "styles": {},
+                      "type": "media-prev"
+                    },
+                    {
+                      "data": {
+                        "shape": "circular",
+                        "size": "large",
+                        "type": "primary"
+                      },
+                      "id": "button-Q06I",
+                      "label": "button-Q06I",
+                      "styles": {},
+                      "type": "toggle-play"
+                    },
+                    {
+                      "data": {
+                        "shape": "circular",
+                        "size": "medium",
+                        "type": "subtle"
+                      },
+                      "id": "button-XZMw",
+                      "label": "button-XZMw",
+                      "styles": {},
+                      "type": "media-next"
+                    }
+                  ],
+                  "data": {},
+                  "id": "container-6F9S",
+                  "label": "container-6F9S",
+                  "styles": {
+                    "alignItems": "center",
+                    "background": "transparent",
+                    "borderRadius": 2,
+                    "display": "flex",
+                    "flex": 1,
+                    "gap": "15px",
+                    "height": "100%",
+                    "justifyContent": "center",
+                    "padding": "0px",
+                    "width": "100%"
+                  },
+                  "type": "container"
+                },
+                {
+                  "children": [
+                    {
+                      "data": {
+                        "text": "<p>{{media:position_text}}</p>"
+                      },
+                      "id": "text-m6zw",
+                      "label": "text-m6zw",
+                      "styles": {
+                        "fontSize": "12px",
+                        "lineHeight": "12px",
+                        "textShadow": "1px 1px black"
+                      },
+                      "type": "text"
+                    },
+                    {
+                      "children": [
+                        {
+                          "data": {
+                            "current": "{{media:position}}",
+                            "max": "{{media:duration}}",
+                            "min": "0"
+                          },
+                          "id": "slider-1fbt",
+                          "styles": {},
+                          "type": "media-slider"
+                        }
+                      ],
+                      "data": {},
+                      "id": "container-B9_5",
+                      "label": "container-B9_5",
+                      "styles": {
+                        "background": "transparent",
+                        "borderRadius": 2,
+                        "display": "flex",
+                        "flex": 1,
+                        "flexDirection": "column",
+                        "height": "100%",
+                        "justifyContent": "center",
+                        "padding": 5,
+                        "width": "100%"
+                      },
+                      "type": "container"
+                    },
+                    {
+                      "data": {
+                        "text": "<p>{{media:duration_text}}</p>"
+                      },
+                      "id": "text-TZcM",
+                      "label": "text-TZcM",
+                      "styles": {
+                        "fontSize": "12px",
+                        "lineHeight": "12px",
+                        "textShadow": "1px 1px black"
+                      },
+                      "type": "text"
+                    }
+                  ],
+                  "data": {},
+                  "id": "container-2uZt",
+                  "label": "container-2uZt",
+                  "styles": {
+                    "alignItems": "center",
+                    "background": "transparent",
+                    "borderRadius": 2,
+                    "display": "flex",
+                    "flex": 1,
+                    "height": "100%",
+                    "justifyContent": "center",
+                    "padding": "0px",
+                    "width": "100%"
+                  },
+                  "type": "container"
+                },
+                {
+                  "children": [],
+                  "data": {},
+                  "id": "container-vv5-",
+                  "label": "container-vv5-",
+                  "styles": {
+                    "alignItems": "center",
+                    "background": "transparent",
+                    "borderRadius": 2,
+                    "display": "flex",
+                    "flex": 1,
+                    "height": "100%",
+                    "justifyContent": "center",
+                    "padding": "0px",
+                    "width": "100%"
+                  },
+                  "type": "container"
+                }
+              ],
+              "data": {},
+              "id": "container-dFvj",
+              "label": "container-dFvj",
+              "styles": {
+                "background": "transparent",
+                "borderRadius": 2,
+                "display": "flex",
+                "flex": 1,
+                "flexDirection": "column",
+                "height": "100%",
+                "padding": 5,
+                "width": "100%"
+              },
+              "type": "container"
+            }
+          ],
+          "data": {},
+          "id": "container-iccE",
+          "label": "container-iccE",
+          "styles": {
+            "backdropFilter": "blur(10px)",
+            "background": "transparent",
+            "backgroundColor": "rgba(0, 0, 0, 0.54)",
+            "backgroundImage": "",
+            "borderRadius": "10px",
+            "display": "flex",
+            "flex": 1,
+            "flexDirection": "column",
+            "height": "100%",
+            "padding": 5,
+            "width": "100%"
+          },
+          "type": "container"
+        }
+      ],
+      "data": {
+        "imageData": {
+          "key": "r6wzsiHpJEfWvf0np-KEI.image",
+          "kind": "url",
+          "path": "{{media:thumbnail}}",
+          "type": "image"
+        }
+      },
+      "id": "container",
+      "label": "container",
+      "styles": {
+        "backdropFilter": "",
+        "background": "transparent",
+        "backgroundSize": "cover",
+        "borderRadius": "10px",
+        "display": "flex",
+        "flex": 1,
+        "padding": "0px",
+        "width": "100%"
+      },
+      "type": "container"
+    }
+  ]
+}"#;
+
+pub struct UpdateMedia;
+
+impl Migration for UpdateMedia {
+    fn name(&self) -> &'static str {
+        "20260104192742_update_media"
+    }
+
+    fn up(&self, json: &mut Value) {
+        let key = json
+            .get("key")
+            .and_then(|k| k.as_str())
+            .unwrap_or("")
+            .to_string();
+        if key != "media" {
+            return;
+        }
+        if let Ok(new_json_value) = serde_json::from_str::<serde_json::Value>(NEW_JSON) {
+            if let Some(elements) = new_json_value.get("elements") {
+                json["elements"] = elements.clone();
+            }
+            if let Some(dimensions) = new_json_value.get("dimensions") {
+                json["dimensions"] = dimensions.clone();
+            }
+        } else {
+            println!("JSON syntax error");
+        }
+    }
+
+    fn down(&self, _json: &mut Value) {
+        // TODO: implement rollback
+    }
+}

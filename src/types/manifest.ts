@@ -41,4 +41,9 @@ export interface IWidget {
   published?: boolean;
   publishedAt?: string | number;
   alwaysOnTop?: boolean;
+  theme?: {
+    mode: "light" | "dark" | "system";
+    color: string;
+  } | null;
+  pinned?: boolean;
 }

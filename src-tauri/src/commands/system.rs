@@ -72,6 +72,7 @@ fn get_network_speeds() -> Vec<serde_json::Value> {
 pub async fn get_system_info(has_network: Option<bool>) -> Result<Value, ()> {
     let state = SysInfoState::default();
     let mut sysinfo = state.sysinfo.lock().unwrap();
+    std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
     sysinfo.refresh_all();
     let cpus = sysinfo.sys.cpus();
     let mut total_cpu_speed: u64 = 0;

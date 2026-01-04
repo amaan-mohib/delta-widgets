@@ -13,6 +13,18 @@
   padding: 0;
 }
 
+.dark {
+  color-scheme: dark;
+}
+
+.light {
+  color-scheme: light;
+}
+
+#widget-preview-window {
+  background: transparent;
+}
+
 .container {
   background-color: var(--colorNeutralBackground2);
   display: flex;

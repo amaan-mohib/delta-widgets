@@ -10,6 +10,8 @@ use std::{
 use serde_json::{json, Value};
 use tauri::{Emitter, Manager, PhysicalPosition, PhysicalSize};
 use tokio::time::{sleep, Instant};
+#[cfg(target_os = "windows")]
+use window_vibrancy::apply_mica;
 
 use crate::get_custom_server_port;
 
@@ -179,6 +181,7 @@ struct WidgetManifest {
     file: Option<String>,
     visible: Option<bool>,
     always_on_top: Option<bool>,
+    pinned: Option<bool>,
     #[serde(default = "default_widget_type")]
     widget_type: WidgetType,
 }
@@ -305,6 +308,10 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
         new_window.set_maximizable(false).unwrap();
         new_window.set_minimizable(false).unwrap();
         new_window.set_closable(false).unwrap();
+
+        let pinned = manifest.pinned.unwrap_or(false);
+        new_window.set_resizable(!pinned).unwrap();
+
         let always_on_top = manifest.always_on_top.unwrap_or(false);
         if always_on_top {
             new_window.set_always_on_top(always_on_top).unwrap();
@@ -515,15 +522,36 @@ pub async fn publish_widget(app: tauri::AppHandle, path: String) -> Result<u128,
     if let Ok(json_string) = serde_json::to_string_pretty(&config) {
         let _ = fs::write(&clean_path, json_string);
     }
+    let manifest_path = widgets_path.join(&key);
+    if !manifest_path.exists() {
+        fs::create_dir_all(&manifest_path).unwrap();
+    } else {
+        if let Value::Object(ref mut map) = config {
+            let old_config_content =
+                fs::read_to_string(&manifest_path.join("manifest.json")).unwrap();
+            let old_config: Value = match serde_json::from_str(&old_config_content) {
+                Ok(json) => json,
+                Err(_) => json!({}),
+            };
+            map.insert(
+                String::from("visible"),
+                old_config.get("visible").unwrap_or(&json!(false)).clone(),
+            );
+            map.insert(
+                String::from("dimensions"),
+                old_config.get("dimensions").unwrap_or(&json!({})).clone(),
+            );
+            map.insert(
+                String::from("position"),
+                old_config.get("position").unwrap_or(&json!({})).clone(),
+            );
+        }
+    }
     // Copy the widget to the published directory
     if let Ok(json_string) = serde_json::to_string_pretty(&config) {
-        println!("{:?}", key);
-        let manifest_path = widgets_path.join(&key);
-        if !manifest_path.exists() {
-            fs::create_dir_all(&manifest_path).unwrap();
-        }
         let _ = fs::write(&manifest_path.join("manifest.json"), json_string);
     }
+    let _ = app.emit_to(format!("widget-{}", key), "update-manifest", 1);
     Ok(published_time)
 }
 
@@ -586,4 +614,39 @@ pub async fn toggle_always_on_top(
         let _ = fs::write(&clean_path, json_string);
     }
     Ok(())
+}
+
+#[tauri::command]
+pub async fn apply_blur_theme(
+    app: tauri::AppHandle,
+    mode: String,
+    label: String,
+) -> Result<bool, String> {
+    #[cfg(not(target_os = "windows"))]
+    return Ok(false);
+
+    let mut theme_applied = true;
+    if let Some(window) = app.get_webview_window(&label) {
+        let mode_type = match mode.as_str() {
+            "dark" => Some(true),
+            "light" => Some(false),
+            _ => None,
+        };
+        #[cfg(target_os = "windows")]
+        if let Err(e) = apply_mica(&window, mode_type) {
+            theme_applied = false;
+            eprintln!("Failed to apply mica effect: {}", e);
+        }
+    } else {
+        theme_applied = false;
+    };
+    Ok(theme_applied)
+}
+
+#[tauri::command]
+pub async fn open_devtools(app: tauri::AppHandle, label: String) {
+    if let Some(window) = app.get_webview_window(&label) {
+        #[cfg(debug_assertions)]
+        window.open_devtools();
+    }
 }

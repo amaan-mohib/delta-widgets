@@ -1,100 +1,156 @@
 {
-  "key": "battery",
-  "label": "battery",
+  "dimensions": {
+    "height": 135,
+    "width": 315
+  },
   "elements": [
     {
-      "type": "container",
-      "id": "container",
-      "styles": {
-        "display": "flex",
-        "background": "transparent",
-        "flex": 1,
-        "width": "100%",
-        "padding": "10px",
-        "backgroundColor": "#000000ff",
-        "flexDirection": "column",
-        "gap": "10px"
-      },
       "children": [
         {
-          "id": "text-9Hw8",
-          "type": "text",
-          "styles": {
-            "fontSize": "20px",
-            "lineHeight": "20px",
-            "fontWeight": "bold"
-          },
           "data": {
             "text": "<p>Battery</p>"
           },
-          "label": "text-9Hw8"
+          "id": "text-9Hw8",
+          "label": "text-9Hw8",
+          "styles": {
+            "fontSize": "20px",
+            "fontWeight": "bold",
+            "lineHeight": "20px"
+          },
+          "type": "text"
         },
         {
-          "id": "text-0LFf",
-          "type": "text",
+          "children": [
+            {
+              "data": {
+                "text": "<p>Charge ({{system:battery_charge}}%)</p>"
+              },
+              "id": "text-Vnhb",
+              "label": "text-Vnhb",
+              "styles": {
+                "fontSize": "16px",
+                "lineHeight": "16px"
+              },
+              "type": "text"
+            },
+            {
+              "data": {
+                "maxValue": "100",
+                "thickness": "large",
+                "value": "{{system:battery_charge}}"
+              },
+              "id": "progress-WxKK",
+              "styles": {
+                "padding": 0
+              },
+              "type": "progress"
+            },
+            {
+              "children": [
+                {
+                  "data": {
+                    "text": "<p>Health ({{system:battery_health}}%)</p>"
+                  },
+                  "id": "text-vEEY",
+                  "label": "text-vEEY",
+                  "styles": {
+                    "fontSize": "16px",
+                    "lineHeight": "16px"
+                  },
+                  "type": "text"
+                },
+                {
+                  "data": {
+                    "text": "<p>{{system:battery_cycles}} cycles</p>"
+                  },
+                  "id": "text-0LFf",
+                  "label": "text-0LFf",
+                  "styles": {
+                    "fontSize": "12px",
+                    "lineHeight": "12px"
+                  },
+                  "type": "text"
+                }
+              ],
+              "data": {},
+              "id": "container-QcYa",
+              "label": "container-QcYa",
+              "styles": {
+                "alignItems": "center",
+                "background": "transparent",
+                "borderRadius": 2,
+                "display": "flex",
+                "flex": 1,
+                "height": "100%",
+                "justifyContent": "space-between",
+                "padding": "0px",
+                "width": "100%"
+              },
+              "type": "container"
+            },
+            {
+              "data": {
+                "maxValue": "100",
+                "thickness": "large",
+                "value": "{{system:battery_health}}"
+              },
+              "id": "progress-wqK8",
+              "label": "progress-wqK8",
+              "styles": {
+                "padding": 0
+              },
+              "type": "progress"
+            },
+            {
+              "children": [],
+              "id": "container-DlyG",
+              "styles": {
+                "background": "transparent",
+                "borderRadius": 2,
+                "display": "flex",
+                "flex": 1,
+                "height": "100%",
+                "padding": 5,
+                "width": "100%"
+              },
+              "type": "container"
+            }
+          ],
+          "data": {},
+          "id": "container-VT9w",
+          "label": "container-VT9w",
           "styles": {
-            "fontSize": "16px",
-            "lineHeight": "16px"
+            "background": "transparent",
+            "borderRadius": 2,
+            "display": "flex",
+            "flex": 1,
+            "flexDirection": "column",
+            "gap": "10px",
+            "height": "100%",
+            "padding": "0px",
+            "width": "100%"
           },
-          "data": {
-            "text": "<p>Technology: {{system:battery_technology}}</p><p>Cycles: {{system:battery_cycles}}</p><p>Charge: {{system:battery_charge}}%</p><p>Health: {{system:battery_health}}%</p><p>Vendor: {{system:battery_vendor}}</p><p>Model: {{system:battery_model}}</p>"
-          },
-          "label": "text-0LFf"
-        },
-        {
-          "id": "text-Vnhb",
-          "type": "text",
-          "styles": {
-            "fontSize": "16px",
-            "lineHeight": "16px"
-          },
-          "data": {
-            "text": "<p>Charge ({{system:battery_charge}}%)</p>"
-          },
-          "label": "text-Vnhb"
-        },
-        {
-          "id": "progress-WxKK",
-          "type": "progress",
-          "styles": {
-            "padding": 0
-          },
-          "data": {
-            "value": "{{system:battery_charge}}",
-            "maxValue": "100",
-            "thickness": "large"
-          }
-        },
-        {
-          "id": "text-vEEY",
-          "type": "text",
-          "styles": {
-            "fontSize": "16px",
-            "lineHeight": "16px"
-          },
-          "data": {
-            "text": "<p>Health ({{system:battery_health}}%)</p>"
-          },
-          "label": "text-vEEY"
-        },
-        {
-          "id": "progress-wqK8",
-          "type": "progress",
-          "styles": {
-            "padding": 0
-          },
-          "data": {
-            "value": "{{system:battery_health}}",
-            "maxValue": "100"
-          }
+          "type": "container"
         }
       ],
-      "data": {}
+      "data": {},
+      "id": "container",
+      "label": "container",
+      "styles": {
+        "background": "transparent",
+        "backgroundColor": "#000000ff",
+        "borderRadius": "10px",
+        "display": "flex",
+        "flex": 1,
+        "flexDirection": "column",
+        "gap": "15px",
+        "padding": "10px",
+        "width": "100%"
+      },
+      "type": "container"
     }
   ],
-  "dimensions": {
-    "width": 335,
-    "height": 232
-  },
+  "key": "battery",
+  "label": "Battery",
   "widgetType": "json"
 }

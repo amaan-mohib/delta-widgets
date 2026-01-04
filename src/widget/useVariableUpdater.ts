@@ -3,39 +3,28 @@ import {
   useDynamicTextStore,
   useVariableStore,
 } from "./stores/useVariableStore";
-import { format } from "date-fns";
 import { Buffer } from "buffer";
-import { formatDuration, humanStorageSize } from "./utils/utils";
+import { formatDate, formatDuration, humanStorageSize } from "./utils/utils";
 
 const useVariableUpdater = () => {
   const { currentDate, currentMedia, systemInfo, weatherInfo, customFields } =
     useVariableStore();
 
   useEffect(() => {
-    useDynamicTextStore.setState({
-      date: (formatStr?: string) => {
-        try {
-          return format(currentDate, formatStr || "yyyy-MM-dd");
-        } catch (error) {
-          return "Invalid date or format";
-        }
-      },
-      time: (formatStr?: string) => {
-        try {
-          return format(currentDate, formatStr || "hh:mm aa");
-        } catch (error) {
-          return "Invalid date or format";
-        }
-      },
-      datetime: (formatStr?: string) => {
-        try {
-          return format(currentDate, formatStr || "eeee, MMMM d yyyy, h:mm aa");
-        } catch (error) {
-          console.log(error);
+    const formatDateSafely = (format: string) => {
+      try {
+        return formatDate(currentDate, format);
+      } catch (error) {
+        console.log(error);
+        return "Invalid date or format";
+      }
+    };
 
-          return "Invalid date or format";
-        }
-      },
+    useDynamicTextStore.setState({
+      date: (formatStr?: string) => formatDateSafely(formatStr || "yyyy-MM-dd"),
+      time: (formatStr?: string) => formatDateSafely(formatStr || "hh:mm aa"),
+      datetime: (formatStr?: string) =>
+        formatDateSafely(formatStr || "eeee, MMMM d yyyy, h:mm aa"),
     });
   }, [currentDate]);
 

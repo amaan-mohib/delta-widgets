@@ -1,18 +1,7 @@
-import { path } from "@tauri-apps/api";
 import { getVersion } from "@tauri-apps/api/app";
 import { invoke } from "@tauri-apps/api/core";
-import { readTextFile } from "@tauri-apps/plugin-fs";
 import { nanoid } from "nanoid";
-
-const getStore = async () => {
-  try {
-    const storePath = await path.resolve(await path.appDataDir(), "store.json");
-    const store = await readTextFile(storePath);
-    return JSON.parse(store);
-  } catch (error) {
-    return {};
-  }
-};
+import { getStore } from "../../common";
 
 export const getOrCreateClientId = async () => {
   const store = await getStore();

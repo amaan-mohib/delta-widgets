@@ -12,8 +12,16 @@
   padding: 0;
 }
 
+.dark {
+  color-scheme: dark;
+}
+
+.light {
+  color-scheme: light;
+}
+
 .container {
-  background-color: var(--colorNeutralBackground2);
+  background-color: transparent;
   min-height: 100vh;
-  padding: 16px;
+  display: flex;
 }

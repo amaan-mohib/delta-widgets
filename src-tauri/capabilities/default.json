@@ -20,6 +20,8 @@
     "core:window:allow-show",
     "core:window:allow-set-always-on-bottom",
     "core:window:allow-set-always-on-top",
-    "system-info:allow-all"
+    "core:window:allow-set-resizable",
+    "system-info:allow-all",
+    "log:default"
   ]
 }

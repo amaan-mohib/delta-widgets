@@ -23,10 +23,11 @@ const PlayButton: React.FC<PlayButtonProps> = ({ component }) => {
 
   const onToggle = useCallback(async () => {
     if (!currentMedia) return;
+
     await invoke("media_action", {
       playerId: currentMedia?.player_id,
       action: "toggle",
-    }).catch(console.log);
+    }).catch(console.error);
   }, [currentMedia]);
 
   return (
