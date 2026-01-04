@@ -4,7 +4,7 @@ import { subscribeWithSelector } from "zustand/middleware";
 import lodashSet from "lodash.set";
 import lodashGet from "lodash.get";
 import debounce from "lodash.debounce";
-import { updateManifest } from "../../main/utils/widgets";
+import { createThumb, updateManifest } from "../../main/utils/widgets";
 import { useDataTrackStore } from "./useDataTrackStore";
 import { arrayMove } from "@dnd-kit/sortable";
 import { useShallow } from "zustand/shallow";
@@ -337,6 +337,7 @@ const debouncedUpdate = debounce((manifest: IWidget) => {
     .finally(() => {
       useDataTrackStore.setState({ isSaving: false });
     });
+  createThumb(manifest).catch(console.error);
 }, 500);
 
 const debouncedHistory = debounce(

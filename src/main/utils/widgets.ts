@@ -9,11 +9,13 @@ import {
   remove,
   UnwatchFn,
   watch,
+  writeFile,
   writeTextFile,
 } from "@tauri-apps/plugin-fs";
 import { nanoid } from "nanoid";
 import { IWidget } from "../../types/manifest";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
+import { toBlob } from "html-to-image";
 
 export const getWidgetsDirPath = async (saves?: boolean) => {
   const appDataDir = await path.appDataDir();
@@ -358,8 +360,27 @@ export const getManifestFromPath = async (manifestPath: string) => {
   return JSON.parse(manifest) as Omit<IWidget, "path">;
 };
 
+export const createThumb = async (manifest: IWidget) => {
+  try {
+    document.querySelectorAll("link").forEach((link) => {
+      link.setAttribute("crossorigin", "anonymous");
+    });
+    const blob = await toBlob(
+      document.getElementById("widget-preview-window")!
+    );
+    if (blob) {
+      const arrayBuffer = await blob.arrayBuffer();
+      const buffer = new Uint8Array(arrayBuffer);
+      const thumbPath = await path.resolve(manifest.path, "thumb.png");
+      await writeFile(thumbPath, buffer);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 export const updateManifest = async (manifest: IWidget) => {
-  const manifestPath = await path.resolve(manifest.path, "manifest.json");
+  const manifestPath = await getManifestPath(manifest.path);
   await writeTextFile(
     manifestPath,
     JSON.stringify({ ...manifest, path: undefined }, null, 2)
@@ -398,6 +419,16 @@ export const toggleAlwaysOnTop = async (
 export const openManifestFolder = async (manifest: IWidget) => {
   if (manifest.path) {
     const path = await getManifestPath(manifest.path);
-    revealItemInDir(path);
+    await revealItemInDir(path);
   }
+};
+
+export const disableWindowDrag = () => {
+  const root = document.querySelector<HTMLDivElement>("#root");
+  root?.classList.add("no-drag");
+};
+
+export const enableWindowDrag = () => {
+  const root = document.querySelector<HTMLDivElement>("#root");
+  root?.classList.remove("no-drag");
 };

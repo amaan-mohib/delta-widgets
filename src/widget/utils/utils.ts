@@ -1,4 +1,12 @@
-import { intervalToDuration } from "date-fns";
+import { path } from "@tauri-apps/api";
+import { exists, writeFile } from "@tauri-apps/plugin-fs";
+import { format, intervalToDuration } from "date-fns";
+import { toBlob } from "html-to-image";
+import { IWidget } from "../../types/manifest";
+import { formatInTimeZone } from "date-fns-tz";
+import { emitTo } from "@tauri-apps/api/event";
+
+const DATE_REGEX = /^(.+?)(?::\[(.+?)\])?$/g;
 
 export const parseDynamicText = (
   text: string,
@@ -10,6 +18,26 @@ export const parseDynamicText = (
     }
     return "Loading...";
   });
+};
+
+const getMatches = (str: string, regex: RegExp) => {
+  let matches: string[] = [];
+  str.replace(regex, (_, dateStr, timezone) => {
+    matches = [dateStr, timezone];
+    return "";
+  });
+  if (matches.length === 0) {
+    return [str];
+  }
+  return matches;
+};
+
+export const formatDate = (date: Date, formatStr: string) => {
+  const [dateStr, timezone] = getMatches(formatStr, DATE_REGEX);
+  if (timezone) {
+    return formatInTimeZone(date, timezone, dateStr);
+  }
+  return format(date, dateStr);
 };
 
 export const formatDuration = (duration: number) => {
@@ -61,4 +89,40 @@ export function humanStorageSize(bytes: number, si = false, dp = 1) {
   );
 
   return bytes.toFixed(dp) + " " + units[u];
+}
+
+export const createThumb = async (manifest: IWidget, refresh = false) => {
+  try {
+    document.querySelectorAll("link").forEach((link) => {
+      link.setAttribute("crossorigin", "anonymous");
+    });
+    const thumbPath = await path.resolve(manifest.path, "..", "thumb.png");
+
+    if (!refresh) {
+      const thumbExists = await exists(thumbPath);
+      if (thumbExists) return;
+    }
+
+    const blob = await toBlob(document.getElementById("widget-window")!);
+    if (blob) {
+      const arrayBuffer = await blob.arrayBuffer();
+      const buffer = new Uint8Array(arrayBuffer);
+      await writeFile(thumbPath, buffer);
+      await emitTo("main", "creator-close", {});
+    }
+  } catch (error) {
+    //skip logging error
+    console.log(error);
+  }
+};
+
+export function forwardConsole(
+  fnName: "log" | "debug" | "info" | "warn" | "error",
+  logger: (message: string) => Promise<void>
+) {
+  const original = console[fnName];
+  console[fnName] = (message) => {
+    original(message);
+    logger(message);
+  };
 }

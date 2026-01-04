@@ -10,7 +10,7 @@ const Main: React.FC<MainProps> = () => {
   const { theme } = useTheme();
 
   return (
-    <FluentProvider theme={theme}>
+    <FluentProvider theme={theme} className="main-window">
       <App />
     </FluentProvider>
   );

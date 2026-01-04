@@ -1,4 +1,4 @@
-import { listen, UnlistenFn } from "@tauri-apps/api/event";
+import { listen } from "@tauri-apps/api/event";
 import { useEffect, useMemo, useState } from "react";
 import { IWidgetElement, TCustomFields } from "../types/manifest";
 import { invoke } from "@tauri-apps/api/core";
@@ -95,20 +95,17 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
             useVariableStore.setState({ currentMedia: null });
           }
         })
-        .catch(console.log);
+        .catch(console.error);
     }, 300);
 
     getMedia();
 
-    let unsub: UnlistenFn;
-    (async () => {
-      unsub = await listen("media_updated", () => {
-        getMedia();
-      });
-    })();
+    const unsub = listen("media_updated", () => {
+      getMedia();
+    });
     return () => {
       getMedia.cancel();
-      unsub && unsub();
+      unsub.then((f) => f());
     };
   }, [dynamicVariables]);
 

@@ -3,6 +3,7 @@ import {
   Card,
   CardFooter,
   CardHeader,
+  CardPreview,
   makeStyles,
   Menu,
   MenuButton,
@@ -17,7 +18,7 @@ import {
   ToastTitle,
   useToastController,
 } from "@fluentui/react-components";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   closeWidgetWindow,
   createCreatorWindow,
@@ -33,10 +34,14 @@ import {
   DeleteRegular,
   EditRegular,
   FolderRegular,
+  ImageArrowCounterclockwiseRegular,
   MoreHorizontal20Regular,
 } from "@fluentui/react-icons";
 import { IWidget } from "../../types/manifest";
 import { sendMixpanelEvent } from "../utils/analytics";
+import WidgetPreview from "./WidgetPreview";
+import { emitTo } from "@tauri-apps/api/event";
+import { templateWidgets } from "../../common";
 
 interface WidgetCardProps {
   widget: IWidget;
@@ -77,6 +82,13 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       { toastId: widget.key, intent: "info" }
     );
 
+  useEffect(() => {
+    setVisible(widget.visible ?? false);
+  }, [widget]);
+
+  const showRefreshThumbnail =
+    widget.widgetType === "json" && visible && !(widget.key in templateWidgets);
+
   return (
     <Card
       role="listitem"
@@ -96,7 +108,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
               <MenuButton
                 onClick={(e) => e.stopPropagation()}
                 size="small"
-                appearance="transparent"
+                appearance="subtle"
                 icon={<MoreHorizontal20Regular />}
               />
             </MenuTrigger>
@@ -111,15 +123,17 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
                   }}>
                   {saves ? "Clone" : "Duplicate"}
                 </MenuItem>
-                <MenuItem
-                  icon={<DeleteRegular />}
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    await removeWidget(widget.path);
-                    updateAllWidgets();
-                  }}>
-                  Remove
-                </MenuItem>
+                {widget.key in templateWidgets ? null : (
+                  <MenuItem
+                    icon={<DeleteRegular />}
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      await removeWidget(widget.path);
+                      updateAllWidgets();
+                    }}>
+                    Remove
+                  </MenuItem>
+                )}
                 <MenuItem
                   icon={<FolderRegular />}
                   onClick={async (e) => {
@@ -129,15 +143,29 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
                   Show manifest
                 </MenuItem>
                 {!saves && (
-                  <MenuItem
-                    icon={alwaysOnTop ? <CheckmarkRegular /> : undefined}
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      await toggleAlwaysOnTop(widget.path, !alwaysOnTop);
-                      setAlwaysOnTop((prev) => !prev);
-                    }}>
-                    Always on Top
-                  </MenuItem>
+                  <>
+                    {showRefreshThumbnail && (
+                      <MenuItem
+                        icon={<ImageArrowCounterclockwiseRegular />}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          await emitTo(`widget-${widget.key}`, "update-thumb", {
+                            key: widget.key,
+                          });
+                        }}>
+                        Refresh thumbnail
+                      </MenuItem>
+                    )}
+                    <MenuItem
+                      icon={alwaysOnTop ? <CheckmarkRegular /> : undefined}
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await toggleAlwaysOnTop(widget.path, !alwaysOnTop);
+                        setAlwaysOnTop((prev) => !prev);
+                      }}>
+                      Always on Top
+                    </MenuItem>
+                  </>
                 )}
               </MenuList>
             </MenuPopover>
@@ -149,6 +177,9 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
           </Text>
         }
       />
+      <CardPreview style={{ height: "100%", minHeight: 100 }}>
+        <WidgetPreview widget={widget} isDraft={saves} />
+      </CardPreview>
       {widget.description && <p>{widget.description}</p>}
       <CardFooter className={styles.cardFooter}>
         {saves ? (

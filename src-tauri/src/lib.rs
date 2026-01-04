@@ -5,6 +5,7 @@ mod plugins;
 
 use commands::{analytics, media, migrate, store, system, widget};
 use include_dir::{include_dir, Dir, DirEntry};
+use log::LevelFilter;
 use plugins::localhost;
 use serde_json::Value;
 use std::{env, fs, sync::OnceLock};
@@ -15,6 +16,7 @@ use tauri::{
 };
 use tauri::{AppHandle, Emitter};
 use tauri_plugin_autostart::ManagerExt;
+use tauri_plugin_log::{Target, TargetKind};
 
 use crate::commands::widget::create_widget_window;
 use crate::migration::{run_migrations, Direction};
@@ -71,6 +73,18 @@ pub fn run() {
     let port = portpicker::pick_unused_port().expect("failed to find unused port");
 
     tauri::Builder::default()
+        .plugin(
+            tauri_plugin_log::Builder::default()
+                .targets([
+                    Target::new(TargetKind::Stdout),
+                    Target::new(TargetKind::Webview),
+                    Target::new(TargetKind::LogDir {
+                        file_name: Some(String::from("logs")),
+                    }),
+                ])
+                .level(LevelFilter::Error)
+                .build(),
+        )
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
@@ -102,6 +116,8 @@ pub fn run() {
             widget::toggle_widget_visibility,
             widget::toggle_always_on_top,
             widget::copy_custom_assets_dir,
+            widget::apply_blur_theme,
+            widget::open_devtools,
             system::get_system_info,
             analytics::track_analytics_event,
             store::write_to_store_cmd,

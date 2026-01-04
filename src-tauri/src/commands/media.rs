@@ -106,14 +106,13 @@ async fn get_app_name_from_id(app_id: String) -> Result<MediaPlayerInfo, Error> 
         .await?
         .into_iter();
 
-    let app_info = info_iterator.Current()?.AppInfo().unwrap().DisplayInfo()?;
+    let app_info = info_iterator.Current()?.AppInfo()?.DisplayInfo()?;
     let buffer = Buffer::Create(5_000_000)?;
     let _icon = app_info
         .GetLogo(Size {
             Height: 50.0,
             Width: 50.0,
-        })
-        .unwrap()
+        })?
         .OpenReadAsync()?
         .get()?
         .ReadAsync(&buffer, buffer.Capacity()?, InputStreamOptions::ReadAhead)?
@@ -164,7 +163,10 @@ async fn get_session_manager() -> MutexGuard<'static, SessionManagerStore> {
     static MAP: tokio::sync::OnceCell<Mutex<SessionManagerStore>> =
         tokio::sync::OnceCell::const_new();
     MAP.get_or_init(|| async {
-        let session_manager = MediaSessionManager::RequestAsync().unwrap().await.unwrap();
+        let session_manager = MediaSessionManager::RequestAsync()
+            .expect("Failed to request session manager")
+            .await
+            .expect("Failed to get session manager");
         Mutex::new(SessionManagerStore {
             session_manager,
             event_tokens: HashMap::new(),
@@ -175,41 +177,35 @@ async fn get_session_manager() -> MutexGuard<'static, SessionManagerStore> {
     .expect("Let's hope the lock isn't poisoned")
 }
 
-fn attach_session_listeners(player_id: String, session: MediaSession) {
+fn attach_session_listeners(player_id: String, session: MediaSession) -> Result<(), Error> {
     let mut session_store = get_session_store();
     if session_store.contains_key(&player_id) {
-        return;
+        return Ok(());
     }
-    let metadata_token = session
-        .MediaPropertiesChanged(&TypedEventHandler::<
-            MediaSession,
-            MediaPropertiesChangedEventArgs,
-        >::new(move |_, _| {
-            emit_global_event("media_updated");
-            println!("Metadata changed");
-            Ok(())
-        }))
-        .unwrap();
-    let playback_token = session
-        .PlaybackInfoChanged(&TypedEventHandler::<
-            MediaSession,
-            PlaybackInfoChangedEventArgs,
-        >::new(move |_, _| {
-            emit_global_event("media_updated");
-            println!("Playback changed");
-            Ok(())
-        }))
-        .unwrap();
-    let timeline_token = session
-        .TimelinePropertiesChanged(&TypedEventHandler::<
-            MediaSession,
-            TimelinePropertiesChangedEventArgs,
-        >::new(move |_, _| {
-            emit_global_event("media_updated");
-            println!("Timeline changed");
-            Ok(())
-        }))
-        .unwrap();
+    let metadata_token = session.MediaPropertiesChanged(&TypedEventHandler::<
+        MediaSession,
+        MediaPropertiesChangedEventArgs,
+    >::new(move |_, _| {
+        emit_global_event("media_updated");
+        println!("Metadata changed");
+        Ok(())
+    }))?;
+    let playback_token = session.PlaybackInfoChanged(&TypedEventHandler::<
+        MediaSession,
+        PlaybackInfoChangedEventArgs,
+    >::new(move |_, _| {
+        emit_global_event("media_updated");
+        println!("Playback changed");
+        Ok(())
+    }))?;
+    let timeline_token = session.TimelinePropertiesChanged(&TypedEventHandler::<
+        MediaSession,
+        TimelinePropertiesChangedEventArgs,
+    >::new(move |_, _| {
+        emit_global_event("media_updated");
+        println!("Timeline changed");
+        Ok(())
+    }))?;
     session_store.insert(
         player_id.clone(),
         SessionStore {
@@ -222,8 +218,9 @@ fn attach_session_listeners(player_id: String, session: MediaSession) {
         },
     );
     println!("attached listeners for {}", player_id);
+    Ok(())
 }
-fn detach_session_listeners(player_id: String) {
+fn detach_session_listeners(player_id: String) -> Result<(), Error> {
     println!("detaching listeners for {}", player_id);
     let mut binding = get_session_store();
     let store = binding.get(&player_id);
@@ -232,15 +229,9 @@ fn detach_session_listeners(player_id: String) {
             println!("got session");
             let event_tokens = &store.event_tokens;
             let session = &store.session;
-            session
-                .RemoveMediaPropertiesChanged(event_tokens.metadata_token)
-                .unwrap();
-            session
-                .RemovePlaybackInfoChanged(event_tokens.playback_token)
-                .unwrap();
-            session
-                .RemoveTimelinePropertiesChanged(event_tokens.timeline_token)
-                .unwrap();
+            session.RemoveMediaPropertiesChanged(event_tokens.metadata_token)?;
+            session.RemovePlaybackInfoChanged(event_tokens.playback_token)?;
+            session.RemoveTimelinePropertiesChanged(event_tokens.timeline_token)?;
         }
         None => {
             println!("none found")
@@ -248,51 +239,47 @@ fn detach_session_listeners(player_id: String) {
     }
     binding.remove(&player_id);
     println!("detached listeners for {}", player_id);
+    Ok(())
 }
 
-async fn attach_session_manager_listeners() -> Result<MediaSessionManager, ()> {
+async fn attach_session_manager_listeners() -> Result<MediaSessionManager, Error> {
     let session_manager = &get_session_manager().await.session_manager;
-    let session_token = session_manager
-        .SessionsChanged(&TypedEventHandler::<
-            MediaSessionManager,
-            SessionsChangedEventArgs,
-        >::new(move |_, _| {
-            emit_global_event("media_updated");
-            println!("sessions changed");
-            Ok(())
-        }))
-        .unwrap();
-    let current_session_token = session_manager
-        .CurrentSessionChanged(&TypedEventHandler::<
+    let session_token = session_manager.SessionsChanged(&TypedEventHandler::<
+        MediaSessionManager,
+        SessionsChangedEventArgs,
+    >::new(move |_, _| {
+        emit_global_event("media_updated");
+        println!("sessions changed");
+        Ok(())
+    }))?;
+    let current_session_token =
+        session_manager.CurrentSessionChanged(&TypedEventHandler::<
             MediaSessionManager,
             CurrentSessionChangedEventArgs,
         >::new(move |_, _| {
             emit_global_event("media_updated");
             println!("current session changed");
             Ok(())
-        }))
-        .unwrap();
+        }))?;
     task::spawn(async move {
         let session_token_key = "session_token".to_string();
         let current_session_token_key = "current_session_token".to_string();
         let old_tokens = get_session_manager().await.event_tokens.clone();
         match old_tokens.get(&session_token_key) {
             Some(key) => {
-                get_session_manager()
+                let _ = get_session_manager()
                     .await
                     .session_manager
-                    .RemoveSessionsChanged(*key)
-                    .unwrap();
+                    .RemoveSessionsChanged(*key);
             }
             None => {}
         }
         match old_tokens.get(&current_session_token_key) {
             Some(key) => {
-                get_session_manager()
+                let _ = get_session_manager()
                     .await
                     .session_manager
-                    .RemoveCurrentSessionChanged(*key)
-                    .unwrap();
+                    .RemoveCurrentSessionChanged(*key);
             }
             None => {}
         }
@@ -311,8 +298,8 @@ async fn attach_session_manager_listeners() -> Result<MediaSessionManager, ()> {
 
 #[tauri::command]
 pub async fn get_media() -> CommandResult<Vec<MediaInfo>> {
-    let session_manager = attach_session_manager_listeners().await.unwrap();
-    let sessions = session_manager.GetSessions().unwrap();
+    let session_manager = attach_session_manager_listeners().await?;
+    let sessions = session_manager.GetSessions()?;
     let session_iterator = sessions.into_iter().collect::<Vec<MediaSession>>();
     let mut players: Vec<MediaInfo> = vec![];
     let mut tasks = vec![];
@@ -323,9 +310,9 @@ pub async fn get_media() -> CommandResult<Vec<MediaInfo>> {
             Ok(id) => id.to_string(),
             Err(_) => "Unkown".to_string(),
         };
-        let current_session = session_manager.GetCurrentSession().unwrap();
+        let current_session = session_manager.GetCurrentSession()?;
         let is_current_session = current_session.SourceAppUserModelId()?.to_string() == player_id;
-        attach_session_listeners(player_id.clone(), session.clone());
+        attach_session_listeners(player_id.clone(), session.clone())?;
 
         let task: task::JoinHandle<Result<MediaInfo, Error>> = task::spawn(async move {
             let info = session.TryGetMediaPropertiesAsync()?.await?;
@@ -407,15 +394,14 @@ pub async fn get_media() -> CommandResult<Vec<MediaInfo>> {
         tasks.push(task);
     }
     for task in tasks {
-        let mut res = task.await?.unwrap();
+        let mut res = task.await??;
         let player_id = res.player_id.clone();
         player_ids.insert(player_id.clone());
         let player_info = tokio::task::spawn(async move {
             let player = get_app_name_from_id(player_id.clone()).await;
             player
         })
-        .await
-        .unwrap();
+        .await?;
         res.player = Some(match player_info {
             Ok(p) => p,
             Err(e) => {
@@ -438,7 +424,7 @@ pub async fn get_media() -> CommandResult<Vec<MediaInfo>> {
     }
     for player_id in players_to_detach {
         println!("player id removing {}", player_id);
-        detach_session_listeners(player_id.clone());
+        detach_session_listeners(player_id.clone())?;
     }
 
     Ok(players)
@@ -457,7 +443,8 @@ pub async fn media_action(
             let session = store.session.clone();
             tokio::spawn(async move {
                 if action == "play".to_string() {
-                    match session.TryPlayAsync().unwrap().await {
+                    let op = session.TryPlayAsync()?;
+                    match op.await {
                         Ok(_) => {
                             println!("played for {}", player_id.clone());
                         }
@@ -467,7 +454,8 @@ pub async fn media_action(
                     };
                 }
                 if action == "pause".to_string() {
-                    match session.TryPauseAsync().unwrap().await {
+                    let op = session.TryPauseAsync()?;
+                    match op.await {
                         Ok(_) => {
                             println!("pause for {}", player_id.clone());
                         }
@@ -477,7 +465,8 @@ pub async fn media_action(
                     };
                 }
                 if action == "toggle".to_string() {
-                    match session.TryTogglePlayPauseAsync().unwrap().await {
+                    let op = session.TryTogglePlayPauseAsync()?;
+                    match op.await {
                         Ok(_) => {
                             println!("toggled for {}", player_id.clone());
                         }
@@ -487,7 +476,8 @@ pub async fn media_action(
                     };
                 }
                 if action == "next".to_string() {
-                    match session.TrySkipNextAsync().unwrap().await {
+                    let op = session.TrySkipNextAsync()?;
+                    match op.await {
                         Ok(_) => {
                             println!("next for {}", player_id.clone());
                         }
@@ -497,7 +487,8 @@ pub async fn media_action(
                     };
                 }
                 if action == "prev".to_string() {
-                    match session.TrySkipPreviousAsync().unwrap().await {
+                    let op = session.TrySkipPreviousAsync()?;
+                    match op.await {
                         Ok(_) => {
                             println!("previous for {}", player_id.clone());
                         }
@@ -510,11 +501,8 @@ pub async fn media_action(
                     match position {
                         Some(value) => {
                             let time = Duration::from_millis(value).as_nanos();
-                            match session
-                                .TryChangePlaybackPositionAsync((time / 100) as i64)
-                                .unwrap()
-                                .await
-                            {
+                            let op = session.TryChangePlaybackPositionAsync((time / 100) as i64)?;
+                            match op.await {
                                 Ok(_) => {
                                     println!("position updated for {}", player_id.clone());
                                 }
@@ -526,7 +514,7 @@ pub async fn media_action(
                         None => {}
                     }
                 }
-                Ok::<(), std::io::Error>(())
+                Ok::<(), Error>(())
             });
             Ok(())
         }

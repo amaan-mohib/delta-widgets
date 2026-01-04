@@ -1,4 +1,7 @@
-{
+use crate::migration::Migration;
+use serde_json::Value;
+
+static NEW_JSON: &str = r#"{
   "dimensions": {
     "height": 100,
     "width": 270
@@ -83,8 +86,38 @@
       },
       "type": "container"
     }
-  ],
-  "key": "weather",
-  "label": "Weather",
-  "widgetType": "json"
+  ]
+}"#;
+
+pub struct UpdateWeather;
+
+impl Migration for UpdateWeather {
+    fn name(&self) -> &'static str {
+        "20260104194741_update_weather"
+    }
+
+    fn up(&self, json: &mut Value) {
+        let key = json
+            .get("key")
+            .and_then(|k| k.as_str())
+            .unwrap_or("")
+            .to_string();
+        if key != "weather" {
+            return;
+        }
+        if let Ok(new_json_value) = serde_json::from_str::<serde_json::Value>(NEW_JSON) {
+            if let Some(elements) = new_json_value.get("elements") {
+                json["elements"] = elements.clone();
+            }
+            if let Some(dimensions) = new_json_value.get("dimensions") {
+                json["dimensions"] = dimensions.clone();
+            }
+        } else {
+            println!("JSON syntax error");
+        }
+    }
+
+    fn down(&self, _json: &mut Value) {
+        // TODO: implement rollback
+    }
 }

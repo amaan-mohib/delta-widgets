@@ -13,8 +13,9 @@
   "app": {
     "windows": [
       {
+        "transparent": true,
         "title": "Delta Widgets",
-        "width": 800,
+        "width": 930,
         "height": 600,
         "visible": false
       }
@@ -23,12 +24,15 @@
       "csp": null,
       "assetProtocol": {
         "scope": [
-          "$APPCACHE/**"
+          "$APPCACHE/**",
+          "$APPDATA/**",
+          "$APPLOCALDATA/**"
         ],
         "enable": true
       }
     },
-    "withGlobalTauri": true
+    "withGlobalTauri": true,
+    "macOSPrivateApi": true
   },
   "bundle": {
     "active": true,
