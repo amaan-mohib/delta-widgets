@@ -361,15 +361,21 @@ export const getManifestFromPath = async (manifestPath: string) => {
 };
 
 export const createThumb = async (manifest: IWidget) => {
-  document.querySelectorAll("link").forEach((link) => {
-    link.setAttribute("crossorigin", "anonymous");
-  });
-  const blob = await toBlob(document.getElementById("widget-preview-window")!);
-  if (blob) {
-    const arrayBuffer = await blob.arrayBuffer();
-    const buffer = new Uint8Array(arrayBuffer);
-    const thumbPath = await path.resolve(manifest.path, "thumb.png");
-    await writeFile(thumbPath, buffer);
+  try {
+    document.querySelectorAll("link").forEach((link) => {
+      link.setAttribute("crossorigin", "anonymous");
+    });
+    const blob = await toBlob(
+      document.getElementById("widget-preview-window")!
+    );
+    if (blob) {
+      const arrayBuffer = await blob.arrayBuffer();
+      const buffer = new Uint8Array(arrayBuffer);
+      const thumbPath = await path.resolve(manifest.path, "thumb.png");
+      await writeFile(thumbPath, buffer);
+    }
+  } catch (error) {
+    console.log(error);
   }
 };
 
