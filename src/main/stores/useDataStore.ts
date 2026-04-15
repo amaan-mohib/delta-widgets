@@ -3,7 +3,7 @@ import { IWidget } from "../../types/manifest";
 import { createCreatorWindow, getAllWidgets } from "../utils/widgets";
 import { sendMixpanelEvent } from "../utils/analytics";
 
-export type TActiveTab = "installed" | "drafts";
+export type TActiveTab = "installed" | "drafts" | "marketplace";
 export type TSettingsActiveTab = "general" | "theme" | "about";
 interface IDataStore {
   installedWidgets: IWidget[];
@@ -33,10 +33,10 @@ export const useDataStore = create<IDataStore>((set, get) => ({
     ]);
     set({
       installedWidgets: Object.values(installedWidgets).sort((a, b) =>
-        a.label > b.label ? 1 : b.label > a.label ? -1 : 0
+        a.label > b.label ? 1 : b.label > a.label ? -1 : 0,
       ),
       draftWidgets: Object.values(draftWidgets).sort((a, b) =>
-        a.label > b.label ? 1 : b.label > a.label ? -1 : 0
+        a.label > b.label ? 1 : b.label > a.label ? -1 : 0,
       ),
       loading: false,
     });

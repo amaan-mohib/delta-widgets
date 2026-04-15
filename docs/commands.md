@@ -21,11 +21,11 @@ Here's a list of available commands, their purpose, and usage examples.
 
 ## Command Reference
 
-| Command           | Description                            | Parameters                  | Returns                                 |
-| ----------------- | -------------------------------------- | --------------------------- | --------------------------------------- |
-| `get_system_info` | Get system info like CPU, RAM, uptime. | _None_                      | Promise<[SystemInfo](#systeminfo)\>     |
-| `get_media`       | Fetch currently playing media details. | _None_                      | Promise<[MediaObject[]](#mediaobject)\> |
-| `media_action`    | Fetch currently playing media details. | [MediaAction](#mediaaction) | Promise<void\>                          |
+| Command           | Description                                    | Parameters                  | Returns                                 |
+| ----------------- | ---------------------------------------------- | --------------------------- | --------------------------------------- |
+| `get_system_info` | Get system info like CPU, RAM, uptime.         | _None_                      | Promise<[SystemInfo](#systeminfo)\>     |
+| `get_media`       | Fetch currently playing media details.         | _None_                      | Promise<[MediaObject[]](#mediaobject)\> |
+| `media_action`    | Perform action on the currently playing media. | [MediaAction](#mediaaction) | Promise<void\>                          |
 
 ### SystemInfo
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import "./App.css";
 import {
+  Button,
   Card,
   makeStyles,
   Spinner,
@@ -8,7 +8,7 @@ import {
   Toaster,
   tokens,
 } from "@fluentui/react-components";
-import { AppsAddInRegular } from "@fluentui/react-icons";
+import { AppsAddInRegular, Open16Regular } from "@fluentui/react-icons";
 import WidgetCard from "./components/WidgetCard";
 import { listen } from "@tauri-apps/api/event";
 import { trackInstall, trackUpdated } from "./utils/analytics";
@@ -16,6 +16,7 @@ import Sidebar, { sidebarWidth } from "./components/Sidebar";
 import { useDataStore } from "./stores/useDataStore";
 import SettingsSidebar from "./components/Settings/Sidebar";
 import Settings from "./components/Settings";
+import "./App.css";
 
 const useStyles = makeStyles({
   container: {
@@ -115,9 +116,9 @@ function App() {
             <Settings />
           </div>
         ) : (
-          <div className={styles.container} role="list" key={key}>
+          <>
             {activeTab === "installed" && (
-              <>
+              <div className={styles.container} role="list" key={key}>
                 {installedWidgets.map((widget) => {
                   return (
                     <WidgetCard
@@ -129,10 +130,10 @@ function App() {
                   );
                 })}
                 {createNew}
-              </>
+              </div>
             )}
             {activeTab === "drafts" && (
-              <>
+              <div className={styles.container} role="list" key={key}>
                 {draftWidgets.length === 0 && createNew}
                 {draftWidgets.map((widget) => {
                   return (
@@ -145,9 +146,38 @@ function App() {
                     />
                   );
                 })}
-              </>
+              </div>
             )}
-          </div>
+            <div className={styles.container2}>
+              {activeTab === "marketplace" && (
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                  <Text size={500} weight="semibold">
+                    Template Marketplace Coming Soon!
+                  </Text>
+                  <Text>
+                    We're building a community marketplace where widget creators
+                    can share, buy, and sell custom templates. This waitlist
+                    helps us gauge interest and prioritize development.
+                  </Text>
+                  <Text size={200}>
+                    Join the waitlist to be among the first to create and
+                    monetize your widget templates.
+                  </Text>
+                  <Button
+                    style={{ width: "fit-content" }}
+                    appearance="primary"
+                    as="a"
+                    href="https://forms.gle/Y7ni54Eknp599nG6A"
+                    target="_blank"
+                    icon={<Open16Regular />}
+                    iconPosition="after">
+                    Join Marketplace Waitlist
+                  </Button>
+                </div>
+              )}
+            </div>
+          </>
         )}
       </div>
 

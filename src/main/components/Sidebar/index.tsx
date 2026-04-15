@@ -9,10 +9,13 @@ import {
   CounterBadge,
   AppItemStatic,
   tokens,
+  Badge,
 } from "@fluentui/react-components";
 import {
   Apps20Color,
   Apps20Regular,
+  BuildingShop20Regular,
+  BuildingStore20Color,
   bundleIcon,
   Drafts20Color,
   Drafts20Regular,
@@ -24,6 +27,7 @@ import {
 import AddMenu from "./AddMenu";
 import { check } from "@tauri-apps/plugin-updater";
 import { useDataStore } from "../../stores/useDataStore";
+import DiscordIcon from "../icons/Discord";
 
 export const sidebarWidth = 250;
 
@@ -58,6 +62,10 @@ const Sidebar: React.FC<SidebarProps> = () => {
   const { draftWidgets, activeTab, setActiveTab } = useDataStore();
   const InstalledIcon = bundleIcon(Apps20Color, Apps20Regular);
   const DraftIcon = bundleIcon(Drafts20Color, Drafts20Regular);
+  const MarketplaceIcon = bundleIcon(
+    BuildingStore20Color,
+    BuildingShop20Regular,
+  );
 
   const checkForUpdates = useCallback(async () => {
     const update = await check();
@@ -98,6 +106,16 @@ const Sidebar: React.FC<SidebarProps> = () => {
               <CounterBadge showZero={false} count={draftWidgets.length} />
             </div>
           </NavItem>
+          <NavItem
+            className={styles.navItem}
+            onClick={() => setActiveTab("marketplace")}
+            value={"marketplace"}
+            icon={<MarketplaceIcon />}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              Marketplace
+              <Badge appearance="tint">NEW</Badge>
+            </div>
+          </NavItem>
           <NavDivider style={{ marginTop: "auto" }} />
           {updateAvailable && (
             <NavItem
@@ -123,13 +141,20 @@ const Sidebar: React.FC<SidebarProps> = () => {
           </NavItem>
           <NavItem
             className={styles.navItem}
+            value={"discord"}
+            href="https://discord.gg/wDE8KNx8fB"
+            target="_blank"
+            icon={<DiscordIcon width={20} height={20} />}>
+            Discord
+          </NavItem>
+          <NavItem
+            className={styles.navItem}
             value={"help"}
             href="https://amaan-mohib.github.io/delta-widgets/"
             target="_blank"
             icon={<QuestionCircle20Regular />}>
             Help
           </NavItem>
-
           <NavItem
             className={styles.navItem}
             value={"settings"}
