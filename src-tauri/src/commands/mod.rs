@@ -1,4 +1,5 @@
 pub mod analytics;
+pub mod audio;
 pub mod media;
 pub mod migrate;
 pub mod store;

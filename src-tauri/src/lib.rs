@@ -3,7 +3,7 @@ pub mod migration;
 pub mod migrations;
 mod plugins;
 
-use commands::{analytics, media, migrate, store, system, widget};
+use commands::{analytics, audio, media, migrate, store, system, widget};
 use include_dir::{include_dir, Dir, DirEntry};
 use log::LevelFilter;
 use plugins::localhost;
@@ -105,6 +105,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_prevent_default::debug())
         .plugin(localhost::Builder::new(port).build())
+        .manage(std::sync::Mutex::new(audio::AudioState::new()))
         .invoke_handler(tauri::generate_handler![
             media::get_media,
             media::media_action,
@@ -122,6 +123,10 @@ pub fn run() {
             analytics::track_analytics_event,
             store::write_to_store_cmd,
             migrate::migrate,
+            audio::start_audio_capture,
+            audio::stop_audio_capture,
+            audio::restart_audio_capture,
+            audio::get_current_device_cmd,
         ])
         .setup(|app| {
             if !cfg!(debug_assertions) {
