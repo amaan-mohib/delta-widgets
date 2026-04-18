@@ -176,7 +176,7 @@ struct WidgetManifest {
     key: Option<String>,
     label: Option<String>,
     dimensions: Option<PhysicalSize<f64>>,
-    position: Option<PhysicalPosition<f64>>,
+    position: Option<PhysicalPosition<Option<f64>>>,
     url: Option<String>,
     file: Option<String>,
     visible: Option<bool>,
@@ -285,8 +285,8 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
             ensure_window_position_bounds(
                 &new_window,
                 PhysicalPosition {
-                    x: p.x as i32,
-                    y: p.y as i32,
+                    x: p.x.unwrap_or(30 as f64) as i32,
+                    y: p.y.unwrap_or(30 as f64) as i32,
                 },
                 physical_size,
             )
