@@ -543,7 +543,10 @@ pub async fn publish_widget(app: tauri::AppHandle, path: String) -> Result<u128,
             );
             map.insert(
                 String::from("position"),
-                old_config.get("position").unwrap_or(&json!({})).clone(),
+                old_config
+                    .get("position")
+                    .unwrap_or(&json!({"x": 30, "y": 30}))
+                    .clone(),
             );
         }
     }
