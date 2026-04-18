@@ -12,7 +12,7 @@ const extractDynamicVariables = (
   elements: IWidgetElement[],
   results = new Set<string>(),
   typesSet = new Set<string>(),
-  fontsSet = new Set<string>()
+  fontsSet = new Set<string>(),
 ) => {
   elements.forEach((element) => {
     typesSet.add(element.type);
@@ -59,7 +59,7 @@ const extractDynamicVariables = (
 function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
   const { typesSet, dynamicVariables, fontsSet } = useMemo(
     () => extractDynamicVariables(elements),
-    [elements]
+    [elements],
   );
   const [currentDate, setCurrentDate] = useState(new Date());
   const [systemInfoCounter, setSystemInfoCounter] = useState(0);
@@ -85,7 +85,7 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
           const selectedMedia = useVariableStore.getState().currentMedia;
           const currentMedia = data.find((media) => media.is_current_session);
           const selectedMediaNotInList = !data.find(
-            (media) => media.player_id === selectedMedia?.player_id
+            (media) => media.player_id === selectedMedia?.player_id,
           );
           if (currentMedia && (!selectedMedia || selectedMediaNotInList)) {
             useVariableStore.setState({ currentMedia });
@@ -167,14 +167,28 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
       }
     })();
 
-    const timeout = setTimeout(() => {
-      setWeatherCounter((prev) => prev + 1);
-    }, 60 * 60 * 1000);
+    const timeout = setTimeout(
+      () => {
+        setWeatherCounter((prev) => prev + 1);
+      },
+      60 * 60 * 1000,
+    );
 
     return () => {
       clearTimeout(timeout);
     };
   }, [dynamicVariables, weatherCounter, typesSet]);
+
+  useEffect(() => {
+    if (!typesSet.has("audio-visualizer")) return;
+
+    const unsub = listen<number[]>("audio-samples", (event) => {
+      useVariableStore.setState({ audioSamples: event.payload });
+    });
+    return () => {
+      unsub.then((f) => f());
+    };
+  }, [typesSet]);
 
   useEffect(() => {
     if (fontsSet.size > 0) {

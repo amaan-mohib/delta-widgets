@@ -1,6 +1,6 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::Sample;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager, State};
 
@@ -58,7 +58,7 @@ pub fn start_capture(app: AppHandle, audio_state: State<Mutex<AudioState>>) {
     }
 
     // Spawn device monitoring in background thread
-    std::thread::spawn(move || {
+    tauri::async_runtime::spawn(async move {
         loop {
             let audio_state_clone = app_clone.state::<Mutex<AudioState>>();
             {
@@ -101,7 +101,7 @@ pub fn start_capture(app: AppHandle, audio_state: State<Mutex<AudioState>>) {
                 }
             }
 
-            std::thread::sleep(DEVICE_CHECK_INTERVAL);
+            tokio::time::sleep(DEVICE_CHECK_INTERVAL).await;
         }
 
         println!("Audio capture stopped");
@@ -176,6 +176,41 @@ pub fn get_current_device() -> Result<String, String> {
         .map_err(|e| format!("Failed to get device ID: {}", e))
 }
 
+fn emit_samples(app: &AppHandle, samples: &[f32]) {
+    let debounce_state = Arc::new(Mutex::new(None::<tokio::time::Instant>));
+    let debounce = debounce_state.clone();
+    *debounce.lock().unwrap() = Some(tokio::time::Instant::now());
+    let app_clone = app.clone();
+    let samples_clone = samples.to_vec();
+
+    tauri::async_runtime::spawn(async move {
+        let duration = tokio::time::Duration::from_millis(100);
+        tokio::time::sleep(duration).await;
+
+        let should_emit = {
+            let mut state = debounce.lock().unwrap();
+            if let Some(last_update) = *state {
+                if last_update.elapsed() >= duration {
+                    *state = None;
+                    true
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        };
+
+        for chunk in samples_clone.chunks(CHUNK_SIZE) {
+            if should_emit {
+                if let Err(e) = app_clone.emit("audio-samples", chunk) {
+                    eprintln!("Failed to emit audio samples: {}", e);
+                }
+            }
+        }
+    });
+}
+
 fn build_stream_f32(
     device: &cpal::Device,
     config: &cpal::StreamConfig,
@@ -195,11 +230,7 @@ fn build_stream_f32(
                         .collect()
                 };
 
-                for chunk in samples.chunks(CHUNK_SIZE) {
-                    if let Err(e) = app.emit("audio-samples", chunk) {
-                        eprintln!("Failed to emit audio samples: {}", e);
-                    }
-                }
+                emit_samples(&app, &samples);
             },
             |err| eprintln!("Audio stream error: {}", err),
             None,
@@ -229,11 +260,7 @@ fn build_stream_i16(
                         .collect()
                 };
 
-                for chunk in samples.chunks(CHUNK_SIZE) {
-                    if let Err(e) = app.emit("audio-samples", chunk) {
-                        eprintln!("Failed to emit audio samples: {}", e);
-                    }
-                }
+                emit_samples(&app, &samples);
             },
             |err| eprintln!("Audio stream error: {}", err),
             None,
@@ -263,11 +290,7 @@ fn build_stream_u16(
                         .collect()
                 };
 
-                for chunk in samples.chunks(CHUNK_SIZE) {
-                    if let Err(e) = app.emit("audio-samples", chunk) {
-                        eprintln!("Failed to emit audio samples: {}", e);
-                    }
-                }
+                emit_samples(&app, &samples);
             },
             |err| eprintln!("Audio stream error: {}", err),
             None,

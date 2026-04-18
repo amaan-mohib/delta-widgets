@@ -7,6 +7,7 @@ export interface IUseDataTrackStore {
   incrementInitialStateLoadCounter: () => void;
   manifest: IWidget | null;
   fontsToLoad: string[];
+  audioSampleCapturing: boolean;
 }
 
 export const useDataTrackStore = create<IUseDataTrackStore>((set, get) => ({
@@ -17,4 +18,5 @@ export const useDataTrackStore = create<IUseDataTrackStore>((set, get) => ({
   },
   manifest: null,
   fontsToLoad: [],
+  audioSampleCapturing: false,
 }));

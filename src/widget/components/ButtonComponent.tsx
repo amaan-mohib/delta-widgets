@@ -7,6 +7,7 @@ interface ButtonComponentProps {
   onClick?: (e: React.MouseEvent) => void;
   disabled?: boolean;
   loading?: boolean;
+  title?: string;
 }
 
 type IconProps = {
@@ -24,6 +25,7 @@ const ButtonComponent: React.FC<ButtonComponentProps> = ({
   onClick,
   disabled,
   loading,
+  title,
 }) => {
   return (
     <Button
@@ -38,6 +40,7 @@ const ButtonComponent: React.FC<ButtonComponentProps> = ({
         ) : null
       }
       id={`${component.id}-child`}
+      title={title}
       onClick={(e) => {
         e.stopPropagation();
         if (onClick) {

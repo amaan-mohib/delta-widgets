@@ -11,6 +11,7 @@ import ImageProperties from "./ImageProperties";
 import SliderProperties from "./SliderProperties";
 import DiskProperties from "./DiskProperties";
 import ProgressProperties from "./ProgressProperties";
+import AudioVisualizerProperties from "./AudioVisualizerProperties";
 
 interface PropertiesProps {}
 
@@ -50,6 +51,7 @@ const Properties: React.FC<PropertiesProps> = () => {
       case "media-next":
       case "media-prev":
       case "media-select":
+      case "toggle-visualizer":
         return <ButtonProperties disableDynamic />;
       case "image":
         return <ImageProperties />;
@@ -61,6 +63,8 @@ const Properties: React.FC<PropertiesProps> = () => {
         return <DiskProperties />;
       case "progress":
         return <ProgressProperties />;
+      case "audio-visualizer":
+        return <AudioVisualizerProperties />;
       default:
         return <WindowProperties />;
     }

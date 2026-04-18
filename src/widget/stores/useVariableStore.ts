@@ -12,6 +12,7 @@ export interface IVariableStore {
   selectedMediaPlayer: string | null;
   systemInfo: Partial<ISystemInformation>;
   weatherInfo: Partial<WeatherResponse>;
+  audioSamples: number[];
   customFields?: Record<string, string>;
 }
 
@@ -22,6 +23,7 @@ export const useVariableStore = create<IVariableStore>(() => ({
   selectedMediaPlayer: null,
   systemInfo: {},
   weatherInfo: {},
+  audioSamples: [],
 }));
 
 export const useDynamicTextStore = create<

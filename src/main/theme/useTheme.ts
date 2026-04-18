@@ -32,8 +32,8 @@ export const useTheme = () => {
         mode: modeValue,
         label: "main",
       });
-      const mainWindow =
-        document.querySelector<HTMLDivElement>(".main-window")!;
+      const mainWindow = document.querySelector<HTMLDivElement>(".main-window");
+      if (!mainWindow) return;
       if (themeApplied) {
         mainWindow.style.backgroundColor = "transparent";
         document.body.style.backgroundColor = "transparent";
