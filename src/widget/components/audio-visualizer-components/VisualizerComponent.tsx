@@ -1,5 +1,11 @@
 import React, { useEffect, useMemo, useRef } from "react";
-import { drawSoundBar, drawWaveform, hannWindow } from "../../../common/utils";
+import {
+  drawFilledWaveform,
+  drawFlatLine,
+  drawSoundBar,
+  drawWaveform,
+  hannWindow,
+} from "../../../common/utils";
 import { IWidgetElement } from "../../../types/manifest";
 import { useVariableStore } from "../../stores/useVariableStore";
 import { invoke } from "@tauri-apps/api/core";
@@ -67,7 +73,8 @@ const VisualizerComponent: React.FC<VisualizerComponentProps> = ({
 
     const draw = () => {
       const data = dataRef.current;
-      if (!data.length) {
+      if (!data.length || data.every((v) => v === 0)) {
+        drawFlatLine(canvas, visualizerData);
         animationRef.current = requestAnimationFrame(draw);
         return;
       }
@@ -86,6 +93,8 @@ const VisualizerComponent: React.FC<VisualizerComponentProps> = ({
 
       if (visualizerData.type === "waveform") {
         drawWaveform(canvas, windowed, visualizerData);
+      } else if (visualizerData.type === "waveform-filled") {
+        drawFilledWaveform(canvas, windowed, visualizerData);
       } else {
         drawSoundBar(canvas, windowed, visualizerData);
       }

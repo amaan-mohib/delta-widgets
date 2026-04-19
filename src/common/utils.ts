@@ -30,28 +30,79 @@ export function drawWaveform(
   const { width, height } = canvas;
   ctx.clearRect(0, 0, width, height);
   ctx.beginPath();
-  const n = data.length;
 
-  const sliceWidth = width / n;
-  let x = 0;
+  const n = data.length;
+  const amplitude = (visualizerData.amplitudeMultiplier || 1) * 0.9;
 
   for (let i = 0; i < n; i++) {
-    const v =
-      (Math.log10(1 + data[i]) / Math.log10(1 + 1)) *
-      (visualizerData.amplitudeMultiplier || 1);
+    const x = (i / (n - 1)) * width;
+
+    // center + shape
+    const centered = data[i];
+    let v = Math.sign(centered) * Math.pow(Math.abs(centered), 0.8) * amplitude;
+    v = Math.max(-1, Math.min(1, v));
+
     const y = height / 2 - v * (height / 2);
 
-    if (i === 0) {
-      ctx.moveTo(x, y);
-    } else {
-      ctx.lineTo(x, y);
-    }
-
-    x += sliceWidth;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
   }
 
   ctx.strokeStyle = visualizerData?.color || "#fff";
   ctx.lineWidth = parseInt(visualizerData?.strokeWidth || "1", 10);
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+
+  ctx.stroke();
+}
+
+export function drawFilledWaveform(
+  canvas: HTMLCanvasElement | null,
+  data: number[],
+  visualizerData: Record<string, any>,
+) {
+  const ctx = canvas?.getContext("2d");
+  if (!ctx || !canvas) return;
+  const { width, height } = canvas;
+  ctx.clearRect(0, 0, width, height);
+
+  const n = data.length;
+  const amplitude = (visualizerData.amplitudeMultiplier || 1) * 0.9;
+
+  ctx.beginPath();
+  ctx.moveTo(0, height / 2);
+
+  // top half of the waveform
+  for (let i = 0; i < n; i++) {
+    const x = (i / (n - 1)) * width;
+    const centered = data[i];
+    let v = Math.pow(Math.abs(centered), 0.8) * amplitude;
+    v = Math.max(0, Math.min(1, v));
+
+    const y = height / 2 - v * (height / 2);
+    ctx.lineTo(x, y);
+  }
+
+  // bottom half (mirrored) - go backwards to close the path
+  for (let i = n - 1; i >= 0; i--) {
+    const x = (i / (n - 1)) * width;
+    const centered = data[i];
+    let v = Math.pow(Math.abs(centered), 0.8) * amplitude;
+    v = Math.max(0, Math.min(1, v));
+
+    const y = height / 2 + v * (height / 2);
+    ctx.lineTo(x, y);
+  }
+
+  ctx.closePath();
+
+  ctx.fillStyle = visualizerData?.fillColor || "transparent";
+  ctx.fill();
+
+  ctx.strokeStyle = visualizerData?.color || "#fff";
+  ctx.lineWidth = parseInt(visualizerData?.strokeWidth || "1", 10);
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
   ctx.stroke();
 }
 
@@ -84,9 +135,35 @@ export function drawSoundBar(
     const barHeight = (magnitude / n) * height;
 
     ctx.fillStyle = visualizerData?.color || "#fff";
-    ctx.fillRect(x, height / 2 - barHeight, barWidth, barHeight * 2);
+    ctx.roundRect(x, height / 2 - barHeight, barWidth, barHeight * 2, 5);
+    ctx.fill();
     x += barWidth + gap;
   });
+}
+
+export function drawFlatLine(
+  canvas: HTMLCanvasElement | null,
+  visualizerData: Record<string, any>,
+) {
+  const ctx = canvas?.getContext("2d");
+  if (!ctx || !canvas) return;
+  const { width, height } = canvas;
+  ctx.clearRect(0, 0, width, height);
+  ctx.beginPath();
+
+  const y = height / 2;
+  ctx.moveTo(0, y);
+  ctx.lineTo(width, y);
+
+  ctx.strokeStyle = visualizerData?.color || "#fff";
+  ctx.lineWidth = Math.max(
+    1,
+    parseInt(visualizerData?.strokeWidth || "1", 10) / 2,
+  );
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+
+  ctx.stroke();
 }
 
 export function hannWindow(size: number): number[] {

@@ -53,8 +53,9 @@ const AudioVisualizerProperties: React.FC<
                       data: { type: value || "bar" },
                     });
                   }}>
-                  <option value="waveform">Waveform</option>
                   <option value="bar">Bar</option>
+                  <option value="waveform">Waveform</option>
+                  <option value="waveform-filled">Filled Waveform</option>
                 </Select>
               ),
             },
@@ -130,6 +131,23 @@ const AudioVisualizerProperties: React.FC<
                 />
               ),
             },
+            audioVisualizerData?.type === "waveform-filled"
+              ? {
+                  label: "Fill Color",
+                  control: (
+                    <ColorPickerPopup
+                      color={audioVisualizerData?.fillColor || "#fff"}
+                      setColor={(color) => {
+                        updateProperties({
+                          data: {
+                            fillColor: color,
+                          },
+                        });
+                      }}
+                    />
+                  ),
+                }
+              : { label: "", control: null },
           ],
         },
         backgroundProperties!,

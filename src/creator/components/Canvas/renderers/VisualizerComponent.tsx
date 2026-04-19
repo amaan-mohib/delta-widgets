@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { IWidgetElement } from "../../../../types/manifest";
-import { drawSoundBar, drawWaveform } from "../../../../common/utils";
+import {
+  drawFilledWaveform,
+  drawSoundBar,
+  drawWaveform,
+} from "../../../../common/utils";
 
 const payloadSample = [
   0, 0.000013146243547893886, -0.00007469450765209121, -0.0004348159151037848,
@@ -95,6 +99,8 @@ const VisualizerComponent: React.FC<VisualizerComponentProps> = ({
 
     if (visualizerData.type === "waveform") {
       drawWaveform(canvas, payloadSample, visualizerData);
+    } else if (visualizerData.type === "waveform-filled") {
+      drawFilledWaveform(canvas, payloadSample, visualizerData);
     } else {
       drawSoundBar(canvas, payloadSample, visualizerData);
     }
