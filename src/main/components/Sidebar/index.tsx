@@ -113,7 +113,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
             icon={<MarketplaceIcon />}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               Marketplace
-              <Badge appearance="tint">NEW</Badge>
+              <Badge appearance="tint">New</Badge>
             </div>
           </NavItem>
           <NavDivider style={{ marginTop: "auto" }} />
