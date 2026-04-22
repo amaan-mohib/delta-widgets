@@ -1,5 +1,5 @@
 import { path } from "@tauri-apps/api";
-import { invoke } from "@tauri-apps/api/core";
+import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { message, open } from "@tauri-apps/plugin-dialog";
 import {
   exists,
@@ -7,6 +7,7 @@ import {
   readDir,
   readTextFile,
   remove,
+  stat,
   UnwatchFn,
   watch,
   writeFile,
@@ -16,12 +17,13 @@ import { nanoid } from "nanoid";
 import { IWidget } from "../../types/manifest";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { toBlob } from "html-to-image";
+import { Buffer } from "buffer";
 
 export const getWidgetsDirPath = async (saves?: boolean) => {
   const appDataDir = await path.appDataDir();
   const widgetsDir = await path.resolve(
     appDataDir,
-    saves ? "saves" : "widgets"
+    saves ? "saves" : "widgets",
   );
   const widgetsDirExists = await exists(widgetsDir);
   return { widgetsDir, widgetsDirExists };
@@ -50,7 +52,7 @@ export const getAllWidgets = async (saves?: boolean) => {
       } catch (error) {
         console.error(error);
       }
-    })
+    }),
   );
 
   return result;
@@ -65,7 +67,7 @@ export const watchWidgetFolder = async (cb: () => void, saves?: boolean) => {
       () => {
         cb();
       },
-      { delayMs: 500, recursive: true }
+      { delayMs: 500, recursive: true },
     );
   }
   return unwatch;
@@ -140,7 +142,7 @@ export const sanitizeString = (input: string) => {
 export const addWidget = async (
   type: IWidget["widgetType"] = "json",
   data: { url?: string; path?: string; manifest?: IWidget; label: string },
-  saves?: boolean
+  saves?: boolean,
 ) => {
   try {
     if (!data.label) {
@@ -190,8 +192,8 @@ export const addWidget = async (
         JSON.stringify(
           { ...manifest, widgetType: type, path: undefined },
           null,
-          2
-        )
+          2,
+        ),
       );
     } catch (error) {
       console.error(error);
@@ -222,7 +224,7 @@ export const duplicateWidget = async (widget: IWidget, saves?: boolean) => {
       path: widget.file,
       url: widget.url,
     },
-    saves
+    saves,
   );
 };
 
@@ -281,7 +283,7 @@ export const createCreatorWindow = async (manifestPath?: string) => {
     manifestPath = await path.resolve(projectFolder, "manifest.json");
     await writeTextFile(
       manifestPath,
-      JSON.stringify({ ...defaultManifest, key, label }, null, 2)
+      JSON.stringify({ ...defaultManifest, key, label }, null, 2),
     );
   } else {
     projectFolder = await path.resolve(manifestPath, "..");
@@ -303,7 +305,7 @@ export const getManifestPath = async (manifestPath: string) => {
 export const createWidgetWindow = async (
   manifestPath: string,
   isPreview?: boolean,
-  toggleVisibility?: boolean
+  toggleVisibility?: boolean,
 ) => {
   try {
     const pathWithJSON = await getManifestPath(manifestPath);
@@ -326,7 +328,7 @@ export const createWidgetWindow = async (
       {
         title: "Error",
         kind: "error",
-      }
+      },
     );
   }
 };
@@ -334,7 +336,7 @@ export const createWidgetWindow = async (
 export const closeWidgetWindow = async (
   label: string,
   toggleVisibility?: boolean,
-  path?: string
+  path?: string,
 ) => {
   try {
     if (toggleVisibility && path) {
@@ -366,7 +368,7 @@ export const createThumb = async (manifest: IWidget) => {
       link.setAttribute("crossorigin", "anonymous");
     });
     const blob = await toBlob(
-      document.getElementById("widget-preview-window")!
+      document.getElementById("widget-preview-window")!,
     );
     if (blob) {
       const arrayBuffer = await blob.arrayBuffer();
@@ -383,7 +385,7 @@ export const updateManifest = async (manifest: IWidget) => {
   const manifestPath = await getManifestPath(manifest.path);
   await writeTextFile(
     manifestPath,
-    JSON.stringify({ ...manifest, path: undefined }, null, 2)
+    JSON.stringify({ ...manifest, path: undefined }, null, 2),
   );
 };
 
@@ -402,7 +404,7 @@ export const publishWidget = async (manifestPath: string) => {
 
 export const toggleAlwaysOnTop = async (
   manifestPath: string,
-  value: boolean
+  value: boolean,
 ) => {
   try {
     const path = await getManifestPath(manifestPath);
@@ -431,4 +433,26 @@ export const disableWindowDrag = () => {
 export const enableWindowDrag = () => {
   const root = document.querySelector<HTMLDivElement>("#root");
   root?.classList.remove("no-drag");
+};
+
+export const createUrlThumbnail = async (url: string) => {
+  try {
+    const urlObj = new URL(url);
+    const fileName = Buffer.from(urlObj.hostname).toString("base64") + ".png";
+    const thumbPath = await path.resolve(
+      await path.appCacheDir(),
+      "thumbs",
+      fileName,
+    );
+    if (!(await exists(thumbPath))) {
+      await invoke("create_url_thumbnail", { url: urlObj.origin, fileName });
+    }
+    if ((await stat(thumbPath)).size === 0) {
+      return null;
+    }
+    return convertFileSrc(thumbPath);
+  } catch (error) {
+    console.error("Error creating URL thumbnail:", error);
+    return null;
+  }
 };

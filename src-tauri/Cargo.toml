@@ -44,6 +44,7 @@ window-vibrancy = "0.7.1"
 tauri-plugin-log = "2"
 log = "0.4.29"
 cpal = "0.17.3"
+image = { version = "0.25.10", default-features = false, features = ["png", "jpeg", "ico"] }
 
 [profile.release]
 opt-level = 'z'     # Optimize for size

@@ -7,6 +7,7 @@ use std::{
     time::Duration,
 };
 
+use image::GenericImageView;
 use serde_json::{json, Value};
 use tauri::{Emitter, Manager, PhysicalPosition, PhysicalSize};
 use tokio::time::{sleep, Instant};
@@ -14,6 +15,8 @@ use tokio::time::{sleep, Instant};
 use window_vibrancy::apply_mica;
 
 use crate::get_custom_server_port;
+
+static NO_THUMB_BYTES: &'static [u8] = include_bytes!("no-thumb.png");
 
 #[tauri::command]
 pub async fn create_creator_window(
@@ -652,4 +655,67 @@ pub async fn open_devtools(app: tauri::AppHandle, label: String) {
         #[cfg(debug_assertions)]
         window.open_devtools();
     }
+}
+
+fn compare_if_no_thumb(bytes: &[u8]) -> bool {
+    let url_img = image::load_from_memory(&bytes).unwrap();
+    let (w, h) = url_img.dimensions();
+    if w != 16 && h != 16 {
+        return false;
+    }
+    let no_img = image::load_from_memory(NO_THUMB_BYTES).unwrap();
+    let mut diff = 0.0;
+
+    for y in 0..16 {
+        for x in 0..16 {
+            let p1 = url_img.get_pixel(x, y);
+            let p2 = no_img.get_pixel(x, y);
+
+            diff += (p1[0] as f64 - p2[0] as f64).abs();
+        }
+    }
+    diff = diff / (w * h) as f64;
+    diff < 5.0
+}
+
+#[tauri::command]
+pub async fn create_url_thumbnail(
+    app: tauri::AppHandle,
+    url: String,
+    file_name: String,
+) -> Result<(), String> {
+    if let Ok(thumb_dir) = app
+        .path()
+        .resolve("thumbs", tauri::path::BaseDirectory::AppCache)
+    {
+        if !thumb_dir.exists() {
+            if let Err(err) = fs::create_dir_all(&thumb_dir) {
+                eprintln!("Error creating thumbs directory: {}", err);
+                return Err(format!("Error creating thumbs directory: {}", err));
+            }
+        }
+        let resp = reqwest::get(format!(
+            "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url={}&size=48",
+            url
+        )).await;
+        let bytes = match resp {
+            Ok(r) => r.bytes().await.map_err(|e| e.to_string()),
+            Err(e) => Err(e.to_string()),
+        };
+        match bytes {
+            Ok(b) => {
+                let thumb_path = thumb_dir.join(&file_name);
+                if compare_if_no_thumb(&b) {
+                    return fs::write(&thumb_path, []).map_err(|e| e.to_string());
+                } else {
+                    return fs::write(&thumb_path, b).map_err(|e| e.to_string());
+                }
+            }
+            Err(err) => {
+                eprintln!("Error fetching thumbnail: {}", err);
+                return Err(format!("Error fetching thumbnail: {}", err));
+            }
+        }
+    }
+    Ok(())
 }
