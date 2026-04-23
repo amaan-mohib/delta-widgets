@@ -28,6 +28,7 @@ import ComponentRender from "./renderers";
 import { useShallow } from "zustand/shallow";
 import ContextMenu from "./ContextMenu";
 import { useTheme } from "../../theme/useTheme";
+import "react-resizable/css/styles.css";
 
 const useStyles = makeStyles({
   canvas: {
@@ -91,7 +92,7 @@ const Controls = ({
     <div className={styles.controls}>
       <Toolbar>
         <Text size={200} style={{ padding: 5 }}>{`${(scale || 1).toPrecision(
-          2
+          2,
         )}x`}</Text>
         <Tooltip content="Zoom In" relationship="label">
           <ToolbarButton icon={<ZoomInRegular />} onClick={() => zoomIn()} />
@@ -136,14 +137,14 @@ const Canvas: React.FC<CanvasProps> = () => {
     useShallow((state) => {
       const { dimensions, elements } = state.manifest || {};
       return [dimensions, elements];
-    })
+    }),
   );
   const zoomDisabled = useDataTrackStore((state) => state.zoomDisabled);
   const scale = useDataTrackStore((state) => state.scale);
   const centerRef = useRef<HTMLDivElement>(null);
   const [wallpaper, setWallpaper] = useState("");
   const initialStateLoading = useDataTrackStore(
-    (state) => state.initialStateLoading
+    (state) => state.initialStateLoading,
   );
   const isDragging = useDataTrackStore((state) => state.isDragging);
   const [showWallpaper, setShowWallpaper] = useState(true);
@@ -154,8 +155,8 @@ const Canvas: React.FC<CanvasProps> = () => {
     if (window.__INITIAL_STATE__?.wallpaper) {
       setWallpaper(
         `data:image/png;base64,${Buffer.from(
-          window.__INITIAL_STATE__.wallpaper
-        ).toString("base64")}`
+          window.__INITIAL_STATE__.wallpaper,
+        ).toString("base64")}`,
       );
     }
   }, [initialStateLoading]);
@@ -223,7 +224,7 @@ const Canvas: React.FC<CanvasProps> = () => {
                   .getState()
                   .updateWidgetDimensions(size.width, size.height);
               }}
-              resizeHandles={["se"]}
+              resizeHandles={["se", "e", "s"]}
               width={widgetDimension.width}
               height={widgetDimension.height}
               className={styles.widgetWindow}
@@ -234,7 +235,7 @@ const Canvas: React.FC<CanvasProps> = () => {
                     <Text size={100}>Window</Text>
                   )}
                   <Text size={100}>{`${Math.round(
-                    widgetDimension.width
+                    widgetDimension.width,
                   )}px X ${Math.round(widgetDimension.height)}px`}</Text>
                 </div>
                 {elements.map((element) => (
