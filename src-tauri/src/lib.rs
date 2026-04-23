@@ -120,6 +120,7 @@ pub fn run() {
             widget::apply_blur_theme,
             widget::open_devtools,
             widget::create_url_thumbnail,
+            widget::toggle_pinned,
             system::get_system_info,
             analytics::track_analytics_event,
             store::write_to_store_cmd,

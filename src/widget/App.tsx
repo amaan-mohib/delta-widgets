@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDataTrackStore } from "./stores/useDataTrackStore";
-import { disableWindowDrag, getManifestFromPath } from "../main/utils/widgets";
+import {
+  disableWindowDrag,
+  enableWindowDrag,
+  getManifestFromPath,
+} from "../main/utils/widgets";
 import Element from "./components/Element";
 import useFetcher from "./useFetcher";
 import useVariableUpdater from "./useVariableUpdater";
@@ -30,7 +34,7 @@ const App: React.FC<AppProps> = () => {
       elements: manifest?.elements || [],
       customFields: manifest?.customFields || {},
     }),
-    [manifest]
+    [manifest],
   );
 
   useFetcher(elements, customFields);
@@ -89,7 +93,7 @@ const App: React.FC<AppProps> = () => {
         if (key === manifest.key) {
           createThumb(manifest, true).catch(console.error);
         }
-      }
+      },
     );
 
     return () => {
@@ -122,6 +126,8 @@ const App: React.FC<AppProps> = () => {
     }
     if (manifest.pinned) {
       disableWindowDrag();
+    } else {
+      enableWindowDrag();
     }
   }, [manifest]);
 

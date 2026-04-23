@@ -47,6 +47,7 @@ const pinWidget = async (manifest: IWidget, isPinned: boolean) => {
     } else {
       enableWindowDrag();
     }
+    await emitTo("main", "creator-close", {});
   } catch (error) {
     console.error(error);
   }

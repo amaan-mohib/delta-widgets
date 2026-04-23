@@ -27,6 +27,7 @@ import {
   openManifestFolder,
   removeWidget,
   toggleAlwaysOnTop,
+  togglePinned,
 } from "../utils/widgets";
 import {
   CheckmarkRegular,
@@ -36,6 +37,8 @@ import {
   FolderRegular,
   ImageArrowCounterclockwiseRegular,
   MoreHorizontal20Regular,
+  PinOffRegular,
+  PinRegular,
 } from "@fluentui/react-icons";
 import { IWidget } from "../../types/manifest";
 import { sendMixpanelEvent } from "../utils/analytics";
@@ -68,8 +71,9 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   const styles = useStyles();
   const [visible, setVisible] = React.useState(widget.visible ?? false);
   const [alwaysOnTop, setAlwaysOnTop] = React.useState(
-    widget.alwaysOnTop ?? false
+    widget.alwaysOnTop ?? false,
   );
+  const [pinned, setPinned] = React.useState(widget.pinned ?? false);
   const { dispatchToast, dismissToast } = useToastController("toaster");
   const notify = () =>
     dispatchToast(
@@ -79,11 +83,12 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
           Widget enabled. You'll find it at the bottom of all windows.
         </ToastBody>
       </Toast>,
-      { toastId: widget.key, intent: "info" }
+      { toastId: widget.key, intent: "info" },
     );
 
   useEffect(() => {
     setVisible(widget.visible ?? false);
+    setPinned(widget.pinned ?? false);
   }, [widget]);
 
   const showRefreshThumbnail =
@@ -157,6 +162,15 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
                       </MenuItem>
                     )}
                     <MenuItem
+                      icon={pinned ? <PinOffRegular /> : <PinRegular />}
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await togglePinned(widget.path, !pinned);
+                        setPinned((prev) => !prev);
+                      }}>
+                      {pinned ? "Unpin" : "Pin"}
+                    </MenuItem>
+                    <MenuItem
                       icon={alwaysOnTop ? <CheckmarkRegular /> : undefined}
                       onClick={async (e) => {
                         e.stopPropagation();
@@ -217,7 +231,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
                 await closeWidgetWindow(
                   `widget-${widget.key}`,
                   true,
-                  widget.path
+                  widget.path,
                 );
                 dismissToast(widget.key);
               }

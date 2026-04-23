@@ -418,6 +418,19 @@ export const toggleAlwaysOnTop = async (
   }
 };
 
+export const togglePinned = async (manifestPath: string, value: boolean) => {
+  try {
+    const path = await getManifestPath(manifestPath);
+    await invoke("toggle_pinned", { value, path: JSON.stringify(path) });
+  } catch (error) {
+    console.error(error);
+    await message("Could not set pinned", {
+      title: "Error",
+      kind: "error",
+    });
+  }
+};
+
 export const openManifestFolder = async (manifest: IWidget) => {
   if (manifest.path) {
     const path = await getManifestPath(manifest.path);
