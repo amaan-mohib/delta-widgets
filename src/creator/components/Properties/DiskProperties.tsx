@@ -37,10 +37,11 @@ const DiskProperties: React.FC<DiskPropertiesProps> = () => {
               label: "Padding (px)",
               control: (
                 <SpinButton
+                  size="small"
                   min={0}
                   value={parseInt(
                     String(elementMap[selectedId].styles.padding || 0),
-                    10
+                    10,
                   )}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
@@ -58,10 +59,11 @@ const DiskProperties: React.FC<DiskPropertiesProps> = () => {
               label: "Roundness (px)",
               control: (
                 <SpinButton
+                  size="small"
                   min={0}
                   value={parseInt(
                     String(elementMap[selectedId].styles.borderRadius || 2),
-                    10
+                    10,
                   )}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
@@ -79,10 +81,11 @@ const DiskProperties: React.FC<DiskPropertiesProps> = () => {
               label: "Gap (px)",
               control: (
                 <SpinButton
+                  size="small"
                   min={0}
                   value={parseInt(
                     String(elementMap[selectedId].styles.gap || 0),
-                    10
+                    10,
                   )}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
@@ -143,10 +146,10 @@ const DiskProperties: React.FC<DiskPropertiesProps> = () => {
                     elementMap[selectedId].styles.color ||
                     window
                       .getComputedStyle(
-                        document.querySelector(".fui-FluentProvider")!
+                        document.querySelector(".fui-FluentProvider")!,
                       )
                       .getPropertyValue(
-                        tokens.colorNeutralForeground1.replace(/var\(|\)/g, "")
+                        tokens.colorNeutralForeground1.replace(/var\(|\)/g, ""),
                       )
                   }
                   setColor={(color) => {

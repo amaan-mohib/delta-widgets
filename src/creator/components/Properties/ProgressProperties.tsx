@@ -79,10 +79,11 @@ const ProgressProperties: React.FC<ProgressPropertiesProps> = () => {
               label: "Padding (px)",
               control: (
                 <SpinButton
+                  size="small"
                   min={0}
                   value={parseInt(
                     String(elementMap[selectedId].styles?.padding ?? 5),
-                    10
+                    10,
                   )}
                   onChange={(event, data) => {
                     spinButtonOnChange(
@@ -93,7 +94,7 @@ const ProgressProperties: React.FC<ProgressPropertiesProps> = () => {
                           styles: { padding: value },
                         });
                       },
-                      5
+                      5,
                     );
                   }}
                 />

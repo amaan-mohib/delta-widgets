@@ -44,9 +44,9 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
       window
         .getComputedStyle(document.querySelector(".fui-FluentProvider")!)
         .getPropertyValue(
-          tokens.colorNeutralForeground1.replace(/var\(|\)/g, "")
+          tokens.colorNeutralForeground1.replace(/var\(|\)/g, ""),
         ),
-    []
+    [],
   );
 
   const updateProperties = (value: IUpdateElementProperties) => {
@@ -147,6 +147,7 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
               label: "Alignment",
               control: (
                 <Toolbar
+                  size="small"
                   checkedValues={{
                     textAlign: [textStyles.textAlign || "left"],
                   }}
@@ -196,6 +197,7 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
               label: "Formatting",
               control: (
                 <Toolbar
+                  size="small"
                   checkedValues={{
                     fontWeight: [String(textStyles.fontWeight || "normal")],
                     fontStyle: [String(textStyles.fontStyle || "normal")],
@@ -210,6 +212,7 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
                   }}>
                   <Tooltip content="Bold" relationship="label" withArrow>
                     <ToolbarToggleButton
+                      size="small"
                       name="fontWeight"
                       appearance="subtle"
                       value="bold"
@@ -218,6 +221,7 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
                   </Tooltip>
                   <Tooltip content="Italic" relationship="label" withArrow>
                     <ToolbarToggleButton
+                      size="small"
                       name="fontStyle"
                       appearance="subtle"
                       value="italic"
@@ -226,6 +230,7 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
                   </Tooltip>
                   <Tooltip content="Underline" relationship="label" withArrow>
                     <ToolbarToggleButton
+                      size="small"
                       name="textDecoration"
                       appearance="subtle"
                       value="underline"
@@ -239,6 +244,7 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
               label: "Size (px)",
               control: (
                 <SpinButton
+                  size="small"
                   value={parseInt(String(textStyles.fontSize || 16), 10)}
                   onChange={(event, data) => {
                     spinButtonOnChange(
@@ -252,7 +258,7 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
                           },
                         });
                       },
-                      16
+                      16,
                     );
                   }}
                 />

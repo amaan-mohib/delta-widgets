@@ -39,6 +39,7 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "column",
     gap: "12px",
+    padding: "10px 0",
   },
 });
 
@@ -68,10 +69,11 @@ const Panel: React.FC<PanelProps> = ({ title, items, selectedId }) => {
                   <Field
                     key={field.label}
                     orientation="horizontal"
-                    label={field.label}>
+                    label={field.label}
+                    size="small">
                     {field.control}
                   </Field>
-                ) : null
+                ) : null,
               )}
             </AccordionPanel>
           </AccordionItem>

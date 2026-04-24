@@ -41,7 +41,9 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ setImage, imageData }) => {
   if (imageData?.kind === "file") {
     return (
       <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
-        <Button disabled>{imageData.path.split(/\/|\\/).at(-1)}</Button>
+        <Button disabled size="small">
+          {imageData.path.split(/\/|\\/).at(-1)}
+        </Button>
         <Tooltip
           content="Remove"
           relationship="label"
@@ -62,6 +64,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ setImage, imageData }) => {
   return (
     <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
       <Input
+        size="small"
         autoCorrect="off"
         autoComplete="off"
         spellCheck="false"

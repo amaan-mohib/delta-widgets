@@ -63,6 +63,7 @@ const AudioVisualizerProperties: React.FC<
               label: "Amplitude Multiplier",
               control: (
                 <SpinButton
+                  size="small"
                   value={parseFloat(
                     String(audioVisualizerData?.amplitudeMultiplier || 1),
                   )}
@@ -83,6 +84,7 @@ const AudioVisualizerProperties: React.FC<
               label: "Stroke Width (px)",
               control: (
                 <SpinButton
+                  size="small"
                   value={parseInt(
                     String(audioVisualizerData?.strokeWidth || 1),
                     10,
@@ -118,6 +120,7 @@ const AudioVisualizerProperties: React.FC<
               label: "Stroke Gap",
               control: (
                 <SpinButton
+                  size="small"
                   value={parseInt(String(audioVisualizerData?.gap || 2), 10)}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {

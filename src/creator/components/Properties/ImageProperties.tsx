@@ -122,10 +122,11 @@ const ImageProperties: React.FC<ImagePropertiesProps> = () => {
               label: "Width (px)",
               control: (
                 <SpinButton
+                  size="small"
                   min={0}
                   value={parseInt(
                     String(elementMap[selectedId].styles.width || 100),
-                    10
+                    10,
                   )}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
@@ -143,10 +144,11 @@ const ImageProperties: React.FC<ImagePropertiesProps> = () => {
               label: "Height (px)",
               control: (
                 <SpinButton
+                  size="small"
                   min={0}
                   value={parseInt(
                     String(elementMap[selectedId].styles.height || 0),
-                    10
+                    10,
                   )}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
