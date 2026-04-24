@@ -11,45 +11,56 @@ import {
 } from "@fluentui/react-components";
 import { CodeRegular, FolderRegular, LinkRegular } from "@fluentui/react-icons";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { addWidget, fileOrFolderPicker } from "../utils/widgets";
-import { IWidget } from "../../types/manifest";
+import {
+  addWidget,
+  closeWidgetWindow,
+  createWidgetWindow,
+  fileOrFolderPicker,
+  removeWidget,
+} from "../utils/widgets";
+import { useDataStore } from "../stores/useDataStore";
+import { useAddDialogStore } from "../stores/useAddDialogStore";
 
-export interface IDialogState {
-  open: boolean;
-  type: "file" | "folder" | "url" | "none";
-  path: string;
-  manifest?: IWidget;
-}
+const URL_REGEX =
+  /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/;
+
+const getType = (type: string) => {
+  if (type === "url") return "url";
+  if (type === "file") return "json";
+  if (type === "folder") return "html";
+  return "json";
+};
 
 interface AddWidgetDialogProps {
   title?: string;
-  dialogState: IDialogState;
-  resetDialogState: React.Dispatch<React.SetStateAction<IDialogState>>;
-  updateAllWidgets: () => void;
 }
 
-const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({
-  title,
-  dialogState,
-  resetDialogState,
-  updateAllWidgets,
-}) => {
+const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ title }) => {
   const [label, setLabel] = useState("");
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
+  const updateAllWidgets = useDataStore((state) => state.updateAllWidgets);
+  const { dialogState, setDialogState, resetDialogState } = useAddDialogStore();
 
   useEffect(() => {
     if (dialogState.type === "folder") {
-      setLabel(dialogState.path.split(/\/|\\/).at(-1) || "");
+      setLabel(
+        (dialogState.existingManifest?.label || dialogState.path)
+          .split(/\/|\\/)
+          .at(-1) || "",
+      );
     } else if (dialogState.type === "file" && dialogState.manifest) {
       setLabel(dialogState.manifest.label || dialogState.manifest.key || "");
     } else {
-      setLabel("");
+      setLabel(dialogState.existingManifest?.label || "");
     }
-  }, [dialogState.path, dialogState.type]);
+    if (dialogState.existingManifest && dialogState.type === "url") {
+      setUrl(dialogState.existingManifest.url || "");
+    }
+  }, [dialogState]);
 
   const onDialogClose = useCallback(() => {
-    resetDialogState((prev) => ({ ...prev, open: false }));
+    resetDialogState();
     setLabel("");
     setUrl("");
     setError("");
@@ -62,7 +73,7 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({
         extensions: ["json"],
       });
       if (path && manifest)
-        resetDialogState({
+        setDialogState({
           open: true,
           type: "file",
           path,
@@ -74,37 +85,42 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({
         directory: true,
         title: "Select HTML folder",
       });
-      if (path) resetDialogState({ open: true, type: "folder", path });
+      if (path) setDialogState({ open: true, type: "folder", path });
     }
-  }, [dialogState.type, resetDialogState]);
+  }, [dialogState.type, setDialogState]);
 
   const onSubmit = useCallback(async () => {
-    if (
-      dialogState.type === "url" &&
-      !/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/.test(
-        url
-      )
-    ) {
+    if (dialogState.type === "url" && !URL_REGEX.test(url)) {
       setError("Invalid URL");
       return;
     }
     try {
-      const type =
-        dialogState.type === "url"
-          ? "url"
-          : dialogState.type === "file"
-          ? "json"
-          : dialogState.type === "folder"
-          ? "html"
-          : "json";
-      await addWidget(type, {
+      const type = getType(dialogState.type);
+      const newManifest = await addWidget(type, {
         label,
         manifest: dialogState.manifest,
         path: dialogState.path,
         url,
+        existingManifestPath: dialogState.existingManifest?.path,
       });
-      updateAllWidgets();
-      onDialogClose();
+      if (dialogState.existingManifest?.path && newManifest) {
+        if (newManifest.visible) {
+          await closeWidgetWindow(`widget-${dialogState.existingManifest.key}`);
+        }
+        if (dialogState.existingManifest.key !== newManifest.key) {
+          await removeWidget(
+            dialogState.existingManifest.path,
+            dialogState.existingManifest,
+          );
+        }
+        if (newManifest.visible) {
+          await createWidgetWindow(newManifest.path);
+        }
+      }
+      if (newManifest) {
+        updateAllWidgets();
+        onDialogClose();
+      }
     } catch (error) {
       console.error(error);
     }
@@ -121,17 +137,15 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({
     <Dialog
       open={dialogState.open}
       onOpenChange={(_, { open }) => {
-        resetDialogState((prev) => ({ ...prev, open }));
+        if (!open) {
+          onDialogClose();
+        }
       }}>
       <DialogSurface style={{ maxWidth: "400px" }}>
         <DialogBody>
           <DialogTitle>{title || "Add widget"}</DialogTitle>
           <DialogContent style={{ padding: "20px 0" }}>
-            <Field
-              required={dialogState.type !== "folder"}
-              label={`Label${
-                dialogState.type === "folder" ? " (Optional)" : ""
-              }`}>
+            <Field required label="Label">
               <Input value={label} onChange={(e) => setLabel(e.target.value)} />
             </Field>
             {dialogState.type === "url" && (

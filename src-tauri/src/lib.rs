@@ -109,6 +109,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             media::get_media,
             media::media_action,
+            widget::get_all_widgets,
             widget::create_creator_window,
             widget::create_widget_window,
             widget::close_widget_window,

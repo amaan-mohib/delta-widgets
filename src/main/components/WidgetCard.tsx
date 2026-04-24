@@ -45,12 +45,13 @@ import { sendMixpanelEvent } from "../utils/analytics";
 import WidgetPreview from "./WidgetPreview";
 import { emitTo } from "@tauri-apps/api/event";
 import { templateWidgets } from "../../common";
+import { useDataStore } from "../stores/useDataStore";
+import { useAddDialogStore } from "../stores/useAddDialogStore";
 
 interface WidgetCardProps {
   widget: IWidget;
   cardStyle: string;
   saves?: boolean;
-  updateAllWidgets: () => void;
 }
 
 const useStyles = makeStyles({
@@ -66,7 +67,6 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   widget,
   cardStyle,
   saves,
-  updateAllWidgets,
 }) => {
   const styles = useStyles();
   const [visible, setVisible] = React.useState(widget.visible ?? false);
@@ -74,6 +74,10 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
     widget.alwaysOnTop ?? false,
   );
   const [pinned, setPinned] = React.useState(widget.pinned ?? false);
+
+  const { updateAllWidgets, editWidget } = useDataStore();
+  const { setDialogState, importHTML } = useAddDialogStore();
+
   const { dispatchToast, dismissToast } = useToastController("toaster");
   const notify = () =>
     dispatchToast(
@@ -90,6 +94,43 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
     setVisible(widget.visible ?? false);
     setPinned(widget.pinned ?? false);
   }, [widget]);
+
+  const toggleWidget = async (checked: boolean) => {
+    if (checked) {
+      await createWidgetWindow(widget.path, false, true);
+
+      sendMixpanelEvent("widget_enabled", {
+        label: widget.label,
+        widgetType: widget.widgetType,
+      }).catch(console.error);
+
+      if (!alwaysOnTop) {
+        notify();
+      }
+    } else {
+      await closeWidgetWindow(`widget-${widget.key}`, true, widget.path);
+      dismissToast(widget.key);
+    }
+    setVisible(checked);
+  };
+
+  const editWidgetAction = async () => {
+    if (widget.key in templateWidgets) {
+      if (widget.visible || visible) {
+        await closeWidgetWindow(`widget-${widget.key}`, true, widget.path);
+        setVisible(false);
+      }
+      const newManifest = await duplicateWidget(widget.path, false, true);
+      if (newManifest) {
+        if (widget.visible || visible) {
+          await createWidgetWindow(newManifest.path, false, true);
+        }
+        await editWidget(newManifest.path);
+      }
+      return;
+    }
+    await editWidget(widget.path);
+  };
 
   const showRefreshThumbnail =
     widget.widgetType === "json" && visible && !(widget.key in templateWidgets);
@@ -123,17 +164,59 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
                   icon={<CopyRegular />}
                   onClick={async (e) => {
                     e.stopPropagation();
-                    await duplicateWidget(widget, saves).catch(console.log);
+                    await duplicateWidget(widget.path, !!saves);
                     updateAllWidgets();
                   }}>
                   {saves ? "Clone" : "Duplicate"}
                 </MenuItem>
+                {!saves && widget.widgetType === "json" && (
+                  <MenuItem
+                    icon={<EditRegular />}
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      editWidgetAction();
+                    }}>
+                    Edit
+                  </MenuItem>
+                )}
+                {!saves && widget.widgetType === "url" && (
+                  <MenuItem
+                    icon={<EditRegular />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDialogState({
+                        open: true,
+                        type: "url",
+                        path: widget.path,
+                        existingManifest: {
+                          label: widget.label,
+                          url: widget.url,
+                          key: widget.key,
+                          widgetType: "url",
+                          path: widget.path,
+                        },
+                        manifest: null,
+                      });
+                    }}>
+                    Edit
+                  </MenuItem>
+                )}
+                {!saves && widget.widgetType === "html" && (
+                  <MenuItem
+                    icon={<EditRegular />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      importHTML(widget);
+                    }}>
+                    Edit
+                  </MenuItem>
+                )}
                 {widget.key in templateWidgets ? null : (
                   <MenuItem
                     icon={<DeleteRegular />}
                     onClick={async (e) => {
                       e.stopPropagation();
-                      await removeWidget(widget.path);
+                      await removeWidget(widget.path, widget);
                       updateAllWidgets();
                     }}>
                     Remove
@@ -161,15 +244,17 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
                         Refresh thumbnail
                       </MenuItem>
                     )}
-                    <MenuItem
-                      icon={pinned ? <PinOffRegular /> : <PinRegular />}
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        await togglePinned(widget.path, !pinned);
-                        setPinned((prev) => !prev);
-                      }}>
-                      {pinned ? "Unpin" : "Pin"}
-                    </MenuItem>
+                    {widget.widgetType !== "html" && (
+                      <MenuItem
+                        icon={pinned ? <PinOffRegular /> : <PinRegular />}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          await togglePinned(widget.path, !pinned);
+                          setPinned((prev) => !prev);
+                        }}>
+                        {pinned ? "Unpin" : "Pin"}
+                      </MenuItem>
+                    )}
                     <MenuItem
                       icon={alwaysOnTop ? <CheckmarkRegular /> : undefined}
                       onClick={async (e) => {
@@ -215,27 +300,8 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
             style={{ margin: 0 }}
             checked={visible}
             indicator={{ className: styles.switch }}
-            onChange={async (_, { checked }) => {
-              if (checked) {
-                await createWidgetWindow(widget.path, false, true);
-
-                sendMixpanelEvent("widget_enabled", {
-                  label: widget.label,
-                  widgetType: widget.widgetType,
-                }).catch(console.error);
-
-                if (!alwaysOnTop) {
-                  notify();
-                }
-              } else {
-                await closeWidgetWindow(
-                  `widget-${widget.key}`,
-                  true,
-                  widget.path,
-                );
-                dismissToast(widget.key);
-              }
-              setVisible(checked);
+            onChange={(_, { checked }) => {
+              toggleWidget(checked);
             }}
           />
         )}

@@ -29,35 +29,6 @@ export const getWidgetsDirPath = async (saves?: boolean) => {
   return { widgetsDir, widgetsDirExists };
 };
 
-export const getAllWidgets = async (saves?: boolean) => {
-  const result: Record<string, IWidget> = {};
-  const { widgetsDir, widgetsDirExists } = await getWidgetsDirPath(saves);
-  if (!widgetsDirExists) {
-    await mkdir(widgetsDir, { recursive: true });
-  }
-  const widgetFolders = await readDir(widgetsDir);
-
-  await Promise.all(
-    widgetFolders.map(async (folder) => {
-      try {
-        if (folder.isDirectory) {
-          const folderPath = await path.resolve(widgetsDir, folder.name);
-          const manifestPath = await path.resolve(folderPath, "manifest.json");
-          const manifest = JSON.parse(await readTextFile(manifestPath));
-          result[manifest.key] = {
-            ...manifest,
-            path: saves ? manifestPath : folderPath,
-          };
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    }),
-  );
-
-  return result;
-};
-
 export const watchWidgetFolder = async (cb: () => void, saves?: boolean) => {
   const { widgetsDir, widgetsDirExists } = await getWidgetsDirPath(saves);
   let unwatch: UnwatchFn | null = null;
@@ -141,7 +112,13 @@ export const sanitizeString = (input: string) => {
 
 export const addWidget = async (
   type: IWidget["widgetType"] = "json",
-  data: { url?: string; path?: string; manifest?: IWidget; label: string },
+  data: {
+    url?: string;
+    path?: string;
+    manifest?: IWidget | null;
+    existingManifestPath?: string;
+    label: string;
+  },
   saves?: boolean,
 ) => {
   try {
@@ -154,8 +131,14 @@ export const addWidget = async (
     if (!widgetsDirExists) {
       throw new Error("Widget directory does not exist");
     }
+    const existingManifest = data.existingManifestPath
+      ? await getManifestFromPath(data.existingManifestPath)
+      : null;
     const widgetFolders = await readDir(widgetsDir);
-    if (widgetFolders.find((item) => item.name === key)) {
+    if (
+      widgetFolders.find((item) => item.name === key) &&
+      existingManifest?.key !== key
+    ) {
       throw new Error("Widget with same key exists");
     }
 
@@ -163,6 +146,7 @@ export const addWidget = async (
 
     if (type === "url" && data.url) {
       manifest = {
+        ...(existingManifest || {}),
         ...(data.manifest || {}),
         key,
         label: data.label,
@@ -172,12 +156,22 @@ export const addWidget = async (
     }
 
     if (type === "json" && data.manifest) {
-      manifest = { ...data.manifest, label: data.label, description };
+      manifest = { ...data.manifest, key, label: data.label, description };
     }
 
     if (type === "html" && data.path) {
-      await invoke("copy_custom_assets_dir", { key, path: data.path });
+      const existingManifest = data.existingManifestPath
+        ? await getManifestFromPath(data.existingManifestPath)
+        : null;
+      const skipCopy =
+        existingManifest &&
+        existingManifest.file === data.path &&
+        key === existingManifest.key;
+      if (!skipCopy) {
+        await invoke("copy_custom_assets_dir", { key, path: data.path });
+      }
       manifest = {
+        ...(existingManifest || {}),
         ...(data.manifest || {}),
         key,
         label: data.label,
@@ -186,15 +180,19 @@ export const addWidget = async (
       };
     }
     try {
-      await mkdir(await path.resolve(widgetsDir, key));
+      if (existingManifest?.key !== key) {
+        await mkdir(await path.resolve(widgetsDir, key));
+      }
+      const manifestPath = await path.resolve(widgetsDir, key, "manifest.json");
       await writeTextFile(
-        await path.resolve(widgetsDir, key, "manifest.json"),
+        manifestPath,
         JSON.stringify(
           { ...manifest, widgetType: type, path: undefined },
           null,
           2,
         ),
       );
+      return { ...manifest, path: manifestPath } as IWidget;
     } catch (error) {
       console.error(error);
       throw new Error("Something went wrong while adding widget");
@@ -208,10 +206,15 @@ export const addWidget = async (
   }
 };
 
-export const duplicateWidget = async (widget: IWidget, saves?: boolean) => {
+export const duplicateWidget = async (
+  oldWidgetPath: string,
+  saves: boolean,
+  keepVisible?: boolean,
+) => {
+  const widget = await getManifestFromPath(oldWidgetPath);
   const copyLabel = `${widget.label}-${nanoid(4)}`;
-  const copyKey = copyLabel.toLowerCase();
-  await addWidget(
+  const copyKey = sanitizeString(copyLabel.toLowerCase());
+  const newManifest = await addWidget(
     widget.widgetType,
     {
       label: copyLabel,
@@ -220,16 +223,26 @@ export const duplicateWidget = async (widget: IWidget, saves?: boolean) => {
         label: copyLabel,
         key: copyKey,
         description: `Copy of ${widget.label}`,
+        visible: keepVisible ? widget.visible : false,
+        publishedAt: widget.publishedAt ? Date.now() : undefined,
+        path: oldWidgetPath,
       },
       path: widget.file,
       url: widget.url,
     },
     saves,
   );
+  return newManifest;
 };
 
-export const removeWidget = async (filePath: string) => {
+export const removeWidget = async (
+  filePath: string,
+  widget?: Partial<IWidget>,
+) => {
   try {
+    if (widget?.key) {
+      await closeWidgetWindow(`widget-${widget.key}`);
+    }
     const manifestPath = await getManifestPath(filePath);
     await remove(await path.resolve(manifestPath, ".."), {
       recursive: true,
@@ -264,27 +277,40 @@ export const defaultManifest: Omit<IWidget, "path"> = {
   widgetType: "json",
 };
 
-export const createCreatorWindow = async (manifestPath?: string) => {
+export const createNewDraft = async (manifest: Omit<IWidget, "path">) => {
   const appDataDir = await path.appDataDir();
   const savePath = await path.resolve(appDataDir, "saves");
   if (!(await exists(savePath))) {
     await mkdir(savePath);
   }
+  const timestamp = new Date().getTime();
+  const projectFolder = await path.resolve(savePath, timestamp.toString());
+  await mkdir(projectFolder);
+
+  const manifestPath = await path.resolve(projectFolder, "manifest.json");
+  await writeTextFile(
+    manifestPath,
+    JSON.stringify(
+      { ...defaultManifest, ...manifest, position: undefined, visible: false },
+      null,
+      2,
+    ),
+  );
+  return projectFolder;
+};
+
+export const createCreatorWindow = async (
+  manifestPath?: string | null,
+  existingManifest?: Partial<IWidget>,
+) => {
   let projectFolder = "";
-
-  const label = manifestPath ? "" : `Untitled-${nanoid(4)}`;
-  const key = manifestPath ? "" : label.toLowerCase();
-
   if (!manifestPath) {
-    const timestamp = new Date().getTime();
-    projectFolder = await path.resolve(savePath, timestamp.toString());
-    await mkdir(projectFolder);
-
-    manifestPath = await path.resolve(projectFolder, "manifest.json");
-    await writeTextFile(
-      manifestPath,
-      JSON.stringify({ ...defaultManifest, key, label }, null, 2),
-    );
+    const label = existingManifest?.label || `Untitled-${nanoid(4)}`;
+    projectFolder = await createNewDraft({
+      key: sanitizeString(existingManifest?.key || label.toLowerCase()),
+      label,
+      ...(existingManifest || {}),
+    });
   } else {
     projectFolder = await path.resolve(manifestPath, "..");
   }
@@ -457,15 +483,61 @@ export const createUrlThumbnail = async (url: string) => {
       "thumbs",
       fileName,
     );
+
+    let shouldCreate = false;
+    let size = 0;
+
     if (!(await exists(thumbPath))) {
-      await invoke("create_url_thumbnail", { url: urlObj.origin, fileName });
+      shouldCreate = true;
+    } else {
+      const meta = await stat(thumbPath);
+      size = meta.size;
+      const now = Date.now();
+
+      if (meta.mtime && now - meta.mtime.getTime() >= 6.048e8) {
+        shouldCreate = true;
+      }
     }
-    if ((await stat(thumbPath)).size === 0) {
+    if (shouldCreate) {
+      size = await invoke<number>("create_url_thumbnail", {
+        url: urlObj.origin,
+        fileName,
+      });
+    }
+
+    if (size <= 0) {
       return null;
     }
     return convertFileSrc(thumbPath);
   } catch (error) {
     console.error("Error creating URL thumbnail:", error);
+    return null;
+  }
+};
+
+export const isWidgetInDraft = async (key: string) => {
+  try {
+    const { widgetsDir, widgetsDirExists } = await getWidgetsDirPath(true);
+    if (!widgetsDirExists) {
+      return null;
+    }
+    const widgetFolders = await readDir(widgetsDir);
+    for (const folder of widgetFolders) {
+      if (folder.isDirectory) {
+        const manifestPath = await path.resolve(
+          widgetsDir,
+          folder.name,
+          "manifest.json",
+        );
+        const manifest = JSON.parse(await readTextFile(manifestPath));
+        if (manifest.key === key) {
+          return manifestPath;
+        }
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error("Error checking if widget is in draft:", error);
     return null;
   }
 };

@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import {
   Card,
   makeStyles,
-  Spinner,
+  Skeleton,
+  SkeletonItem,
   Text,
   Toaster,
   tokens,
@@ -17,6 +18,7 @@ import SettingsSidebar from "./components/Settings/Sidebar";
 import Settings from "./components/Settings";
 import MartketplaceWaitlist from "./components/MartketplaceWaitlist";
 import "./App.css";
+import AddWidgetDialog from "./components/AddWidgetDialog";
 
 const useStyles = makeStyles({
   container: {
@@ -39,7 +41,7 @@ const useStyles = makeStyles({
     gap: "5px",
   },
   card: {
-    minHeight: "130px",
+    minHeight: "180px",
     height: "100%",
   },
 });
@@ -109,7 +111,13 @@ function App() {
       <div style={{ flex: 1 }}>
         {loading ? (
           <div className={styles.container} role="list">
-            <Spinner />
+            {Array(9)
+              .fill(null)
+              .map((_, i) => (
+                <Skeleton key={i}>
+                  <SkeletonItem className={styles.card} />
+                </Skeleton>
+              ))}
           </div>
         ) : showSettings ? (
           <div className={styles.container2}>
@@ -125,7 +133,6 @@ function App() {
                       key={widget.key}
                       widget={widget}
                       cardStyle={styles.card}
-                      updateAllWidgets={updateAllWidgets}
                     />
                   );
                 })}
@@ -142,7 +149,6 @@ function App() {
                       widget={widget}
                       cardStyle={styles.card}
                       saves
-                      updateAllWidgets={updateAllWidgets}
                     />
                   );
                 })}
@@ -157,6 +163,7 @@ function App() {
         )}
       </div>
 
+      <AddWidgetDialog />
       <Toaster toasterId={"toaster"} />
     </main>
   );

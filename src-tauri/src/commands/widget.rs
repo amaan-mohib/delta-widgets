@@ -8,6 +8,7 @@ use std::{
 };
 
 use image::GenericImageView;
+use serde::Serialize;
 use serde_json::{json, Value};
 use tauri::{Emitter, Manager, PhysicalPosition, PhysicalSize};
 use tokio::time::{sleep, Instant};
@@ -727,7 +728,7 @@ pub async fn create_url_thumbnail(
     app: tauri::AppHandle,
     url: String,
     file_name: String,
-) -> Result<(), String> {
+) -> Result<i32, String> {
     if let Ok(thumb_dir) = app
         .path()
         .resolve("thumbs", tauri::path::BaseDirectory::AppCache)
@@ -750,9 +751,15 @@ pub async fn create_url_thumbnail(
             Ok(b) => {
                 let thumb_path = thumb_dir.join(&file_name);
                 if compare_if_no_thumb(&b) {
-                    return fs::write(&thumb_path, []).map_err(|e| e.to_string());
+                    return match fs::write(&thumb_path, []) {
+                        Ok(_) => Ok(0),
+                        Err(e) => Err(e.to_string()),
+                    };
                 } else {
-                    return fs::write(&thumb_path, b).map_err(|e| e.to_string());
+                    return match fs::write(&thumb_path, b) {
+                        Ok(_) => Ok(1),
+                        Err(e) => Err(e.to_string()),
+                    };
                 }
             }
             Err(err) => {
@@ -761,5 +768,88 @@ pub async fn create_url_thumbnail(
             }
         }
     }
-    Ok(())
+    Ok(-1)
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WidgetWithMeta {
+    pub manifest: serde_json::Value,
+    pub path: String,
+    pub modified_at: u64,
+    pub is_draft: bool,
+}
+
+#[tauri::command]
+pub async fn get_all_widgets(app: tauri::AppHandle) -> Result<Vec<WidgetWithMeta>, String> {
+    let mut result = Vec::new();
+
+    for sub_dir in vec!["saves", "widgets"] {
+        let saves = sub_dir == "saves";
+        match app
+            .path()
+            .resolve(sub_dir, tauri::path::BaseDirectory::AppData)
+        {
+            Ok(path) => {
+                if !path.exists() {
+                    if let Err(err) = fs::create_dir_all(&path) {
+                        eprintln!("Error creating widgets directory: {}", err);
+                        return Err(err.to_string());
+                    }
+                }
+                let entries = fs::read_dir(path).unwrap();
+                for entry in entries {
+                    let entry = match entry {
+                        Ok(e) => e,
+                        Err(_) => continue,
+                    };
+
+                    let path = entry.path();
+                    if !path.is_dir() {
+                        continue;
+                    }
+
+                    let manifest_path = path.join("manifest.json");
+
+                    if !manifest_path.exists() {
+                        continue;
+                    }
+
+                    let content = match fs::read_to_string(&manifest_path) {
+                        Ok(c) => c,
+                        Err(_) => continue,
+                    };
+                    let manifest_json: serde_json::Value = match serde_json::from_str(&content) {
+                        Ok(m) => m,
+                        Err(_) => continue,
+                    };
+
+                    let metadata = match fs::metadata(&manifest_path) {
+                        Ok(m) => m,
+                        Err(_) => continue,
+                    };
+
+                    let modified_at = metadata
+                        .modified()
+                        .ok()
+                        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                        .map(|d| d.as_millis() as u64)
+                        .unwrap_or(0);
+
+                    result.push(WidgetWithMeta {
+                        manifest: manifest_json,
+                        path: if saves {
+                            manifest_path.to_string_lossy().to_string()
+                        } else {
+                            path.to_string_lossy().to_string()
+                        },
+                        modified_at,
+                        is_draft: saves,
+                    });
+                }
+            }
+            _ => {}
+        };
+    }
+    Ok(result)
 }
