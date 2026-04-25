@@ -20,6 +20,12 @@ export function downsample(data: number[], targetCount: number) {
   return result;
 }
 
+function normalizeLoudness(data: number[]) {
+  const peak = Math.max(...data.map(Math.abs));
+  if (peak === 0) return data; // avoid divide-by-zero
+  return data.map((v) => v / peak);
+}
+
 export function drawWaveform(
   canvas: HTMLCanvasElement | null,
   data: number[],
@@ -31,8 +37,9 @@ export function drawWaveform(
   ctx.clearRect(0, 0, width, height);
   ctx.beginPath();
 
+  data = normalizeLoudness(data);
   const n = data.length;
-  const amplitude = (visualizerData.amplitudeMultiplier || 1) * 0.9;
+  const amplitude = (visualizerData.amplitudeMultiplier || 1) * 0.8;
 
   for (let i = 0; i < n; i++) {
     const x = (i / (n - 1)) * width;
@@ -66,8 +73,9 @@ export function drawFilledWaveform(
   const { width, height } = canvas;
   ctx.clearRect(0, 0, width, height);
 
+  data = normalizeLoudness(data);
   const n = data.length;
-  const amplitude = (visualizerData.amplitudeMultiplier || 1) * 0.9;
+  const amplitude = (visualizerData.amplitudeMultiplier || 1) * 0.8;
 
   ctx.beginPath();
   ctx.moveTo(0, height / 2);
@@ -116,8 +124,9 @@ export function drawSoundBar(
   const { width, height } = canvas;
   ctx.clearRect(0, 0, width, height);
   ctx.beginPath();
-  const n = data.length;
 
+  data = normalizeLoudness(data);
+  const n = data.length;
   let barWidth = parseInt(visualizerData?.strokeWidth || "1", 10);
   let gap = visualizerData?.gap || 2;
   const barsCount = Math.floor((width + gap) / (barWidth + gap));

@@ -1,5 +1,4 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::Sample;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager, State};
@@ -28,7 +27,6 @@ impl AudioState {
 pub fn start_capture(app: AppHandle, audio_state: State<Mutex<AudioState>>) {
     let mut state = audio_state.lock().unwrap();
 
-    // Check if already running
     if state.is_running {
         println!("Audio capture already running");
         return;
@@ -108,7 +106,6 @@ pub fn start_capture(app: AppHandle, audio_state: State<Mutex<AudioState>>) {
     });
 }
 
-/// Build and start the audio stream
 fn build_and_start_stream(app: AppHandle, device: &cpal::Device) -> Result<(), String> {
     let config = device
         .default_output_config()
@@ -127,9 +124,15 @@ fn build_and_start_stream(app: AppHandle, device: &cpal::Device) -> Result<(), S
     let config: cpal::StreamConfig = config.into();
 
     let stream = match sample_format {
-        cpal::SampleFormat::F32 => build_stream_f32(device, &config, app.clone())?,
-        cpal::SampleFormat::I16 => build_stream_i16(device, &config, app.clone())?,
-        cpal::SampleFormat::U16 => build_stream_u16(device, &config, app.clone())?,
+        cpal::SampleFormat::F32 => {
+            build_stream::<f32>(app.clone(), device, &config, "Failed to build F32 stream")?
+        }
+        cpal::SampleFormat::I16 => {
+            build_stream::<i16>(app.clone(), device, &config, "Failed to build I16 stream")?
+        }
+        cpal::SampleFormat::U16 => {
+            build_stream::<u16>(app.clone(), device, &config, "Failed to build U16 stream")?
+        }
         _ => return Err(format!("Unsupported sample format: {:?}", sample_format)),
     };
 
@@ -163,7 +166,6 @@ pub fn restart_capture(app: AppHandle, audio_state: State<Mutex<AudioState>>) {
     start_capture(app, audio_state);
 }
 
-/// Get current device name
 pub fn get_current_device() -> Result<String, String> {
     let host = cpal::default_host();
     let device = host
@@ -176,79 +178,66 @@ pub fn get_current_device() -> Result<String, String> {
         .map_err(|e| format!("Failed to get device ID: {}", e))
 }
 
-fn emit_samples(app: &AppHandle, samples: &[f32]) {
-    let debounce_state = Arc::new(Mutex::new(None::<tokio::time::Instant>));
-    let debounce = debounce_state.clone();
-    *debounce.lock().unwrap() = Some(tokio::time::Instant::now());
-    let app_clone = app.clone();
-    let samples_clone = samples.to_vec();
-
-    tauri::async_runtime::spawn(async move {
-        let duration = tokio::time::Duration::from_millis(100);
-        tokio::time::sleep(duration).await;
-
-        let should_emit = {
-            let mut state = debounce.lock().unwrap();
-            if let Some(last_update) = *state {
-                if last_update.elapsed() >= duration {
-                    *state = None;
-                    true
-                } else {
-                    false
-                }
+fn downsample(samples: &[f32], target: usize) -> Vec<f32> {
+    let len = samples.len();
+    if len <= target {
+        return samples.to_vec();
+    }
+    (0..target)
+        .map(|i| {
+            let start = i * len / target;
+            let end = ((i + 1) * len / target).min(len);
+            let chunk = &samples[start..end];
+            let rms = (chunk.iter().map(|s| s * s).sum::<f32>() / chunk.len() as f32).sqrt();
+            // preserve sign using the mean's sign
+            let mean: f32 = chunk.iter().sum::<f32>() / chunk.len() as f32;
+            if mean >= 0.0 {
+                rms
             } else {
-                false
+                -rms
             }
-        };
+        })
+        .collect()
+}
 
-        for chunk in samples_clone.chunks(CHUNK_SIZE) {
-            if should_emit {
-                if let Err(e) = app_clone.emit("audio-samples", chunk) {
-                    eprintln!("Failed to emit audio samples: {}", e);
-                }
-            }
+fn emit_samples(app: &AppHandle, samples: &[f32], last_emit: &Arc<Mutex<tokio::time::Instant>>) {
+    let interval = std::time::Duration::from_millis(33);
+
+    let should_emit = {
+        let mut last = last_emit.lock().unwrap();
+        if last.elapsed() >= interval {
+            *last = tokio::time::Instant::now();
+            true
+        } else {
+            false
         }
-    });
+    };
+
+    if !should_emit {
+        return;
+    }
+
+    if let Err(e) = app.emit("audio-samples", downsample(&samples, CHUNK_SIZE)) {
+        eprintln!("Failed to emit audio samples: {}", e);
+    }
 }
 
-fn build_stream_f32(
+fn build_stream<T>(
+    app: AppHandle,
     device: &cpal::Device,
     config: &cpal::StreamConfig,
-    app: AppHandle,
-) -> Result<cpal::Stream, String> {
+    error_msg: &str,
+) -> Result<cpal::Stream, String>
+where
+    T: cpal::Sample<Float = f32> + cpal::SizedSample + Send + 'static,
+{
     let channels = config.channels as usize;
+    let last_emit = Arc::new(Mutex::new(tokio::time::Instant::now()));
 
     device
         .build_input_stream(
             config,
-            move |data: &[f32], _: &cpal::InputCallbackInfo| {
-                let samples: Vec<f32> = if channels == 1 {
-                    data.to_vec()
-                } else {
-                    data.chunks(channels)
-                        .map(|frame| frame.iter().sum::<f32>() / channels as f32)
-                        .collect()
-                };
-
-                emit_samples(&app, &samples);
-            },
-            |err| eprintln!("Audio stream error: {}", err),
-            None,
-        )
-        .map_err(|e| format!("Failed to build F32 stream: {}", e))
-}
-
-fn build_stream_i16(
-    device: &cpal::Device,
-    config: &cpal::StreamConfig,
-    app: AppHandle,
-) -> Result<cpal::Stream, String> {
-    let channels = config.channels as usize;
-
-    device
-        .build_input_stream(
-            config,
-            move |data: &[i16], _: &cpal::InputCallbackInfo| {
+            move |data: &[T], _: &cpal::InputCallbackInfo| {
                 let samples: Vec<f32> = if channels == 1 {
                     data.iter().map(|s| s.to_float_sample()).collect()
                 } else {
@@ -260,42 +249,12 @@ fn build_stream_i16(
                         .collect()
                 };
 
-                emit_samples(&app, &samples);
+                emit_samples(&app, &samples, &last_emit);
             },
             |err| eprintln!("Audio stream error: {}", err),
             None,
         )
-        .map_err(|e| format!("Failed to build I16 stream: {}", e))
-}
-
-fn build_stream_u16(
-    device: &cpal::Device,
-    config: &cpal::StreamConfig,
-    app: AppHandle,
-) -> Result<cpal::Stream, String> {
-    let channels = config.channels as usize;
-
-    device
-        .build_input_stream(
-            config,
-            move |data: &[u16], _: &cpal::InputCallbackInfo| {
-                let samples: Vec<f32> = if channels == 1 {
-                    data.iter().map(|s| s.to_float_sample()).collect()
-                } else {
-                    data.chunks(channels)
-                        .map(|frame| {
-                            let sum: f32 = frame.iter().map(|s| s.to_float_sample()).sum();
-                            sum / channels as f32
-                        })
-                        .collect()
-                };
-
-                emit_samples(&app, &samples);
-            },
-            |err| eprintln!("Audio stream error: {}", err),
-            None,
-        )
-        .map_err(|e| format!("Failed to build U16 stream: {}", e))
+        .map_err(|e| format!("{}: {}", error_msg, e))
 }
 
 #[tauri::command]
@@ -303,19 +262,16 @@ pub fn start_audio_capture(app: tauri::AppHandle, audio_state: State<Mutex<Audio
     start_capture(app, audio_state);
 }
 
-/// Tauri command to stop audio capture
 #[tauri::command]
 pub fn stop_audio_capture(audio_state: State<Mutex<AudioState>>) {
     stop_capture(audio_state);
 }
 
-/// Tauri command to restart audio capture
 #[tauri::command]
 pub fn restart_audio_capture(app: tauri::AppHandle, audio_state: State<Mutex<AudioState>>) {
     restart_capture(app, audio_state);
 }
 
-/// Tauri command to get current device
 #[tauri::command]
 pub fn get_current_device_cmd() -> Result<String, String> {
     get_current_device()

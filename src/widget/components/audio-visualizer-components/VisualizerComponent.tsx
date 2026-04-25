@@ -59,13 +59,6 @@ const VisualizerComponent: React.FC<VisualizerComponentProps> = ({
         useDataTrackStore.setState({ audioSampleCapturing: true });
       })
       .catch((e) => console.error(e));
-    return () => {
-      invoke("stop_audio_capture")
-        .then(() => {
-          useDataTrackStore.setState({ audioSampleCapturing: false });
-        })
-        .catch((e) => console.error(e));
-    };
   }, []);
 
   useEffect(() => {
@@ -78,17 +71,9 @@ const VisualizerComponent: React.FC<VisualizerComponentProps> = ({
         animationRef.current = requestAnimationFrame(draw);
         return;
       }
-      const max = Math.max(...data, 1);
-      const normalized = data.map((v) => v / max);
 
-      // const grouped = groupBands(normalized, 64);
-      const smoothed = smoothBands(normalized);
-
-      // 3. optional peaks
-      // const peaks = updatePeaks(smoothed);
-
+      const smoothed = smoothBands(data);
       const window = hannWindow(data.length);
-
       const windowed = smoothed.map((v, i) => v * window[i]);
 
       if (visualizerData.type === "waveform") {
