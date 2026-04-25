@@ -109,8 +109,8 @@ const VisualizerComponent: React.FC<VisualizerComponentProps> = ({
   return (
     <canvas
       ref={canvasRef}
-      width={800}
-      height={300}
+      width={component.data?.width || 800}
+      height={component.data?.height || 300}
       style={{ ...(component.styles || {}), width: "100%", height: "100%" }}
     />
   );

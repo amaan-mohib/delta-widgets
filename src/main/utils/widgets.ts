@@ -391,7 +391,9 @@ export const getManifestFromPath = async (manifestPath: string) => {
 export const publishWidget = async (manifestPath: string) => {
   try {
     const path = await getManifestPath(manifestPath);
-    await invoke("publish_widget", { path: JSON.stringify(path) });
+    return await invoke<string>("publish_widget", {
+      path: JSON.stringify(path),
+    });
   } catch (error) {
     console.error(error);
     await message("Could not publish widget", {

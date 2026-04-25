@@ -10,12 +10,12 @@ import useFetcher from "./useFetcher";
 import useVariableUpdater from "./useVariableUpdater";
 import FontPicker from "react-fontpicker-ts";
 import { useCustomAssets } from "../creator/hooks/useCustomAssets";
-
-import "./index.css";
 import { createThumb } from "./utils/utils";
 import { listen } from "@tauri-apps/api/event";
 import { templateWidgets } from "../common";
 import Toolbar from "./components/Toolbar";
+
+import "./index.css";
 
 interface AppProps {}
 

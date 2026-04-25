@@ -44,6 +44,42 @@ const AudioVisualizerProperties: React.FC<
           value: "properties",
           fields: [
             {
+              label: "Height (px)",
+              control: (
+                <SpinButton
+                  size="small"
+                  value={parseInt(String(audioVisualizerData?.height || 300))}
+                  onChange={(event, data) => {
+                    spinButtonOnChange(event, data, (value) => {
+                      updateProperties({
+                        data: {
+                          height: value,
+                        },
+                      });
+                    });
+                  }}
+                />
+              ),
+            },
+            {
+              label: "Width (px)",
+              control: (
+                <SpinButton
+                  size="small"
+                  value={parseInt(String(audioVisualizerData?.width || 800))}
+                  onChange={(event, data) => {
+                    spinButtonOnChange(event, data, (value) => {
+                      updateProperties({
+                        data: {
+                          width: value,
+                        },
+                      });
+                    });
+                  }}
+                />
+              ),
+            },
+            {
               label: "Type",
               control: (
                 <Select

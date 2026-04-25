@@ -37,6 +37,7 @@ import { useToolbarActions } from "../hooks/useToolbarActions";
 import { ThemePicker } from "../theme/Theme";
 import { Webview } from "@tauri-apps/api/webview";
 import { updateManifest } from "../../widget/utils/utils";
+import { getAllWebviewWindows } from "@tauri-apps/api/webviewWindow";
 
 interface ToolbarProps {}
 
@@ -97,7 +98,9 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
       return;
     }
 
-    useManifestStore.getState().updateManifest({ key, label });
+    useManifestStore
+      .getState()
+      .updateManifest(isPublished ? { label } : { key, label });
     setEditName(false);
   }, []);
 
@@ -112,8 +115,16 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
 
   const publish = useCallback(async () => {
     useDataTrackStore.setState({ isSaving: true });
-    await publishWidget(manifest?.path || "");
+    const widgetPath = await publishWidget(manifest?.path || "");
     useDataTrackStore.setState({ isSaving: false });
+    const win = await getAllWebviewWindows();
+    const isVisible = win
+      .map((i) => i.label)
+      .find((i) => i === `widget-${manifest?.key || ""}`);
+    if (isVisible && widgetPath) {
+      await closeWidgetWindow(`widget-${manifest?.key || ""}`);
+      await createWidgetWindow(widgetPath);
+    }
     window.location.reload();
   }, [manifest]);
 
@@ -123,7 +134,7 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
         {!editName ? (
           <Tooltip content="Project name" relationship="label">
             <Button
-              disabled={isSaving || isPreviewing || isPublished}
+              disabled={isSaving || isPreviewing}
               size="small"
               appearance="secondary"
               icon={<EditRegular />}

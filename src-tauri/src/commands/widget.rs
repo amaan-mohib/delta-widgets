@@ -309,7 +309,7 @@ pub async fn copy_custom_assets_dir(
 }
 
 #[tauri::command]
-pub async fn publish_widget(app: tauri::AppHandle, path: String) -> Result<u128, String> {
+pub async fn publish_widget(app: tauri::AppHandle, path: String) -> Result<String, String> {
     let clean_path = serde_json::from_str::<String>(&path).unwrap();
     let widgets_path = app
         .path()
@@ -361,10 +361,13 @@ pub async fn publish_widget(app: tauri::AppHandle, path: String) -> Result<u128,
                 String::from("visible"),
                 old_config.get("visible").unwrap_or(&json!(false)).clone(),
             );
-            map.insert(
-                String::from("dimensions"),
-                old_config.get("dimensions").unwrap_or(&json!({})).clone(),
-            );
+            let dimensions = map.get("dimensions");
+            if dimensions.is_none() {
+                map.insert(
+                    String::from("dimensions"),
+                    old_config.get("dimensions").unwrap_or(&json!({})).clone(),
+                );
+            }
             map.insert(
                 String::from("position"),
                 old_config
@@ -378,8 +381,11 @@ pub async fn publish_widget(app: tauri::AppHandle, path: String) -> Result<u128,
     if let Ok(json_string) = serde_json::to_string_pretty(&config) {
         let _ = fs::write(&manifest_path.join("manifest.json"), json_string);
     }
-    let _ = app.emit_to(format!("widget-{}", key), "update-manifest", 1);
-    Ok(published_time)
+
+    manifest_path
+        .into_os_string()
+        .into_string()
+        .map_err(|_| String::from("Error stringifying path"))
 }
 
 #[tauri::command]
