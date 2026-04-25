@@ -40,7 +40,7 @@ import {
   PinOffRegular,
   PinRegular,
 } from "@fluentui/react-icons";
-import { IWidget } from "../../types/manifest";
+import { ILiteWidget } from "../../types/manifest";
 import { sendMixpanelEvent } from "../utils/analytics";
 import WidgetPreview from "./WidgetPreview";
 import { emitTo } from "@tauri-apps/api/event";
@@ -49,7 +49,7 @@ import { useDataStore } from "../stores/useDataStore";
 import { useAddDialogStore } from "../stores/useAddDialogStore";
 
 interface WidgetCardProps {
-  widget: IWidget;
+  widget: ILiteWidget;
   cardStyle: string;
   saves?: boolean;
 }
@@ -125,11 +125,11 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
         if (widget.visible || visible) {
           await createWidgetWindow(newManifest.path, false, true);
         }
-        await editWidget(newManifest.path);
+        await editWidget(newManifest);
       }
       return;
     }
-    await editWidget(widget.path);
+    await editWidget(widget);
   };
 
   const showRefreshThumbnail =
@@ -226,7 +226,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
                   icon={<FolderRegular />}
                   onClick={async (e) => {
                     e.stopPropagation();
-                    openManifestFolder(widget);
+                    openManifestFolder(widget.path);
                   }}>
                   Show manifest
                 </MenuItem>

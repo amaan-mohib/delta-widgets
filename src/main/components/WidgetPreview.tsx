@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { IWidget } from "../../types/manifest";
+import { ILiteWidget } from "../../types/manifest";
 import {
   AppsColor,
   DocumentColor,
@@ -15,7 +15,7 @@ import { templateWidgets } from "../../common";
 import { createUrlThumbnail } from "../utils/widgets";
 
 interface WidgetPreviewProps {
-  widget: IWidget;
+  widget: ILiteWidget;
   isDraft?: boolean;
 }
 

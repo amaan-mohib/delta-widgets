@@ -1,35 +1,32 @@
-use std::{
-    collections::HashMap,
-    fs::{self, File},
-    io::{self, Read},
-    path::Path,
-    sync::Mutex,
-    time::Duration,
-};
-
-use image::GenericImageView;
 use serde::Serialize;
 use serde_json::{json, Value};
+use std::fs;
 use tauri::{Emitter, Manager, PhysicalPosition, PhysicalSize};
-use tokio::time::{sleep, Instant};
+
 #[cfg(target_os = "windows")]
 use window_vibrancy::apply_mica;
 
-use crate::get_custom_server_port;
-
-static NO_THUMB_BYTES: &'static [u8] = include_bytes!("no-thumb.png");
+use crate::{
+    commands::utils::{
+        attach_window_events, compare_if_no_thumb, copy_dir_all, ensure_window_position_bounds,
+        get_existing_keys, get_wallpaper_preview,
+    },
+    get_custom_server_port,
+};
 
 #[tauri::command]
 pub async fn create_creator_window(
     app: tauri::AppHandle,
     webview: tauri::WebviewWindow,
-    manifest: String,
-    current_folder: String,
+    manifest_path: String,
 ) {
-    let mut buffer = Vec::new();
-    let wallpaper_path = wallpaper::get().unwrap();
-    let mut file = File::open(wallpaper_path).unwrap();
-    file.read_to_end(&mut buffer).unwrap();
+    let cached_wallpaper = match get_wallpaper_preview(&app) {
+        Ok(p) => p,
+        Err(e) => {
+            eprintln!("Error caching wallpaper: {e}");
+            "".to_string()
+        }
+    };
 
     let current_monitor = webview.current_monitor().unwrap();
     let position = match current_monitor {
@@ -40,46 +37,18 @@ pub async fn create_creator_window(
         None => tauri::PhysicalPosition::new(0, 0),
     };
 
-    let mut existing_keys: HashMap<String, Option<()>> = HashMap::new();
+    let existing_keys = get_existing_keys(&app, manifest_path.clone());
 
-    for sub_dir in vec!["saves", "widgets"] {
-        match app
-            .path()
-            .resolve(sub_dir, tauri::path::BaseDirectory::AppData)
-            .unwrap()
-            .to_str()
-        {
-            Some(path) => {
-                let entries = fs::read_dir(path).unwrap();
-                entries.filter_map(|e| e.ok()).for_each(|entry| {
-                    let entry_path = entry.path();
-                    if entry_path.to_str().or_else(|| None) != Some(current_folder.as_str()) {
-                        let manifest_path = entry_path.join("manifest.json");
-                        if manifest_path.exists() {
-                            if let Ok(json) = fs::read_to_string(&manifest_path)
-                                .and_then(|contents| {
-                                    Ok(serde_json::from_str::<serde_json::Value>(&contents))
-                                })
-                                .expect("Cannot read manifest")
-                            {
-                                if let Some(key) = json.get("key").and_then(Value::as_str) {
-                                    existing_keys.insert(key.to_string(), None);
-                                }
-                            }
-                        };
-                    }
-                });
-            }
-            None => {}
-        };
-    }
-
+    let init_obj = json!({
+        "manifestPath": manifest_path,
+        "wallpaper": cached_wallpaper,
+        "existingKeys": existing_keys
+    });
     let init_script: &str = &format!(
-        "window.__INITIAL_STATE__ = {{ manifest: {}, wallpaper: {:?}, existingKeys: {} }};",
-        manifest,
-        buffer,
-        serde_json::to_string(&existing_keys).unwrap()
+        "window.__INITIAL_STATE__ = {};",
+        serde_json::to_string(&init_obj).unwrap()
     );
+
     let new_window = tauri::WebviewWindowBuilder::new(
         &app,
         "creator",
@@ -107,64 +76,6 @@ pub async fn create_creator_window(
             _ => {}
         };
     });
-}
-
-pub fn ensure_window_position_bounds(
-    webview: &tauri::WebviewWindow,
-    position: PhysicalPosition<i32>,
-    size: PhysicalSize<u32>,
-) -> PhysicalPosition<i32> {
-    let monitors = webview.available_monitors().unwrap();
-
-    let win_x = position.x;
-    let win_y = position.y;
-    let win_right = win_x + size.width as i32;
-    let win_bottom = win_y + size.height as i32;
-
-    let mut in_bounds = false;
-
-    for monitor in &monitors {
-        let monitor_size = monitor.size();
-        let monitor_position = monitor.position();
-
-        if win_x >= monitor_position.x
-            && win_y >= monitor_position.y
-            && win_right <= monitor_position.x + monitor_size.width as i32
-            && win_bottom <= monitor_position.y + monitor_size.height as i32
-        {
-            in_bounds = true;
-            break;
-        }
-    }
-
-    if in_bounds {
-        return position;
-    }
-
-    if let Some(primary) = webview.primary_monitor().unwrap_or_default() {
-        let mon_pos = primary.position();
-
-        let new_x = mon_pos.x + 30 as i32;
-        let new_y = mon_pos.y + 30 as i32;
-
-        PhysicalPosition { x: new_x, y: new_y }
-    } else {
-        PhysicalPosition { x: 30, y: 30 }
-    }
-}
-
-pub fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> {
-    fs::create_dir_all(&dst)?;
-    for entry in fs::read_dir(src)? {
-        let entry = entry?;
-        let ty = entry.file_type()?;
-        if ty.is_dir() {
-            copy_dir_all(entry.path(), dst.as_ref().join(entry.file_name()))?;
-        } else {
-            fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?;
-        }
-    }
-    Ok(())
 }
 
 #[derive(serde::Deserialize, PartialEq)]
@@ -336,100 +247,6 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
             };
         });
     }
-}
-
-fn save_window_state(window: &tauri::WebviewWindow, config_path: String) {
-    if let (Ok(position), Ok(size), Ok(scale_factor)) = (
-        window.inner_position(),
-        window.inner_size(),
-        window.scale_factor(),
-    ) {
-        // Try to read the existing config file
-        let config_content = match fs::read_to_string(&config_path) {
-            Ok(content) => content,
-            Err(_) => String::from("{}"),
-        };
-
-        // Parse the existing JSON
-        let mut config: Value = match serde_json::from_str(&config_content) {
-            Ok(json) => json,
-            Err(_) => json!({}),
-        };
-        let widget_type = config
-            .get("widgetType")
-            .and_then(Value::as_str)
-            .unwrap_or("json")
-            .to_string();
-
-        // Update only the window position and size fields
-        if let Value::Object(ref mut map) = config {
-            map.insert(
-                String::from("position"),
-                json!({
-                    "x": position.x,
-                    "y": position.y
-                }),
-            );
-            let is_json = widget_type == "json";
-            let logical_size = size.to_logical::<u32>(scale_factor);
-
-            map.insert(
-                String::from("dimensions"),
-                json!({
-                    "width": if is_json { logical_size.width } else { size.width },
-                    "height": if is_json { logical_size.height } else { size.height }
-                }),
-            );
-        }
-
-        // Write the updated JSON back to the file
-        if let Ok(json_string) = serde_json::to_string_pretty(&config) {
-            let _ = fs::write(&config_path, json_string);
-        }
-    }
-}
-
-fn attach_window_events(new_window: tauri::WebviewWindow, clean_path: String) {
-    let debounce_state = std::sync::Arc::new(Mutex::new(None::<Instant>));
-    new_window.clone().on_window_event(move |event| {
-        match event {
-            tauri::WindowEvent::Moved(_) | tauri::WindowEvent::Resized(_) => {
-                let window_clone = new_window.clone();
-                let path = clean_path.clone();
-                let debounce = debounce_state.clone();
-                *debounce.lock().unwrap() = Some(Instant::now());
-                tauri::async_runtime::spawn(async move {
-                    // Wait for debounce period
-                    sleep(Duration::from_millis(500)).await;
-
-                    // Check if we should still save
-                    let should_save = {
-                        let mut state = debounce.lock().unwrap();
-                        if let Some(last_update) = *state {
-                            if last_update.elapsed() >= Duration::from_millis(500) {
-                                // Reset the state
-                                *state = None;
-                                true
-                            } else {
-                                false
-                            }
-                        } else {
-                            false
-                        }
-                    };
-
-                    if should_save {
-                        save_window_state(&window_clone, path);
-                    }
-                });
-                // hack to keep widget unminimized
-                if new_window.is_minimized().unwrap() {
-                    new_window.unminimize().unwrap();
-                }
-            }
-            _ => {}
-        };
-    });
 }
 
 #[tauri::command]
@@ -702,27 +519,6 @@ pub async fn open_devtools(app: tauri::AppHandle, label: String) {
     }
 }
 
-fn compare_if_no_thumb(bytes: &[u8]) -> bool {
-    let url_img = image::load_from_memory(&bytes).unwrap();
-    let (w, h) = url_img.dimensions();
-    if w != 16 && h != 16 {
-        return false;
-    }
-    let no_img = image::load_from_memory(NO_THUMB_BYTES).unwrap();
-    let mut diff = 0.0;
-
-    for y in 0..16 {
-        for x in 0..16 {
-            let p1 = url_img.get_pixel(x, y);
-            let p2 = no_img.get_pixel(x, y);
-
-            diff += (p1[0] as f64 - p2[0] as f64).abs();
-        }
-    }
-    diff = diff / (w * h) as f64;
-    diff < 5.0
-}
-
 #[tauri::command]
 pub async fn create_url_thumbnail(
     app: tauri::AppHandle,
@@ -819,10 +615,19 @@ pub async fn get_all_widgets(app: tauri::AppHandle) -> Result<Vec<WidgetWithMeta
                         Ok(c) => c,
                         Err(_) => continue,
                     };
-                    let manifest_json: serde_json::Value = match serde_json::from_str(&content) {
+                    let mut manifest_json: serde_json::Value = match serde_json::from_str(&content)
+                    {
                         Ok(m) => m,
                         Err(_) => continue,
                     };
+                    if let Some(obj) = manifest_json.as_object_mut() {
+                        obj.remove("elements");
+                        obj.remove("dimensions");
+                        obj.remove("position");
+                        obj.remove("customFields");
+                        obj.remove("customAssets");
+                        obj.remove("theme");
+                    }
 
                     let metadata = match fs::metadata(&manifest_path) {
                         Ok(m) => m,

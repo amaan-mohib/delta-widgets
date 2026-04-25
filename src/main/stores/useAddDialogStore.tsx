@@ -1,20 +1,20 @@
 import { fileOrFolderPicker } from "../utils/widgets";
-import { IWidget } from "../../types/manifest";
+import { ILiteWidget } from "../../types/manifest";
 import { create } from "zustand";
 
 export interface IDialogState {
   open: boolean;
   type: "file" | "folder" | "url" | "none";
   path: string;
-  manifest?: IWidget | null;
-  existingManifest?: Partial<IWidget> | null;
+  manifest?: ILiteWidget | null;
+  existingManifest?: Partial<ILiteWidget> | null;
 }
 
 interface IAddDialogStore {
   dialogState: IDialogState;
   setDialogState: (state: IDialogState) => void;
   resetDialogState: () => void;
-  importHTML: (existingWidget?: IWidget) => Promise<void>;
+  importHTML: (existingWidget?: ILiteWidget) => Promise<void>;
   importJSON: () => Promise<void>;
 }
 
@@ -36,7 +36,7 @@ export const useAddDialogStore = create<IAddDialogStore>((set, get) => ({
       dialogState: { ...defaultDialogState, type: get().dialogState.type },
     });
   },
-  importHTML: async (existingWidget?: IWidget) => {
+  importHTML: async (existingWidget?: ILiteWidget) => {
     if (
       existingWidget &&
       existingWidget.widgetType === "html" &&

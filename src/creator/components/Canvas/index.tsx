@@ -21,7 +21,6 @@ import {
   useControls,
 } from "react-zoom-pan-pinch";
 import { ResizableBox } from "react-resizable";
-import { Buffer } from "buffer";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import { useManifestStore } from "../../stores/useManifestStore";
 import ComponentRender from "./renderers";
@@ -29,6 +28,8 @@ import { useShallow } from "zustand/shallow";
 import ContextMenu from "./ContextMenu";
 import { useTheme } from "../../theme/useTheme";
 import "react-resizable/css/styles.css";
+import { nanoid } from "nanoid";
+import { convertFileSrc } from "@tauri-apps/api/core";
 
 const useStyles = makeStyles({
   canvas: {
@@ -153,11 +154,8 @@ const Canvas: React.FC<CanvasProps> = () => {
   useEffect(() => {
     if (initialStateLoading) return;
     if (window.__INITIAL_STATE__?.wallpaper) {
-      setWallpaper(
-        `data:image/png;base64,${Buffer.from(
-          window.__INITIAL_STATE__.wallpaper,
-        ).toString("base64")}`,
-      );
+      const wallpaperPath = convertFileSrc(window.__INITIAL_STATE__.wallpaper);
+      setWallpaper(`${wallpaperPath}?key=${nanoid()}`);
     }
   }, [initialStateLoading]);
 

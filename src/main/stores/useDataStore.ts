@@ -1,18 +1,14 @@
 import { create } from "zustand";
-import { IWidget } from "../../types/manifest";
-import {
-  createCreatorWindow,
-  getManifestFromPath,
-  isWidgetInDraft,
-} from "../utils/widgets";
+import { ILiteWidget } from "../../types/manifest";
+import { createCreatorWindow, isWidgetInDraft } from "../utils/widgets";
 import { sendMixpanelEvent } from "../utils/analytics";
 import { invoke } from "@tauri-apps/api/core";
 
 export type TActiveTab = "installed" | "drafts" | "marketplace";
 export type TSettingsActiveTab = "general" | "theme" | "about";
 interface IDataStore {
-  installedWidgets: IWidget[];
-  draftWidgets: IWidget[];
+  installedWidgets: ILiteWidget[];
+  draftWidgets: ILiteWidget[];
   activeTab: TActiveTab;
   settingsActiveTab: TSettingsActiveTab;
   loading: boolean;
@@ -21,16 +17,16 @@ interface IDataStore {
   setSettingsActiveTab: (tab: TSettingsActiveTab) => void;
   updateAllWidgets: () => Promise<void>;
   createWidget: () => Promise<void>;
-  editWidget: (widgetPath: string) => Promise<void>;
+  editWidget: (widget: ILiteWidget) => Promise<void>;
 }
 
 interface IGetAllWidget {
-  manifest: IWidget;
+  manifest: ILiteWidget;
   path: string;
   modifiedAt: number;
   isDraft: boolean;
 }
-type TWidgetWithDate = IWidget & { modifiedAt: number };
+type TWidgetWithDate = ILiteWidget & { modifiedAt: number };
 
 export const useDataStore = create<IDataStore>((set, get) => ({
   installedWidgets: [],
@@ -82,11 +78,9 @@ export const useDataStore = create<IDataStore>((set, get) => ({
     await createCreatorWindow();
     get().updateAllWidgets();
   },
-  editWidget: async (widgetPath: string) => {
-    const widget = await getManifestFromPath(widgetPath);
-    if (!widget) return;
+  editWidget: async (widget: ILiteWidget) => {
     const draftPath = await isWidgetInDraft(widget.key);
-    await createCreatorWindow(draftPath, widget);
+    await createCreatorWindow(draftPath, widget.path);
     get().setActiveTab("drafts");
     get().updateAllWidgets();
   },

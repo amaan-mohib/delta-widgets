@@ -1,16 +1,17 @@
 import { path } from "@tauri-apps/api";
-import { exists, writeFile } from "@tauri-apps/plugin-fs";
+import { exists, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { format, intervalToDuration } from "date-fns";
 import { toBlob } from "html-to-image";
-import { IWidget } from "../../types/manifest";
+import { ILiteWidget, IWidget } from "../../types/manifest";
 import { formatInTimeZone } from "date-fns-tz";
 import { emitTo } from "@tauri-apps/api/event";
+import { getManifestPath } from "../../main/utils/widgets";
 
 const DATE_REGEX = /^(.+?)(?::\[(.+?)\])?$/g;
 
 export const parseDynamicText = (
   text: string,
-  textVariables: Record<string, (format?: string) => string>
+  textVariables: Record<string, (format?: string) => string>,
 ) => {
   return text.replace(/\{\{(\w+)(?::([^}]+))?\}\}/g, (_, key, formatStr) => {
     if (textVariables[key]) {
@@ -49,7 +50,7 @@ export const formatDuration = (duration: number) => {
 
   const formatted = [hours || 0, minutes || 0, seconds || 0]
     .map((value, index) =>
-      index === 0 && hours ? hours : index !== 0 ? value : null
+      index === 0 && hours ? hours : index !== 0 ? value : null,
     )
     .filter((item) => item !== null)
     .map(zeroPad)
@@ -91,7 +92,7 @@ export function humanStorageSize(bytes: number, si = false, dp = 1) {
   return bytes.toFixed(dp) + " " + units[u];
 }
 
-export const createThumb = async (manifest: IWidget, refresh = false) => {
+export const createThumb = async (manifest: ILiteWidget, refresh = false) => {
   try {
     document.querySelectorAll("link").forEach((link) => {
       link.setAttribute("crossorigin", "anonymous");
@@ -118,7 +119,7 @@ export const createThumb = async (manifest: IWidget, refresh = false) => {
 
 export function forwardConsole(
   fnName: "log" | "debug" | "info" | "warn" | "error",
-  logger: (message: string) => Promise<void>
+  logger: (message: string) => Promise<void>,
 ) {
   const original = console[fnName];
   console[fnName] = (message) => {
@@ -126,3 +127,11 @@ export function forwardConsole(
     logger(message);
   };
 }
+
+export const updateManifest = async (manifest: IWidget) => {
+  const manifestPath = await getManifestPath(manifest.path);
+  await writeTextFile(
+    manifestPath,
+    JSON.stringify({ ...manifest, path: undefined }, null, 2),
+  );
+};

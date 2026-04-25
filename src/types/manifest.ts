@@ -47,3 +47,13 @@ export interface IWidget {
   } | null;
   pinned?: boolean;
 }
+
+export type ILiteWidget = Omit<
+  IWidget,
+  | "elements"
+  | "dimensions"
+  | "position"
+  | "customFields"
+  | "customAssets"
+  | "theme"
+>;

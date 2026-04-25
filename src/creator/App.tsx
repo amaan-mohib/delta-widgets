@@ -49,9 +49,9 @@ const App: React.FC<AppProps> = () => {
 
   useEffect(() => {
     if (initialStateLoading) return;
-    const initialManifest = window.__INITIAL_STATE__?.manifest;
+    const initialManifest = window.__INITIAL_STATE__?.manifestPath;
     if (initialManifest && manifestStore === null) {
-      const manifestPath = initialManifest.path;
+      const manifestPath = initialManifest;
       getManifestFromPath(manifestPath).then((manifest) => {
         useManifestStore.setState({
           manifest: { ...manifest, path: manifestPath },

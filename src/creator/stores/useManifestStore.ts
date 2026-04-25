@@ -4,11 +4,11 @@ import { subscribeWithSelector } from "zustand/middleware";
 import lodashSet from "lodash.set";
 import lodashGet from "lodash.get";
 import debounce from "lodash.debounce";
-import { createThumb, updateManifest } from "../../main/utils/widgets";
 import { useDataTrackStore } from "./useDataTrackStore";
 import { arrayMove } from "@dnd-kit/sortable";
 import { useShallow } from "zustand/shallow";
-import { cloneObject } from "../utils";
+import { cloneObject, createThumb } from "../utils";
+import { updateManifest } from "../../widget/utils/utils";
 
 export interface IUpdateElementProperties {
   data?: any;
@@ -33,7 +33,7 @@ export interface IManifestStore {
   addElements: (
     element: IWidgetElement,
     parentId: string,
-    index?: number
+    index?: number,
   ) => void;
   removeElement: (id: string, cut?: boolean) => void;
   moveElement: (id: string, dropId: string, dropIndex: number) => string | void;
@@ -97,7 +97,7 @@ export const useManifestStore = create<IManifestStore>()(
       const newManifest = lodashSet(
         manifest,
         `elements${elementPath}.children`,
-        elements
+        elements,
       );
 
       set({
@@ -118,8 +118,8 @@ export const useManifestStore = create<IManifestStore>()(
         manifest,
         `elements${parentPath}`,
         (lodashGet(manifest, `elements${parentPath}`) || []).filter(
-          (_, index) => index !== elementIndex
-        )
+          (_, index) => index !== elementIndex,
+        ),
       );
       if (cut) {
         const element = cloneObject(elementMap[id]);
@@ -165,13 +165,13 @@ export const useManifestStore = create<IManifestStore>()(
         const reorderedElements = arrayMove(
           lodashGet(manifest, `elements${sourceParentPath}`) || [],
           sourceIndex,
-          dropIndex
+          dropIndex,
         );
 
         const newManifest = lodashSet(
           manifest,
           `elements${sourceParentPath}`,
-          reorderedElements
+          reorderedElements,
         );
 
         set({ manifest: newManifest });
@@ -199,12 +199,12 @@ export const useManifestStore = create<IManifestStore>()(
         const manifestWithNewTarget = lodashSet(
           manifest,
           `elements${sourceParentPath}`,
-          sourceItems
+          sourceItems,
         );
         const finalManifest = lodashSet(
           manifestWithNewTarget,
           targetInsertPath,
-          targetItems
+          targetItems,
         );
 
         set({ manifest: finalManifest });
@@ -215,12 +215,12 @@ export const useManifestStore = create<IManifestStore>()(
       const manifestWithNewTarget = lodashSet(
         manifest,
         targetInsertPath,
-        targetItems
+        targetItems,
       );
       const finalManifest = lodashSet(
         manifestWithNewTarget,
         `elements${sourceParentPath}`,
-        sourceItems
+        sourceItems,
       );
 
       set({ manifest: finalManifest });
@@ -287,13 +287,13 @@ export const useManifestStore = create<IManifestStore>()(
     },
     isUndoRedo: false,
     clipboard: null,
-  }))
+  })),
 );
 
 function mapElementPaths(
   elements: IWidgetElement[],
   parentPath: string = "",
-  parentId: string | null = null
+  parentId: string | null = null,
 ) {
   let map: IManifestStore["elementMap"] = {};
 
@@ -313,7 +313,7 @@ function mapElementPaths(
     if (element.children) {
       Object.assign(
         map,
-        mapElementPaths(element.children, currentPath, currentId)
+        mapElementPaths(element.children, currentPath, currentId),
       );
     }
   });
@@ -327,7 +327,7 @@ useManifestStore.subscribe(
     if (!elements) return;
     const elementMap = mapElementPaths(elements);
     useManifestStore.setState({ elementMap });
-  }
+  },
 );
 
 const debouncedUpdate = debounce((manifest: IWidget) => {
@@ -337,7 +337,7 @@ const debouncedUpdate = debounce((manifest: IWidget) => {
     .finally(() => {
       useDataTrackStore.setState({ isSaving: false });
     });
-  createThumb(manifest).catch(console.error);
+  createThumb(manifest.path).catch(console.error);
 }, 500);
 
 const debouncedHistory = debounce(
@@ -356,7 +356,7 @@ const debouncedHistory = debounce(
     useManifestStore.setState({ isUndoRedo: false });
   },
   700,
-  { leading: true, trailing: false }
+  { leading: true, trailing: false },
 );
 
 useManifestStore.subscribe(
@@ -364,7 +364,7 @@ useManifestStore.subscribe(
   (manifest, prevManifest) => {
     if (manifest) debouncedUpdate(manifest);
     if (prevManifest) debouncedHistory(prevManifest);
-  }
+  },
 );
 
 export const getManifestStore = () =>

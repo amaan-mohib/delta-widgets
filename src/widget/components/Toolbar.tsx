@@ -11,12 +11,13 @@ import { IWidget } from "../../types/manifest";
 import {
   disableWindowDrag,
   enableWindowDrag,
+  getManifestFromPath,
   getManifestPath,
-  updateManifest,
 } from "../../main/utils/widgets";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useDataTrackStore } from "../stores/useDataTrackStore";
 import { emitTo } from "@tauri-apps/api/event";
+import { updateManifest } from "../utils/utils";
 
 interface ToolbarProps {}
 
@@ -34,10 +35,12 @@ const closeWidget = async (manifest: IWidget) => {
   }
 };
 
-const pinWidget = async (manifest: IWidget, isPinned: boolean) => {
+const pinWidget = async (manifestPath: string, isPinned: boolean) => {
   try {
+    const manifest = await getManifestFromPath(manifestPath);
     await updateManifest({
       ...manifest,
+      path: manifestPath,
       pinned: isPinned,
     });
     const window = await WebviewWindow.getByLabel(`widget-${manifest.key}`);
@@ -80,7 +83,7 @@ const Toolbar: React.FC<ToolbarProps> = () => {
         icon={manifest.pinned ? <PinOffRegular /> : <PinRegular />}
         size="small"
         onClick={() => {
-          pinWidget(manifest, !manifest.pinned);
+          pinWidget(manifest.path, !manifest.pinned);
           useDataTrackStore.setState({
             manifest: {
               ...manifest,

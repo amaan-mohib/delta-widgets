@@ -10,13 +10,11 @@ import {
   stat,
   UnwatchFn,
   watch,
-  writeFile,
   writeTextFile,
 } from "@tauri-apps/plugin-fs";
 import { nanoid } from "nanoid";
-import { IWidget } from "../../types/manifest";
+import { ILiteWidget, IWidget } from "../../types/manifest";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
-import { toBlob } from "html-to-image";
 import { Buffer } from "buffer";
 
 export const getWidgetsDirPath = async (saves?: boolean) => {
@@ -237,7 +235,7 @@ export const duplicateWidget = async (
 
 export const removeWidget = async (
   filePath: string,
-  widget?: Partial<IWidget>,
+  widget?: Partial<ILiteWidget>,
 ) => {
   try {
     if (widget?.key) {
@@ -301,10 +299,13 @@ export const createNewDraft = async (manifest: Omit<IWidget, "path">) => {
 
 export const createCreatorWindow = async (
   manifestPath?: string | null,
-  existingManifest?: Partial<IWidget>,
+  existingPath?: string,
 ) => {
   let projectFolder = "";
   if (!manifestPath) {
+    const existingManifest = existingPath
+      ? await getManifestFromPath(existingPath)
+      : null;
     const label = existingManifest?.label || `Untitled-${nanoid(4)}`;
     projectFolder = await createNewDraft({
       key: sanitizeString(existingManifest?.key || label.toLowerCase()),
@@ -315,8 +316,7 @@ export const createCreatorWindow = async (
     projectFolder = await path.resolve(manifestPath, "..");
   }
   await invoke("create_creator_window", {
-    manifest: JSON.stringify({ path: projectFolder }),
-    currentFolder: projectFolder,
+    manifestPath: projectFolder,
   });
 };
 
@@ -388,33 +388,6 @@ export const getManifestFromPath = async (manifestPath: string) => {
   return JSON.parse(manifest) as Omit<IWidget, "path">;
 };
 
-export const createThumb = async (manifest: IWidget) => {
-  try {
-    document.querySelectorAll("link").forEach((link) => {
-      link.setAttribute("crossorigin", "anonymous");
-    });
-    const blob = await toBlob(
-      document.getElementById("widget-preview-window")!,
-    );
-    if (blob) {
-      const arrayBuffer = await blob.arrayBuffer();
-      const buffer = new Uint8Array(arrayBuffer);
-      const thumbPath = await path.resolve(manifest.path, "thumb.png");
-      await writeFile(thumbPath, buffer);
-    }
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-export const updateManifest = async (manifest: IWidget) => {
-  const manifestPath = await getManifestPath(manifest.path);
-  await writeTextFile(
-    manifestPath,
-    JSON.stringify({ ...manifest, path: undefined }, null, 2),
-  );
-};
-
 export const publishWidget = async (manifestPath: string) => {
   try {
     const path = await getManifestPath(manifestPath);
@@ -457,9 +430,9 @@ export const togglePinned = async (manifestPath: string, value: boolean) => {
   }
 };
 
-export const openManifestFolder = async (manifest: IWidget) => {
-  if (manifest.path) {
-    const path = await getManifestPath(manifest.path);
+export const openManifestFolder = async (manifestPath: string) => {
+  if (manifestPath) {
+    const path = await getManifestPath(manifestPath);
     await revealItemInDir(path);
   }
 };

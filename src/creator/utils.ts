@@ -2,31 +2,36 @@ import {
   SpinButtonChangeEvent,
   SpinButtonOnChangeData,
 } from "@fluentui/react-components";
+import { path } from "@tauri-apps/api";
+import { writeFile } from "@tauri-apps/plugin-fs";
+import { toBlob } from "html-to-image";
 
 export const spinButtonOnChange = (
   event: SpinButtonChangeEvent,
   data: SpinButtonOnChangeData,
   onChange: (value: number) => void,
-  defaultValue?: number
+  defaultValue?: number,
 ) => {
   onChange(
     Number(
       data.value ||
         (event.target as HTMLInputElement).value ||
         defaultValue ||
-        0
-    )
+        0,
+    ),
   );
 };
 
-const formatVariable = (key: string) => (format?: string): string => {
-  const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
-  return key === "media" && format === "thumbnail"
-    ? "https://placehold.co/400x400?text=Thumbnail"
-    : key === "weather" && format === "icon"
-    ? "https://placehold.co/400x400?text=Weather"
-    : `${capitalizedKey}${format ? ` (${format})` : ""}`;
-};
+const formatVariable =
+  (key: string) =>
+  (format?: string): string => {
+    const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
+    return key === "media" && format === "thumbnail"
+      ? "https://placehold.co/400x400?text=Thumbnail"
+      : key === "weather" && format === "icon"
+        ? "https://placehold.co/400x400?text=Weather"
+        : `${capitalizedKey}${format ? ` (${format})` : ""}`;
+  };
 
 const textVariables: Record<string, (format?: string) => string> = [
   "date",
@@ -42,7 +47,7 @@ const textVariables: Record<string, (format?: string) => string> = [
     ...acc,
     [key]: formatVariable(key),
   }),
-  {}
+  {},
 );
 
 export const parseDynamicText = (text: string) => {
@@ -53,10 +58,29 @@ export const parseDynamicText = (text: string) => {
         return textVariables[key](formatStr);
       }
       return match;
-    }
+    },
   );
 };
 
 export const cloneObject = <T>(obj: T) => {
   return JSON.parse(JSON.stringify(obj)) as T;
+};
+
+export const createThumb = async (manifestPath: string) => {
+  try {
+    document.querySelectorAll("link").forEach((link) => {
+      link.setAttribute("crossorigin", "anonymous");
+    });
+    const blob = await toBlob(
+      document.getElementById("widget-preview-window")!,
+    );
+    if (blob) {
+      const arrayBuffer = await blob.arrayBuffer();
+      const buffer = new Uint8Array(arrayBuffer);
+      const thumbPath = await path.resolve(manifestPath, "thumb.png");
+      await writeFile(thumbPath, buffer);
+    }
+  } catch (error) {
+    console.log(error);
+  }
 };
