@@ -140,7 +140,7 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
             let html_folder = manifest.file.unwrap_or_else(|| "index.html".to_string());
             let _ = copy_custom_assets_dir(app.clone(), manifest_key.clone(), html_folder.clone())
                 .await
-                .unwrap();
+                .unwrap_or_default();
             let port = get_custom_server_port();
             format!(
                 "http://localhost:{}/{}/index.html",

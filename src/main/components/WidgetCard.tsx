@@ -30,6 +30,7 @@ import {
   togglePinned,
 } from "../utils/widgets";
 import {
+  ArrowClockwiseRegular,
   CheckmarkRegular,
   CopyRegular,
   DeleteRegular,
@@ -114,20 +115,26 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
     setVisible(checked);
   };
 
+  const refreshHTML = async () => {
+    await closeWidgetWindow(`widget-${widget.key}`, false, widget.path);
+    await createWidgetWindow(widget.path, false, false);
+  };
+
   const editWidgetAction = async () => {
     if (widget.key in templateWidgets) {
-      if (widget.visible || visible) {
+      const wasVisible = visible;
+      if (wasVisible) {
         await closeWidgetWindow(`widget-${widget.key}`, true, widget.path);
         setVisible(false);
       }
       const newManifest = await duplicateWidget(widget.path, false, true);
-      if (newManifest) {
-        if (widget.visible || visible) {
-          await createWidgetWindow(newManifest.path, false, true);
-        }
-        await editWidget(newManifest);
+      if (!newManifest) {
+        return;
       }
-      return;
+      if (wasVisible) {
+        await createWidgetWindow(newManifest.path, false, true);
+      }
+      await editWidget(newManifest);
     }
     await editWidget(widget);
   };
@@ -253,6 +260,16 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
                           setPinned((prev) => !prev);
                         }}>
                         {pinned ? "Unpin" : "Pin"}
+                      </MenuItem>
+                    )}
+                    {widget.widgetType === "html" && visible && (
+                      <MenuItem
+                        icon={<ArrowClockwiseRegular />}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          await refreshHTML();
+                        }}>
+                        Refresh
                       </MenuItem>
                     )}
                     <MenuItem
