@@ -106,8 +106,11 @@ pub fn run() {
         .plugin(tauri_plugin_prevent_default::debug())
         .plugin(localhost::Builder::new(port).build())
         .manage(std::sync::Mutex::new(audio::AudioState::new()))
+        .manage(tokio::sync::Mutex::new(media::MediaState::new()))
         .invoke_handler(tauri::generate_handler![
             media::get_media,
+            media::start_media_listener,
+            media::stop_media_listener,
             media::media_action,
             widget::get_all_widgets,
             widget::create_creator_window,

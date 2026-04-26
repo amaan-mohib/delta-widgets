@@ -1,5 +1,5 @@
 import { listen } from "@tauri-apps/api/event";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { IWidgetElement, TCustomFields } from "../types/manifest";
 import { invoke } from "@tauri-apps/api/core";
 import debounce from "lodash.debounce";
@@ -75,30 +75,42 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
     useVariableStore.setState({ customFields: customFieldsData });
   }, [customFields]);
 
+  const getMediaRef = useRef(
+    debounce(
+      () => {
+        invoke<IMedia[]>("get_media")
+          .then((data) => {
+            useVariableStore.setState({ media: data });
+            const selectedMedia = useVariableStore.getState().currentMedia;
+            const currentMedia = data.find((media) => media.is_current_session);
+
+            const selectedMediaNotInList = !data.find(
+              (media) => media.player_id === selectedMedia?.player_id,
+            );
+            if (currentMedia && (!selectedMedia || selectedMediaNotInList)) {
+              useVariableStore.setState({ currentMedia });
+            } else if (data.length > 0) {
+              useVariableStore.setState({ currentMedia: data[0] });
+            } else {
+              useVariableStore.setState({ currentMedia: null });
+            }
+          })
+          .catch(console.error);
+      },
+      300,
+      { leading: true },
+    ),
+  );
+
   useEffect(() => {
     if (!dynamicVariables.has("media")) return;
+    const getMedia = getMediaRef.current;
 
-    const getMedia = debounce(() => {
-      invoke<IMedia[]>("get_media")
-        .then((data) => {
-          useVariableStore.setState({ media: data });
-          const selectedMedia = useVariableStore.getState().currentMedia;
-          const currentMedia = data.find((media) => media.is_current_session);
-          const selectedMediaNotInList = !data.find(
-            (media) => media.player_id === selectedMedia?.player_id,
-          );
-          if (currentMedia && (!selectedMedia || selectedMediaNotInList)) {
-            useVariableStore.setState({ currentMedia });
-          } else if (data.length > 0) {
-            useVariableStore.setState({ currentMedia: data[0] });
-          } else {
-            useVariableStore.setState({ currentMedia: null });
-          }
-        })
-        .catch(console.error);
-    }, 300);
-
-    getMedia();
+    invoke("start_media_listener")
+      .then(() => {
+        getMedia();
+      })
+      .catch(console.error);
 
     const unsub = listen("media_updated", () => {
       getMedia();
