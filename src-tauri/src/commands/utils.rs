@@ -424,7 +424,7 @@ pub fn get_win32_icon(app: &tauri::AppHandle, app_id: &String) -> Result<(String
                 .to_string_lossy()
                 .to_lowercase();
             if n.ends_with(&app_id.to_lowercase()) {
-                ps = Some(p);
+                ps = Some(exe);
                 app_name = get_exe_display_name(exe).unwrap_or_default();
                 break;
             }
@@ -435,7 +435,7 @@ pub fn get_win32_icon(app: &tauri::AppHandle, app_id: &String) -> Result<(String
 
     if let Some(p) = ps {
         let encoded_app_id = get_encoded_app_id(app_id);
-        match get_icon_by_path(p.exe().expect("will be here")) {
+        match get_icon_by_path(p) {
             Ok(i) => {
                 icon_path = get_player_icon_path(app, &encoded_app_id);
                 i.save(&icon_path).map_err(|e| e.to_string())?;
