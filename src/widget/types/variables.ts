@@ -24,7 +24,8 @@ export interface IMedia {
   };
   player?: {
     name: string;
-    icon: number[];
+    icon: string;
+    is_uwp: boolean;
   };
   player_id: string;
   thumbnail: number[];

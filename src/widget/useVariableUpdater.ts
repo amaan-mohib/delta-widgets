@@ -5,6 +5,7 @@ import {
 } from "./stores/useVariableStore";
 import { Buffer } from "buffer";
 import { formatDate, formatDuration, humanStorageSize } from "./utils/utils";
+import { convertFileSrc } from "@tauri-apps/api/core";
 
 const FALLBACK_THUMB_URL =
   "https://cdn.pixabay.com/photo/2017/03/13/04/25/play-button-2138735_1280.png";
@@ -21,7 +22,6 @@ const useVariableUpdater = () => {
   const { currentDate, currentMedia, systemInfo, weatherInfo, customFields } =
     useVariableStore();
   const thumbnailBytesRef = useRef<number[] | null>(null);
-  const playerIconBytesRef = useRef<number[] | null>(null);
   const thumbnailUrlRef = useRef<string | null>(null);
   const playerIconUrlRef = useRef<string | null>(null);
 
@@ -90,36 +90,18 @@ const useVariableUpdater = () => {
     }
 
     const thumbnailBytes =
-      currentMedia.thumbnail.length > 0
-        ? currentMedia.thumbnail
-        : currentMedia.player && currentMedia.player?.icon.length > 0
-          ? currentMedia.player?.icon
-          : null;
+      currentMedia.thumbnail.length > 0 ? currentMedia.thumbnail : null;
 
     if (bytesChanged(thumbnailBytesRef.current, thumbnailBytes)) {
       thumbnailUrlRef.current = thumbnailBytes
         ? `data:image/png;base64,${Buffer.from(thumbnailBytes).toString(
             "base64",
           )}`
-        : FALLBACK_THUMB_URL;
+        : currentMedia.player && currentMedia.player.icon
+          ? convertFileSrc(currentMedia.player.icon)
+          : FALLBACK_THUMB_URL;
 
       thumbnailBytesRef.current = thumbnailBytes;
-    }
-
-    if (
-      bytesChanged(playerIconBytesRef.current, currentMedia.player?.icon ?? [])
-    ) {
-      if (playerIconUrlRef.current?.startsWith("blob:"))
-        URL.revokeObjectURL(playerIconUrlRef.current);
-
-      playerIconUrlRef.current =
-        currentMedia.player && currentMedia.player.icon?.length > 0
-          ? `data:image/png;base64,${Buffer.from(
-              currentMedia.player.icon,
-            ).toString("base64")}`
-          : FALLBACK_PLAYER_ICON;
-
-      playerIconBytesRef.current = currentMedia.player?.icon ?? [];
     }
 
     useDynamicTextStore.setState({
@@ -136,7 +118,9 @@ const useVariableUpdater = () => {
           case "thumbnail":
             return thumbnailUrlRef.current ?? FALLBACK_THUMB_URL;
           case "player_icon":
-            return playerIconUrlRef.current ?? FALLBACK_PLAYER_ICON;
+            return currentMedia.player && currentMedia.player.icon
+              ? convertFileSrc(currentMedia.player.icon)
+              : FALLBACK_PLAYER_ICON;
           case "position":
             return currentMedia.timeline_properties
               ? String(currentMedia.timeline_properties.position || "0")

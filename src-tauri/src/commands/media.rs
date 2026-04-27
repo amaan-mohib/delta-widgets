@@ -12,8 +12,7 @@ use tokio::{
 };
 use windows::{
     core::{Error, HSTRING},
-    ApplicationModel::AppDisplayInfo,
-    Foundation::{Size, TypedEventHandler},
+    Foundation::TypedEventHandler,
     Media::Control::{
         CurrentSessionChangedEventArgs, GlobalSystemMediaTransportControlsSession as MediaSession,
         GlobalSystemMediaTransportControlsSessionManager as MediaSessionManager,
@@ -24,6 +23,10 @@ use windows::{
     },
     Storage::Streams::{Buffer, DataReader, IRandomAccessStreamReference, InputStreamOptions},
     System::AppDiagnosticInfo,
+};
+
+use crate::commands::utils::{
+    get_app_icon, get_encoded_app_id, get_player_icon_path, get_win32_icon, read_cached_app_name,
 };
 
 #[derive(serde::Serialize, Debug)]
@@ -46,7 +49,8 @@ pub struct MediaPlaybackControls {
 #[derive(serde::Serialize, Debug)]
 pub struct MediaPlayerInfo {
     name: String,
-    icon: Vec<u8>,
+    icon: String,
+    is_uwp: bool,
 }
 #[derive(serde::Serialize, Debug)]
 pub struct MediaPlaybackInfo {
@@ -138,36 +142,61 @@ fn get_playback_status(&status: &SessionPlaybackStatus) -> String {
     }
 }
 
-fn get_app_icon(app_info: &AppDisplayInfo) -> Result<Vec<u8>, Error> {
-    let buffer = Buffer::Create(5_000_000)?;
-    let _ = app_info
-        .GetLogo(Size {
-            Height: 50.0,
-            Width: 50.0,
-        })?
-        .OpenReadAsync()?
-        .get()?
-        .ReadAsync(&buffer, buffer.Capacity()?, InputStreamOptions::ReadAhead)?
-        .get()?;
-    let reader = DataReader::FromBuffer(&buffer)?;
-    let mut bytes = vec![0; buffer.Length()? as usize];
-    reader.ReadBytes(&mut bytes)?;
-
-    Ok(bytes)
-}
-
-fn get_player_info(app_id: String) -> Result<MediaPlayerInfo, Error> {
+fn get_uwp_player_info(app: &AppHandle, app_id: &String) -> Result<MediaPlayerInfo, Error> {
     let hstring_app_id = HSTRING::from(app_id);
     let info_iterator = AppDiagnosticInfo::RequestInfoForAppUserModelId(&hstring_app_id)?
         .get()?
         .into_iter();
 
     let app_info = info_iterator.Current()?.AppInfo()?.DisplayInfo()?;
+    let app_name = app_info.DisplayName().unwrap_or_default().to_string_lossy();
+
+    let encoded_app_id = get_encoded_app_id(&app_id);
+    let icon_path = get_player_icon_path(app, &encoded_app_id);
+    if icon_path.exists() {
+        return Ok(MediaPlayerInfo {
+            name: app_name,
+            icon: icon_path.to_string_lossy().to_string(),
+            is_uwp: true,
+        });
+    }
 
     Ok(MediaPlayerInfo {
-        name: app_info.DisplayName().unwrap_or_default().to_string_lossy(),
-        icon: get_app_icon(&app_info).unwrap_or_default(),
+        name: app_name,
+        icon: get_app_icon(app, app_id, &app_info).unwrap_or_default(),
+        is_uwp: true,
     })
+}
+
+fn get_win32_player_info(app: &AppHandle, app_id: &String) -> Result<MediaPlayerInfo, Error> {
+    let encoded_app_id = get_encoded_app_id(app_id);
+    let icon_path = get_player_icon_path(app, &encoded_app_id);
+    if icon_path.exists() {
+        let name = read_cached_app_name(app, &encoded_app_id).unwrap_or_else(|| app_id.clone());
+        return Ok(MediaPlayerInfo {
+            name,
+            icon: icon_path.to_string_lossy().to_string(),
+            is_uwp: false,
+        });
+    }
+
+    let (icon, name) = get_win32_icon(app, app_id).unwrap_or_default();
+    Ok(MediaPlayerInfo {
+        name: if name.is_empty() {
+            app_id.clone()
+        } else {
+            name
+        },
+        icon,
+        is_uwp: false,
+    })
+}
+
+fn get_player_info(app: &AppHandle, app_id: String) -> Result<MediaPlayerInfo, Error> {
+    if let Ok(info) = get_uwp_player_info(app, &app_id) {
+        return Ok(info);
+    }
+    get_win32_player_info(app, &app_id)
 }
 
 fn get_media_thumbnail(
@@ -246,6 +275,7 @@ pub struct MediaState {
     listener: Option<ListenerState>,
     session_manager: Option<MediaSessionManager>,
     is_listening: bool,
+    fetch_lock: Arc<Mutex<()>>,
 }
 
 impl MediaState {
@@ -254,6 +284,7 @@ impl MediaState {
             listener: None,
             session_manager: None,
             is_listening: false,
+            fetch_lock: Arc::new(Mutex::new(())),
         }
     }
 }
@@ -429,6 +460,7 @@ fn build_listener_state(
 }
 
 fn build_media_info(
+    app: &AppHandle,
     session: &MediaSession,
     player_id: String,
     is_current_session: bool,
@@ -467,7 +499,7 @@ fn build_media_info(
                 .unwrap_or(false),
         });
 
-    let player = get_player_info(player_id.clone()).ok();
+    let player = get_player_info(app, player_id.clone()).ok();
 
     Ok(MediaInfo {
         title,
@@ -537,7 +569,18 @@ fn get_current_player_id(manager: &MediaSessionManager) -> String {
 }
 
 #[tauri::command]
-pub async fn get_media(media_state: State<'_, Mutex<MediaState>>) -> CommandResult<Vec<MediaInfo>> {
+pub async fn get_media(
+    app: AppHandle,
+    media_state: State<'_, Mutex<MediaState>>,
+) -> CommandResult<Vec<MediaInfo>> {
+    // Serialise concurrent calls — a second webview calling get_media while
+    // one is already in flight will wait here until the first completes.
+    let fetch_lock = {
+        let state = media_state.lock().await;
+        Arc::clone(&state.fetch_lock)
+    };
+    let _fetch_guard = fetch_lock.lock().await;
+
     let mut state = media_state.lock().await;
     let sessions: Vec<(MediaSession, String, bool)> = if let Some(listener) = &state.listener {
         let current_id = get_current_player_id(&listener.manager);
@@ -567,7 +610,8 @@ pub async fn get_media(media_state: State<'_, Mutex<MediaState>>) -> CommandResu
 
     let mut join_set = JoinSet::new();
     for (session, player_id, is_current) in sessions {
-        join_set.spawn_blocking(move || build_media_info(&session, player_id, is_current));
+        let app = app.clone();
+        join_set.spawn_blocking(move || build_media_info(&app, &session, player_id, is_current));
     }
 
     let mut players: Vec<MediaInfo> = Vec::with_capacity(join_set.len());
@@ -577,7 +621,11 @@ pub async fn get_media(media_state: State<'_, Mutex<MediaState>>) -> CommandResu
         }
     }
 
-    players.sort_by_key(|p| !p.is_current_session);
+    players.sort_by(|a, b| {
+        b.is_current_session
+            .cmp(&a.is_current_session)
+            .then_with(|| a.player_id.cmp(&b.player_id))
+    });
 
     Ok(players)
 }

@@ -9,23 +9,31 @@ import {
   MenuPopover,
   MenuTrigger,
 } from "@fluentui/react-components";
-import { Buffer } from "buffer";
 import { useVariableStore } from "../../stores/useVariableStore";
 import { IMedia } from "../../types/variables";
 import { PlayCircle20Regular } from "@fluentui/react-icons";
+import { convertFileSrc } from "@tauri-apps/api/core";
 
 interface MediaSelectProps {
   component: IWidgetElement;
 }
 
 const getImage = (
-  buffer: number[],
+  player: IMedia["player"],
   size?: { width: string; height: string },
 ) => {
-  return buffer.length > 0 ? (
+  return player && player.icon.length > 0 ? (
     <img
-      style={size || { width: "35px", height: "35px" }}
-      src={`data:image/png;base64,${Buffer.from(buffer).toString("base64")}`}
+      style={{
+        ...(size || {
+          width: player.is_uwp ? 45 : 38,
+          height: player.is_uwp ? 45 : 38,
+        }),
+        objectFit: "contain",
+        objectPosition: "center",
+        ...(player.is_uwp ? {} : { padding: size ? 16 : 10 }),
+      }}
+      src={convertFileSrc(player.icon)}
       alt="media icon"
     />
   ) : (
@@ -49,7 +57,7 @@ const MediaSelect: React.FC<MediaSelectProps> = ({ component }) => {
 
   return mediaList.length <= 1 ? (
     <Button
-      icon={getImage(currentMedia?.player?.icon || [], {
+      icon={getImage(currentMedia?.player, {
         width: imageSize,
         height: imageSize,
       })}
@@ -64,7 +72,8 @@ const MediaSelect: React.FC<MediaSelectProps> = ({ component }) => {
     <Menu positioning={{ autoSize: true }} hasIcons>
       <MenuTrigger disableButtonEnhancement>
         <MenuButton
-          icon={getImage(currentMedia?.player?.icon || [], {
+          className="media-btn-player-icon"
+          icon={getImage(currentMedia?.player, {
             width: imageSize,
             height: imageSize,
           })}
@@ -80,10 +89,11 @@ const MediaSelect: React.FC<MediaSelectProps> = ({ component }) => {
         <MenuList>
           {mediaList.map((item) => (
             <MenuItem
+              className="media-item-player-icon"
               onClick={() => {
                 onChange(item);
               }}
-              icon={getImage(item?.player?.icon || [])}
+              icon={getImage(item?.player)}
               key={item.player_id}>
               {getName(item)}
             </MenuItem>
