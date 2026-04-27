@@ -12,6 +12,7 @@ use tokio::{
 };
 use windows::{
     core::{Error, HSTRING},
+    ApplicationModel::AppDisplayInfo,
     Foundation::{Size, TypedEventHandler},
     Media::Control::{
         CurrentSessionChangedEventArgs, GlobalSystemMediaTransportControlsSession as MediaSession,
@@ -21,7 +22,7 @@ use windows::{
         MediaPropertiesChangedEventArgs, PlaybackInfoChangedEventArgs, SessionsChangedEventArgs,
         TimelinePropertiesChangedEventArgs,
     },
-    Storage::Streams::{Buffer, DataReader, InputStreamOptions},
+    Storage::Streams::{Buffer, DataReader, IRandomAccessStreamReference, InputStreamOptions},
     System::AppDiagnosticInfo,
 };
 
@@ -137,15 +138,9 @@ fn get_playback_status(&status: &SessionPlaybackStatus) -> String {
     }
 }
 
-fn get_app_name_from_id(app_id: String) -> Result<MediaPlayerInfo, Error> {
-    let hstring_app_id = HSTRING::from(app_id);
-    let info_iterator = AppDiagnosticInfo::RequestInfoForAppUserModelId(&hstring_app_id)?
-        .get()?
-        .into_iter();
-
-    let app_info = info_iterator.Current()?.AppInfo()?.DisplayInfo()?;
+fn get_app_icon(app_info: &AppDisplayInfo) -> Result<Vec<u8>, Error> {
     let buffer = Buffer::Create(5_000_000)?;
-    let _icon = app_info
+    let _ = app_info
         .GetLogo(Size {
             Height: 50.0,
             Width: 50.0,
@@ -158,10 +153,38 @@ fn get_app_name_from_id(app_id: String) -> Result<MediaPlayerInfo, Error> {
     let mut bytes = vec![0; buffer.Length()? as usize];
     reader.ReadBytes(&mut bytes)?;
 
+    Ok(bytes)
+}
+
+fn get_player_info(app_id: String) -> Result<MediaPlayerInfo, Error> {
+    let hstring_app_id = HSTRING::from(app_id);
+    let info_iterator = AppDiagnosticInfo::RequestInfoForAppUserModelId(&hstring_app_id)?
+        .get()?
+        .into_iter();
+
+    let app_info = info_iterator.Current()?.AppInfo()?.DisplayInfo()?;
+
     Ok(MediaPlayerInfo {
-        name: app_info.DisplayName()?.to_string_lossy(),
-        icon: bytes,
+        name: app_info.DisplayName().unwrap_or_default().to_string_lossy(),
+        icon: get_app_icon(&app_info).unwrap_or_default(),
     })
+}
+
+fn get_media_thumbnail(
+    thumbnail: Result<IRandomAccessStreamReference, Error>,
+) -> Result<Vec<u8>, Error> {
+    let buffer = Buffer::Create(5_000_000)?;
+    let _ = thumbnail?
+        .OpenReadAsync()?
+        .get()?
+        .ReadAsync(&buffer, buffer.Capacity()?, InputStreamOptions::ReadAhead)?
+        .get()?;
+
+    let reader = DataReader::FromBuffer(&buffer)?;
+    let mut bytes = vec![0; buffer.Length()? as usize];
+    reader.ReadBytes(&mut bytes)?;
+
+    Ok(bytes)
 }
 
 fn get_timeline_properties(
@@ -416,7 +439,7 @@ fn build_media_info(
 
     let title = props.Title()?.to_string();
     let artist = props.Artist()?.to_string();
-    let thumbnail = props.Thumbnail();
+    let thumbnail = get_media_thumbnail(props.Thumbnail()).unwrap_or_default();
     // println!("{} - {}", title, artist);
 
     let playback = playback_info
@@ -444,40 +467,12 @@ fn build_media_info(
                 .unwrap_or(false),
         });
 
-    let thumbnail_bytes: Vec<u8> = match thumbnail {
-        Ok(t) => {
-            let buffer = Buffer::Create(5_000_000)?;
-            let _thumbnail_buffer = t
-                .OpenReadAsync()?
-                .get()?
-                .ReadAsync(&buffer, buffer.Capacity()?, InputStreamOptions::ReadAhead)?
-                .get()?;
-
-            let reader = DataReader::FromBuffer(&buffer)?;
-            let mut bytes = vec![0; buffer.Length()? as usize];
-            reader.ReadBytes(&mut bytes)?;
-
-            bytes
-        }
-        Err(_) => {
-            vec![]
-        }
-    };
-    let player = Some(match get_app_name_from_id(player_id.clone()) {
-        Ok(p) => p,
-        Err(_e) => {
-            // println!("player info error for {}: {}", player_id, e);
-            MediaPlayerInfo {
-                name: String::new(),
-                icon: vec![],
-            }
-        }
-    });
+    let player = get_player_info(player_id.clone()).ok();
 
     Ok(MediaInfo {
         title,
         artist,
-        thumbnail: thumbnail_bytes,
+        thumbnail,
         playback_info: playback,
         player,
         player_id,

@@ -3,6 +3,7 @@ import {
   useDynamicTextStore,
   useVariableStore,
 } from "./stores/useVariableStore";
+import { Buffer } from "buffer";
 import { formatDate, formatDuration, humanStorageSize } from "./utils/utils";
 
 const FALLBACK_THUMB_URL =
@@ -91,37 +92,34 @@ const useVariableUpdater = () => {
     const thumbnailBytes =
       currentMedia.thumbnail.length > 0
         ? currentMedia.thumbnail
-        : currentMedia.player.icon.length > 0
-          ? currentMedia.player.icon
+        : currentMedia.player && currentMedia.player?.icon.length > 0
+          ? currentMedia.player?.icon
           : null;
 
     if (bytesChanged(thumbnailBytesRef.current, thumbnailBytes)) {
-      if (thumbnailUrlRef.current?.startsWith("blob:"))
-        URL.revokeObjectURL(thumbnailUrlRef.current);
-
       thumbnailUrlRef.current = thumbnailBytes
-        ? URL.createObjectURL(
-            new Blob([new Uint8Array(thumbnailBytes)], { type: "image/jpeg" }),
-          )
+        ? `data:image/png;base64,${Buffer.from(thumbnailBytes).toString(
+            "base64",
+          )}`
         : FALLBACK_THUMB_URL;
 
       thumbnailBytesRef.current = thumbnailBytes;
     }
 
-    if (bytesChanged(playerIconBytesRef.current, currentMedia.player.icon)) {
+    if (
+      bytesChanged(playerIconBytesRef.current, currentMedia.player?.icon ?? [])
+    ) {
       if (playerIconUrlRef.current?.startsWith("blob:"))
         URL.revokeObjectURL(playerIconUrlRef.current);
 
       playerIconUrlRef.current =
-        currentMedia.player.icon?.length > 0
-          ? URL.createObjectURL(
-              new Blob([new Uint8Array(currentMedia.player.icon)], {
-                type: "image/jpeg",
-              }),
-            )
+        currentMedia.player && currentMedia.player.icon?.length > 0
+          ? `data:image/png;base64,${Buffer.from(
+              currentMedia.player.icon,
+            ).toString("base64")}`
           : FALLBACK_PLAYER_ICON;
 
-      playerIconBytesRef.current = currentMedia.player.icon;
+      playerIconBytesRef.current = currentMedia.player?.icon ?? [];
     }
 
     useDynamicTextStore.setState({
@@ -132,69 +130,77 @@ const useVariableUpdater = () => {
           case "title":
             return currentMedia.title || "NA";
           case "player":
-            return currentMedia.player.name || currentMedia.player_id || "NA";
+            return currentMedia.player?.name || currentMedia.player_id || "NA";
           case "status":
-            return currentMedia.playback_info.status || "NA";
+            return currentMedia.playback_info?.status || "NA";
           case "thumbnail":
             return thumbnailUrlRef.current ?? FALLBACK_THUMB_URL;
           case "player_icon":
             return playerIconUrlRef.current ?? FALLBACK_PLAYER_ICON;
           case "position":
-            return String(currentMedia.timeline_properties.position) || "0";
+            return currentMedia.timeline_properties
+              ? String(currentMedia.timeline_properties.position || "0")
+              : "0";
           case "duration":
-            return String(
-              currentMedia.timeline_properties.end_time -
-                currentMedia.timeline_properties.start_time || "0",
-            );
+            return currentMedia.timeline_properties
+              ? String(
+                  currentMedia.timeline_properties.end_time -
+                    currentMedia.timeline_properties.start_time || "0",
+                )
+              : "0";
           case "position_text":
             return formatDuration(
-              Number(currentMedia.timeline_properties.position) || 0,
+              currentMedia.timeline_properties
+                ? Number(currentMedia.timeline_properties.position || 0)
+                : 0,
             );
           case "duration_text":
             return formatDuration(
-              Number(
-                currentMedia.timeline_properties.end_time -
-                  currentMedia.timeline_properties.start_time || "0",
-              ),
+              currentMedia.timeline_properties
+                ? Number(
+                    currentMedia.timeline_properties.end_time -
+                      currentMedia.timeline_properties.start_time || "0",
+                  )
+                : 0,
             );
           case "next_enabled":
             return (
-              String(currentMedia.playback_info.controls.next_enabled) ||
+              String(!!currentMedia.playback_info?.controls.next_enabled) ||
               "false"
             );
           case "prev_enabled":
             return (
-              String(currentMedia.playback_info.controls.prev_enabled) ||
+              String(!!currentMedia.playback_info?.controls.prev_enabled) ||
               "false"
             );
           case "play_enabled":
             return (
-              String(currentMedia.playback_info.controls.play_enabled) ||
+              String(!!currentMedia.playback_info?.controls.play_enabled) ||
               "false"
             );
           case "pause_enabled":
             return (
-              String(currentMedia.playback_info.controls.pause_enabled) ||
+              String(!!currentMedia.playback_info?.controls.pause_enabled) ||
               "false"
             );
           case "stop_enabled":
             return (
-              String(currentMedia.playback_info.controls.stop_enabled) ||
+              String(!!currentMedia.playback_info?.controls.stop_enabled) ||
               "false"
             );
           case "shuffle_enabled":
             return (
-              String(currentMedia.playback_info.controls.shuffle_enabled) ||
+              String(!!currentMedia.playback_info?.controls.shuffle_enabled) ||
               "false"
             );
           case "repeat_enabled":
             return (
-              String(currentMedia.playback_info.controls.repeat_enabled) ||
+              String(!!currentMedia.playback_info?.controls.repeat_enabled) ||
               "false"
             );
           case "toggle_enabled":
             return (
-              String(currentMedia.playback_info.controls.toggle_enabled) ||
+              String(!!currentMedia.playback_info?.controls.toggle_enabled) ||
               "false"
             );
           default:

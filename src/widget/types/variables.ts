@@ -2,7 +2,7 @@ export interface IMedia {
   artist: string;
   title: string;
   is_current_session: boolean;
-  playback_info: {
+  playback_info?: {
     controls: {
       next_enabled: boolean;
       pause_enabled: boolean;
@@ -22,13 +22,13 @@ export interface IMedia {
       | "opened"
       | "unknown";
   };
-  player: {
+  player?: {
     name: string;
     icon: number[];
   };
   player_id: string;
   thumbnail: number[];
-  timeline_properties: {
+  timeline_properties?: {
     start_time: number;
     end_time: number;
     position: number;

@@ -20,7 +20,7 @@ interface MediaSelectProps {
 
 const getImage = (
   buffer: number[],
-  size?: { width: string; height: string }
+  size?: { width: string; height: string },
 ) => {
   return buffer.length > 0 ? (
     <img
@@ -34,7 +34,7 @@ const getImage = (
 };
 
 const getName = (item: IMedia | null) => {
-  return item?.player.name || item?.player_id || "No media";
+  return item?.player?.name || item?.player_id || "No media";
 };
 
 const MediaSelect: React.FC<MediaSelectProps> = ({ component }) => {

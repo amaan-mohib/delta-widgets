@@ -93,10 +93,9 @@ export function humanStorageSize(bytes: number, si = false, dp = 1) {
 }
 
 export const createThumb = async (manifest: ILiteWidget, refresh = false) => {
+  const linksTransformed: HTMLLinkElement[] = [];
+
   try {
-    document.querySelectorAll("link").forEach((link) => {
-      link.setAttribute("crossorigin", "anonymous");
-    });
     const thumbPath = await path.resolve(manifest.path, "..", "thumb.png");
 
     if (!refresh) {
@@ -104,6 +103,19 @@ export const createThumb = async (manifest: ILiteWidget, refresh = false) => {
       if (thumbExists) return;
     }
 
+    document.querySelectorAll("link").forEach((link) => {
+      link.setAttribute("crossorigin", "anonymous");
+      if (link.href.startsWith("https://fonts.googleapis.com/css2")) {
+        link.setAttribute(
+          "href",
+          link.href.replace(
+            "https://fonts.googleapis.com/css2",
+            "https://fonts.bunny.net/css",
+          ),
+        );
+        linksTransformed.push(link);
+      }
+    });
     const blob = await toBlob(document.getElementById("widget-window")!);
     if (blob) {
       const arrayBuffer = await blob.arrayBuffer();
@@ -112,8 +124,17 @@ export const createThumb = async (manifest: ILiteWidget, refresh = false) => {
       await emitTo("main", "creator-close", {});
     }
   } catch (error) {
-    //skip logging error
     console.log(error);
+  } finally {
+    linksTransformed.forEach((link) => {
+      link.setAttribute(
+        "href",
+        link.href.replace(
+          "https://fonts.bunny.net/css",
+          "https://fonts.googleapis.com/css2",
+        ),
+      );
+    });
   }
 };
 
