@@ -1,4 +1,6 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use std::collections::HashSet;
+use std::fmt;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager, State};
@@ -11,6 +13,35 @@ pub struct AudioState {
     stream: Option<cpal::Stream>,
     last_device_id: String,
     is_running: bool,
+    pub listening_windows: HashSet<String>,
+}
+
+impl fmt::Debug for AudioState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        #[allow(unused)]
+        #[derive(Debug)]
+        struct AudioState<'a> {
+            last_device_id: &'a String,
+            is_running: &'a bool,
+            listening_windows: &'a HashSet<String>,
+        }
+
+        let Self {
+            last_device_id,
+            is_running,
+            listening_windows,
+            stream: _,
+        } = self;
+
+        fmt::Debug::fmt(
+            &AudioState {
+                last_device_id,
+                is_running,
+                listening_windows,
+            },
+            f,
+        )
+    }
 }
 
 impl AudioState {
@@ -19,13 +50,19 @@ impl AudioState {
             stream: None,
             last_device_id: String::new(),
             is_running: false,
+            listening_windows: HashSet::new(),
         }
     }
 }
 
 /// Start audio capture and monitor for device changes
-pub fn start_capture(app: AppHandle, audio_state: State<Mutex<AudioState>>) {
+pub fn start_capture(
+    app: AppHandle,
+    window: &tauri::WebviewWindow,
+    audio_state: &State<Mutex<AudioState>>,
+) {
     let mut state = audio_state.lock().unwrap();
+    state.listening_windows.insert(window.label().to_string());
 
     if state.is_running {
         println!("Audio capture already running");
@@ -152,18 +189,23 @@ fn build_and_start_stream(app: AppHandle, device: &cpal::Device) -> Result<(), S
 }
 
 /// Stop audio capture
-pub fn stop_capture(audio_state: State<Mutex<AudioState>>) {
+pub fn stop_capture(label: &String, audio_state: &State<Mutex<AudioState>>) {
     let mut state = audio_state.lock().unwrap();
     state.is_running = false;
     state.stream = None;
+    state.listening_windows.remove(label);
     println!("Audio capture stopped");
 }
 
 /// Restart audio capture (useful when device changes or for manual restart)
-pub fn restart_capture(app: AppHandle, audio_state: State<Mutex<AudioState>>) {
-    stop_capture(audio_state.clone());
+pub fn restart_capture(
+    app: AppHandle,
+    window: &tauri::WebviewWindow,
+    audio_state: State<Mutex<AudioState>>,
+) {
+    stop_capture(&window.label().to_string(), &audio_state);
     std::thread::sleep(Duration::from_millis(100)); // Brief delay
-    start_capture(app, audio_state);
+    start_capture(app, window, &audio_state);
 }
 
 pub fn get_current_device() -> Result<String, String> {
@@ -258,18 +300,26 @@ where
 }
 
 #[tauri::command]
-pub fn start_audio_capture(app: tauri::AppHandle, audio_state: State<Mutex<AudioState>>) {
-    start_capture(app, audio_state);
+pub fn start_audio_capture(
+    app: tauri::AppHandle,
+    window: tauri::WebviewWindow,
+    audio_state: State<Mutex<AudioState>>,
+) {
+    start_capture(app, &window, &audio_state);
 }
 
 #[tauri::command]
-pub fn stop_audio_capture(audio_state: State<Mutex<AudioState>>) {
-    stop_capture(audio_state);
+pub fn stop_audio_capture(window: tauri::WebviewWindow, audio_state: State<Mutex<AudioState>>) {
+    stop_capture(&window.label().to_string(), &audio_state);
 }
 
 #[tauri::command]
-pub fn restart_audio_capture(app: tauri::AppHandle, audio_state: State<Mutex<AudioState>>) {
-    restart_capture(app, audio_state);
+pub fn restart_audio_capture(
+    app: tauri::AppHandle,
+    window: tauri::WebviewWindow,
+    audio_state: State<Mutex<AudioState>>,
+) {
+    restart_capture(app, &window, audio_state);
 }
 
 #[tauri::command]

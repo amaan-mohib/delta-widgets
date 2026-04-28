@@ -407,29 +407,21 @@ export const toggleAlwaysOnTop = async (
   manifestPath: string,
   value: boolean,
 ) => {
-  try {
-    const path = await getManifestPath(manifestPath);
-    await invoke("toggle_always_on_top", { value, path: JSON.stringify(path) });
-  } catch (error) {
-    console.error(error);
-    await message("Could not set always on top", {
-      title: "Error",
-      kind: "error",
-    });
-  }
+  const path = await getManifestPath(manifestPath);
+  await invoke("update_manifest_value", {
+    field: "alwaysOnTop",
+    value,
+    path: JSON.stringify(path),
+  });
 };
 
 export const togglePinned = async (manifestPath: string, value: boolean) => {
-  try {
-    const path = await getManifestPath(manifestPath);
-    await invoke("toggle_pinned", { value, path: JSON.stringify(path) });
-  } catch (error) {
-    console.error(error);
-    await message("Could not set pinned", {
-      title: "Error",
-      kind: "error",
-    });
-  }
+  const path = await getManifestPath(manifestPath);
+  await invoke("update_manifest_value", {
+    field: "pinned",
+    value,
+    path: JSON.stringify(path),
+  });
 };
 
 export const openManifestFolder = async (manifestPath: string) => {

@@ -4,7 +4,7 @@ use std::{
     sync::Arc,
     time::Duration,
 };
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, State, WebviewWindow};
 use tokio::{
     sync::Mutex,
     task::{JoinError, JoinSet},
@@ -229,16 +229,19 @@ fn get_timeline_properties(
     })
 }
 
+#[derive(Debug)]
 struct EventStore {
     playback_token: i64,
     metadata_token: i64,
     timeline_token: i64,
 }
+#[derive(Debug)]
 struct SessionStore {
     session: MediaSession,
     event_tokens: EventStore,
 }
 
+#[derive(Debug)]
 struct ListenerState {
     manager: MediaSessionManager,
     sessions_changed_token: i64,
@@ -271,11 +274,13 @@ impl ListenerState {
     }
 }
 
+#[derive(Debug)]
 pub struct MediaState {
     listener: Option<ListenerState>,
     session_manager: Option<MediaSessionManager>,
     is_listening: bool,
     fetch_lock: Arc<Mutex<()>>,
+    pub listening_windows: HashSet<String>,
 }
 
 impl MediaState {
@@ -285,6 +290,7 @@ impl MediaState {
             session_manager: None,
             is_listening: false,
             fetch_lock: Arc::new(Mutex::new(())),
+            listening_windows: HashSet::new(),
         }
     }
 }
@@ -513,12 +519,13 @@ fn build_media_info(
     })
 }
 
-#[tauri::command]
 pub async fn start_media_listener(
-    app: AppHandle,
-    media_state: State<'_, Mutex<MediaState>>,
+    app: &AppHandle,
+    window: &WebviewWindow,
+    media_state: &State<'_, Mutex<MediaState>>,
 ) -> CommandResult<()> {
     let mut state = media_state.lock().await;
+    state.listening_windows.insert(window.label().to_string());
 
     if state.is_listening {
         println!("media listener already running");
@@ -532,14 +539,23 @@ pub async fn start_media_listener(
     state.listener = Some(listener);
     state.is_listening = true;
 
-    drop(state);
     println!("media listener started");
-
     Ok(())
 }
 
 #[tauri::command]
-pub async fn stop_media_listener(media_state: State<'_, Mutex<MediaState>>) -> CommandResult<()> {
+pub async fn start_media_listener_cmd(
+    app: AppHandle,
+    window: WebviewWindow,
+    media_state: State<'_, Mutex<MediaState>>,
+) -> CommandResult<()> {
+    start_media_listener(&app, &window, &media_state).await
+}
+
+pub async fn stop_media_listener(
+    label: &String,
+    media_state: &State<'_, Mutex<MediaState>>,
+) -> CommandResult<()> {
     let mut state = media_state.lock().await;
 
     if !state.is_listening {
@@ -553,11 +569,18 @@ pub async fn stop_media_listener(media_state: State<'_, Mutex<MediaState>>) -> C
 
     state.session_manager = None;
     state.is_listening = false;
+    state.listening_windows.remove(label);
 
-    drop(state);
     println!("media listener stopped");
-
     Ok(())
+}
+
+#[tauri::command]
+pub async fn stop_media_listener_cmd(
+    window: WebviewWindow,
+    media_state: State<'_, Mutex<MediaState>>,
+) -> CommandResult<()> {
+    stop_media_listener(&window.label().to_string(), &media_state).await
 }
 
 fn get_current_player_id(manager: &MediaSessionManager) -> String {

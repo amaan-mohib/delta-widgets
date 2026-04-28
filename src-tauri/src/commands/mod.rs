@@ -2,6 +2,7 @@ pub mod analytics;
 pub mod audio;
 pub mod media;
 pub mod migrate;
+pub mod services;
 pub mod store;
 pub mod system;
 pub mod utils;

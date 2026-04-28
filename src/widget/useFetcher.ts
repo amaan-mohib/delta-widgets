@@ -106,7 +106,7 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
     if (!dynamicVariables.has("media")) return;
     const getMedia = getMediaRef.current;
 
-    invoke("start_media_listener")
+    invoke("start_media_listener_cmd")
       .then(() => {
         getMedia();
       })

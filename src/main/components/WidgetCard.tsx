@@ -8,6 +8,7 @@ import {
   Menu,
   MenuButton,
   MenuItem,
+  MenuItemProps,
   MenuList,
   MenuPopover,
   MenuTrigger,
@@ -18,7 +19,7 @@ import {
   ToastTitle,
   useToastController,
 } from "@fluentui/react-components";
-import React, { useEffect } from "react";
+import React, { ReactNode, useEffect } from "react";
 import {
   closeWidgetWindow,
   createCreatorWindow,
@@ -48,6 +49,7 @@ import { emitTo } from "@tauri-apps/api/event";
 import { templateWidgets } from "../../common";
 import { useDataStore } from "../stores/useDataStore";
 import { useAddDialogStore } from "../stores/useAddDialogStore";
+import { message } from "@tauri-apps/plugin-dialog";
 
 interface WidgetCardProps {
   widget: ILiteWidget;
@@ -96,6 +98,151 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
     setPinned(widget.pinned ?? false);
   }, [widget]);
 
+  const menuItems: {
+    key: string;
+    icon: MenuItemProps["icon"];
+    onClick: MenuItemProps["onClick"];
+    children: ReactNode;
+    condition?: boolean;
+  }[] = [
+    {
+      key: "duplicate",
+      icon: <CopyRegular />,
+      onClick: async (e) => {
+        e.stopPropagation();
+        await duplicateWidget(widget.path, !!saves);
+        updateAllWidgets();
+      },
+      children: saves ? "Clone" : "Duplicate",
+      condition: true,
+    },
+    {
+      key: "edit-json",
+      icon: <EditRegular />,
+      onClick: async (e) => {
+        e.stopPropagation();
+        editWidgetAction();
+      },
+      children: "Edit",
+      condition: !saves && widget.widgetType === "json",
+    },
+    {
+      key: "edit-url",
+      icon: <EditRegular />,
+      onClick: (e) => {
+        e.stopPropagation();
+        setDialogState({
+          open: true,
+          type: "url",
+          path: widget.path,
+          existingManifest: {
+            label: widget.label,
+            url: widget.url,
+            key: widget.key,
+            widgetType: "url",
+            path: widget.path,
+          },
+          manifest: null,
+        });
+      },
+      children: "Edit",
+      condition: !saves && widget.widgetType === "url",
+    },
+    {
+      key: "edit-html",
+      icon: <EditRegular />,
+      onClick: (e) => {
+        e.stopPropagation();
+        importHTML(widget);
+      },
+      children: "Edit",
+      condition: !saves && widget.widgetType === "html",
+    },
+    {
+      key: "remove",
+      icon: <DeleteRegular />,
+      onClick: async (e) => {
+        e.stopPropagation();
+        await removeWidget(widget.path, widget);
+        updateAllWidgets();
+      },
+      children: "Remove",
+      condition: !(widget.key in templateWidgets),
+    },
+    {
+      key: "show-manifest",
+      icon: <FolderRegular />,
+      onClick: async (e) => {
+        e.stopPropagation();
+        openManifestFolder(widget.path);
+      },
+      children: "Show manifest",
+      condition: true,
+    },
+    {
+      key: "refresh-thumbnail",
+      icon: <ImageArrowCounterclockwiseRegular />,
+      onClick: async (e) => {
+        e.stopPropagation();
+        await emitTo(`widget-${widget.key}`, "update-thumb", {
+          key: widget.key,
+        });
+      },
+      children: "Refresh thumbnail",
+      condition:
+        !saves &&
+        widget.widgetType === "json" &&
+        visible &&
+        !(widget.key in templateWidgets),
+    },
+    {
+      key: "pin",
+      icon: pinned ? <PinOffRegular /> : <PinRegular />,
+      onClick: async (e) => {
+        e.stopPropagation();
+        try {
+          await togglePinned(widget.path, !pinned);
+          setPinned((prev) => !prev);
+        } catch (error) {
+          await message("Could not set pinned", {
+            title: "Error",
+            kind: "error",
+          });
+        }
+      },
+      children: pinned ? "Unpin" : "Pin",
+      condition: !saves && widget.widgetType !== "html",
+    },
+    {
+      key: "refresh-html",
+      icon: <ArrowClockwiseRegular />,
+      onClick: async (e) => {
+        e.stopPropagation();
+        await refreshHTML();
+      },
+      children: "Refresh",
+      condition: !saves && widget.widgetType === "html" && visible,
+    },
+    {
+      key: "always-on-top",
+      icon: alwaysOnTop ? <CheckmarkRegular /> : undefined,
+      onClick: async (e) => {
+        e.stopPropagation();
+        try {
+          await toggleAlwaysOnTop(widget.path, !alwaysOnTop);
+          setAlwaysOnTop((prev) => !prev);
+        } catch (error) {
+          await message("Could not set always on top", {
+            title: "Error",
+            kind: "error",
+          });
+        }
+      },
+      children: "Always on Top",
+      condition: !saves,
+    },
+  ];
+
   const toggleWidget = async (checked: boolean) => {
     if (checked) {
       await createWidgetWindow(widget.path, false, true);
@@ -139,9 +286,6 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
     await editWidget(widget);
   };
 
-  const showRefreshThumbnail =
-    widget.widgetType === "json" && visible && !(widget.key in templateWidgets);
-
   return (
     <Card
       role="listitem"
@@ -167,122 +311,16 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
             </MenuTrigger>
             <MenuPopover>
               <MenuList>
-                <MenuItem
-                  icon={<CopyRegular />}
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    await duplicateWidget(widget.path, !!saves);
-                    updateAllWidgets();
-                  }}>
-                  {saves ? "Clone" : "Duplicate"}
-                </MenuItem>
-                {!saves && widget.widgetType === "json" && (
-                  <MenuItem
-                    icon={<EditRegular />}
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      editWidgetAction();
-                    }}>
-                    Edit
-                  </MenuItem>
-                )}
-                {!saves && widget.widgetType === "url" && (
-                  <MenuItem
-                    icon={<EditRegular />}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDialogState({
-                        open: true,
-                        type: "url",
-                        path: widget.path,
-                        existingManifest: {
-                          label: widget.label,
-                          url: widget.url,
-                          key: widget.key,
-                          widgetType: "url",
-                          path: widget.path,
-                        },
-                        manifest: null,
-                      });
-                    }}>
-                    Edit
-                  </MenuItem>
-                )}
-                {!saves && widget.widgetType === "html" && (
-                  <MenuItem
-                    icon={<EditRegular />}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      importHTML(widget);
-                    }}>
-                    Edit
-                  </MenuItem>
-                )}
-                {widget.key in templateWidgets ? null : (
-                  <MenuItem
-                    icon={<DeleteRegular />}
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      await removeWidget(widget.path, widget);
-                      updateAllWidgets();
-                    }}>
-                    Remove
-                  </MenuItem>
-                )}
-                <MenuItem
-                  icon={<FolderRegular />}
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    openManifestFolder(widget.path);
-                  }}>
-                  Show manifest
-                </MenuItem>
-                {!saves && (
-                  <>
-                    {showRefreshThumbnail && (
-                      <MenuItem
-                        icon={<ImageArrowCounterclockwiseRegular />}
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          await emitTo(`widget-${widget.key}`, "update-thumb", {
-                            key: widget.key,
-                          });
-                        }}>
-                        Refresh thumbnail
-                      </MenuItem>
-                    )}
-                    {widget.widgetType !== "html" && (
-                      <MenuItem
-                        icon={pinned ? <PinOffRegular /> : <PinRegular />}
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          await togglePinned(widget.path, !pinned);
-                          setPinned((prev) => !prev);
-                        }}>
-                        {pinned ? "Unpin" : "Pin"}
-                      </MenuItem>
-                    )}
-                    {widget.widgetType === "html" && visible && (
-                      <MenuItem
-                        icon={<ArrowClockwiseRegular />}
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          await refreshHTML();
-                        }}>
-                        Refresh
-                      </MenuItem>
-                    )}
+                {menuItems
+                  .filter((item) => item.condition)
+                  .map((item) => (
                     <MenuItem
-                      icon={alwaysOnTop ? <CheckmarkRegular /> : undefined}
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        await toggleAlwaysOnTop(widget.path, !alwaysOnTop);
-                        setAlwaysOnTop((prev) => !prev);
-                      }}>
-                      Always on Top
+                      key={item.key}
+                      icon={item.icon}
+                      onClick={item.onClick}>
+                      {item.children}
                     </MenuItem>
-                  </>
-                )}
+                  ))}
               </MenuList>
             </MenuPopover>
           </Menu>

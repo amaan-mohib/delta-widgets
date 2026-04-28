@@ -28,6 +28,7 @@ const VisualizerComponent: React.FC<VisualizerComponentProps> = ({
 
   const visualizerData = useMemo(() => component.data || {}, [component.data]);
   const data = useVariableStore((state) => state.audioSamples);
+  const isCapturing = useDataTrackStore((state) => state.audioSampleCapturing);
 
   useEffect(() => {
     dataRef.current = data;
@@ -68,7 +69,7 @@ const VisualizerComponent: React.FC<VisualizerComponentProps> = ({
       if (!canvas) return;
 
       const data = dataRef.current;
-      if (!data.length || data.every((v) => v === 0)) {
+      if (!data.length || data.every((v) => v === 0) || !isCapturing) {
         drawFlatLine(canvas, visualizerData);
         animationRef.current = requestAnimationFrame(draw);
         return;
@@ -90,7 +91,7 @@ const VisualizerComponent: React.FC<VisualizerComponentProps> = ({
 
     animationRef.current = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(animationRef.current!);
-  }, [visualizerData]);
+  }, [visualizerData, isCapturing]);
 
   return (
     <canvas

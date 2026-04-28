@@ -8,16 +8,10 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import React from "react";
 import { IWidget } from "../../types/manifest";
-import {
-  disableWindowDrag,
-  enableWindowDrag,
-  getManifestFromPath,
-  getManifestPath,
-} from "../../main/utils/widgets";
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { getManifestPath, togglePinned } from "../../main/utils/widgets";
 import { useDataTrackStore } from "../stores/useDataTrackStore";
 import { emitTo } from "@tauri-apps/api/event";
-import { updateManifest } from "../utils/utils";
+import { message } from "@tauri-apps/plugin-dialog";
 
 interface ToolbarProps {}
 
@@ -37,22 +31,14 @@ const closeWidget = async (manifest: IWidget) => {
 
 const pinWidget = async (manifestPath: string, isPinned: boolean) => {
   try {
-    const manifest = await getManifestFromPath(manifestPath);
-    await updateManifest({
-      ...manifest,
-      path: manifestPath,
-      pinned: isPinned,
-    });
-    const window = await WebviewWindow.getByLabel(`widget-${manifest.key}`);
-    window?.setResizable(!isPinned);
-    if (isPinned) {
-      disableWindowDrag();
-    } else {
-      enableWindowDrag();
-    }
+    await togglePinned(manifestPath, isPinned);
     await emitTo("main", "creator-close", {});
   } catch (error) {
     console.error(error);
+    await message("Could not set pinned", {
+      title: "Error",
+      kind: "error",
+    });
   }
 };
 

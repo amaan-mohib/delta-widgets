@@ -4,7 +4,7 @@ pub mod migrations;
 mod plugins;
 mod setup;
 
-use commands::{analytics, audio, media, migrate, store, system, widget};
+use commands::{analytics, audio, media, migrate, services, store, system, widget};
 use log::LevelFilter;
 use plugins::localhost;
 use setup::init::init_app;
@@ -61,22 +61,21 @@ pub fn run() {
         .manage(tokio::sync::Mutex::new(media::MediaState::new()))
         .invoke_handler(tauri::generate_handler![
             media::get_media,
-            media::start_media_listener,
-            media::stop_media_listener,
+            media::start_media_listener_cmd,
+            media::stop_media_listener_cmd,
             media::media_action,
-            widget::get_all_widgets,
+            services::get_all_widgets,
+            services::copy_custom_assets,
+            services::copy_custom_assets_dir,
+            services::apply_blur_theme,
+            services::create_url_thumbnail,
+            services::update_manifest_value,
             widget::create_creator_window,
             widget::create_widget_window,
             widget::close_widget_window,
-            widget::copy_custom_assets,
             widget::publish_widget,
             widget::toggle_widget_visibility,
-            widget::toggle_always_on_top,
-            widget::copy_custom_assets_dir,
-            widget::apply_blur_theme,
             widget::open_devtools,
-            widget::create_url_thumbnail,
-            widget::toggle_pinned,
             system::get_system_info,
             analytics::track_analytics_event,
             store::write_to_store_cmd,
