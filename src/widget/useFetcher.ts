@@ -1,12 +1,11 @@
 import { listen } from "@tauri-apps/api/event";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { IWidgetElement, TCustomFields } from "../types/manifest";
-import { invoke } from "@tauri-apps/api/core";
 import debounce from "lodash.debounce";
-import { IMedia, ISystemInformation } from "./types/variables";
 import { useVariableStore } from "./stores/useVariableStore";
 import { getCityFromIp, getWeather } from "./utils/weather";
 import { useDataTrackStore } from "./stores/useDataTrackStore";
+import { commands } from "../common/commands";
 
 const extractDynamicVariables = (
   elements: IWidgetElement[],
@@ -78,7 +77,8 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
   const getMediaRef = useRef(
     debounce(
       () => {
-        invoke<IMedia[]>("get_media")
+        commands
+          .getMedia()
           .then((data) => {
             useVariableStore.setState({ media: data });
             const selectedMedia = useVariableStore.getState().currentMedia;
@@ -106,7 +106,8 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
     if (!dynamicVariables.has("media")) return;
     const getMedia = getMediaRef.current;
 
-    invoke("start_media_listener_cmd")
+    commands
+      .startMediaListenerCmd()
       .then(() => {
         getMedia();
       })
@@ -145,7 +146,7 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
 
     (async () => {
       try {
-        const data = await invoke<ISystemInformation>("get_system_info", {
+        const data = await commands.getSystemInfo({
           hasNetwork: typesSet.has("network"),
         });
         useVariableStore.setState({ systemInfo: data });

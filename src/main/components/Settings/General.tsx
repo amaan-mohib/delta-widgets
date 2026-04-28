@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import * as autostart from "@tauri-apps/plugin-autostart";
-import { invoke } from "@tauri-apps/api/core";
 import { Body2, Button, Switch } from "@fluentui/react-components";
+import { commands } from "../../../common/commands";
 
 interface IProps {}
 
@@ -14,7 +14,7 @@ const General: React.FC<IProps> = () => {
     } else {
       await autostart.enable();
     }
-    await invoke("write_to_store_cmd", {
+    await commands.writeToStoreCmd({
       key: "autostart",
       value: !autostartEnabled,
     });
@@ -54,13 +54,13 @@ const General: React.FC<IProps> = () => {
           <div>
             <Button
               onClick={() => {
-                invoke("migrate", { direction: "up" });
+                commands.migrate({ direction: "up" });
               }}>
               Migrate Up
             </Button>
             <Button
               onClick={() => {
-                invoke("migrate", { direction: "down" });
+                commands.migrate({ direction: "down" });
               }}>
               Migrate Down
             </Button>

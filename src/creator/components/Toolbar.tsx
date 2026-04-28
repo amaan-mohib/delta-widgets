@@ -23,7 +23,6 @@ import {
 import { message } from "@tauri-apps/plugin-dialog";
 import { useDataTrackStore } from "../stores/useDataTrackStore";
 import {
-  closeWidgetWindow,
   createWidgetWindow,
   openManifestFolder,
   publishWidget,
@@ -38,6 +37,7 @@ import { ThemePicker } from "../theme/Theme";
 import { Webview } from "@tauri-apps/api/webview";
 import { updateManifest } from "../../widget/utils/utils";
 import { getAllWebviewWindows } from "@tauri-apps/api/webviewWindow";
+import { closeWidgetWindow } from "../../common";
 
 interface ToolbarProps {}
 

@@ -21,7 +21,6 @@ import {
 } from "@fluentui/react-components";
 import React, { ReactNode, useEffect } from "react";
 import {
-  closeWidgetWindow,
   createCreatorWindow,
   createWidgetWindow,
   duplicateWidget,
@@ -46,7 +45,7 @@ import { ILiteWidget } from "../../types/manifest";
 import { sendMixpanelEvent } from "../utils/analytics";
 import WidgetPreview from "./WidgetPreview";
 import { emitTo } from "@tauri-apps/api/event";
-import { templateWidgets } from "../../common";
+import { closeWidgetWindow, templateWidgets } from "../../common";
 import { useDataStore } from "../stores/useDataStore";
 import { useAddDialogStore } from "../stores/useAddDialogStore";
 import { message } from "@tauri-apps/plugin-dialog";

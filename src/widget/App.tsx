@@ -1,10 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDataTrackStore } from "./stores/useDataTrackStore";
-import {
-  disableWindowDrag,
-  enableWindowDrag,
-  getManifestFromPath,
-} from "../main/utils/widgets";
+import { disableWindowDrag, enableWindowDrag } from "../main/utils/widgets";
 import Element from "./components/Element";
 import useFetcher from "./useFetcher";
 import useVariableUpdater from "./useVariableUpdater";
@@ -12,7 +8,7 @@ import FontPicker from "react-fontpicker-ts";
 import { useCustomAssets } from "../creator/hooks/useCustomAssets";
 import { createThumb } from "./utils/utils";
 import { listen } from "@tauri-apps/api/event";
-import { templateWidgets } from "../common";
+import { getManifestFromPath, templateWidgets } from "../common";
 import Toolbar from "./components/Toolbar";
 
 import "./index.css";

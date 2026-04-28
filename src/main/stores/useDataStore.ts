@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { ILiteWidget } from "../../types/manifest";
 import { createCreatorWindow, isWidgetInDraft } from "../utils/widgets";
 import { sendMixpanelEvent } from "../utils/analytics";
-import { invoke } from "@tauri-apps/api/core";
+import { commands } from "../../common/commands";
 
 export type TActiveTab = "installed" | "drafts" | "marketplace";
 export type TSettingsActiveTab = "general" | "theme" | "about";
@@ -20,12 +20,6 @@ interface IDataStore {
   editWidget: (widget: ILiteWidget) => Promise<void>;
 }
 
-interface IGetAllWidget {
-  manifest: ILiteWidget;
-  path: string;
-  modifiedAt: number;
-  isDraft: boolean;
-}
 type TWidgetWithDate = ILiteWidget & { modifiedAt: number };
 
 export const useDataStore = create<IDataStore>((set, get) => ({
@@ -40,7 +34,7 @@ export const useDataStore = create<IDataStore>((set, get) => ({
     try {
       set({ loading: true });
 
-      const allWidgets = await invoke<IGetAllWidget[]>("get_all_widgets");
+      const allWidgets = await commands.getAllWidgets();
       const installedWidgets: TWidgetWithDate[] = [];
       const draftWidgets: TWidgetWithDate[] = [];
       allWidgets.forEach((widget) => {

@@ -2,7 +2,7 @@ import React, { useCallback } from "react";
 import { IWidgetElement } from "../../../types/manifest";
 import ButtonComponent from "../ButtonComponent";
 import { useVariableStore } from "../../stores/useVariableStore";
-import { invoke } from "@tauri-apps/api/core";
+import { commands } from "../../../common/commands";
 
 interface PrevButtonProps {
   component: IWidgetElement;
@@ -15,16 +15,18 @@ const PrevButton: React.FC<PrevButtonProps> = ({ component }) => {
     mediaList.find((item) => item.is_current_session)?.player_id ===
     currentMedia?.player_id;
   const prevEnabled =
-    !!currentMedia?.playback_info.controls?.prev_enabled &&
+    !!currentMedia?.playback_info?.controls?.prev_enabled &&
     isSelectedMediaCurrentSession;
 
   const onClick = useCallback(async () => {
     if (!currentMedia) return;
 
-    await invoke("media_action", {
-      playerId: currentMedia?.player_id,
-      action: "prev",
-    }).catch(console.error);
+    await commands
+      .mediaAction({
+        playerId: currentMedia?.player_id,
+        action: "prev",
+      })
+      .catch(console.error);
   }, [currentMedia]);
 
   return (

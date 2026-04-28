@@ -7,10 +7,10 @@ import { nanoid } from "nanoid";
 import CreatorToolbar from "./components/Toolbar";
 import { useDataTrackStore } from "./stores/useDataTrackStore";
 import Properties from "./components/Properties";
-import { getManifestFromPath } from "../main/utils/widgets";
 import DnDWrapper from "./components/DnD/DnDWrapper";
-import "./index.css";
 import { useCustomAssets } from "./hooks/useCustomAssets";
+import { getManifestFromPath } from "../common";
+import "./index.css";
 
 const useStyles = makeStyles({
   toolbar: {

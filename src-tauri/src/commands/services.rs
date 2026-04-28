@@ -279,7 +279,7 @@ pub async fn update_manifest_value(
     // Write the updated JSON back to the file
     if let Ok(json_string) = serde_json::to_string_pretty(&config) {
         fs::write(&clean_path, &json_string).map_err(|e| e.to_string())?;
-        app.emit_to(format!("widget-{}", key), "update-manifest", 1)
+        app.emit_to(label, "update-manifest", 1)
             .map_err(|e| e.to_string())?;
         return Ok(json_string);
     }

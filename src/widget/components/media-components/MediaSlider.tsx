@@ -1,8 +1,8 @@
 import React, { useCallback } from "react";
 import { IWidgetElement } from "../../../types/manifest";
 import { useVariableStore } from "../../stores/useVariableStore";
-import { invoke } from "@tauri-apps/api/core";
 import SliderComponent from "../SliderComponent";
+import { commands } from "../../../common/commands";
 
 interface MediaSliderProps {
   component: IWidgetElement;
@@ -19,13 +19,15 @@ const MediaSlider: React.FC<MediaSliderProps> = ({ component }) => {
     async (value: number) => {
       if (!currentMedia) return;
 
-      await invoke("media_action", {
-        playerId: currentMedia?.player_id,
-        action: "position",
-        position: value,
-      }).catch(console.error);
+      await commands
+        .mediaAction({
+          playerId: currentMedia.player_id,
+          action: "position",
+          position: value,
+        })
+        .catch(console.error);
     },
-    [currentMedia]
+    [currentMedia],
   );
 
   return (

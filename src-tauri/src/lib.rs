@@ -74,7 +74,6 @@ pub fn run() {
             widget::create_widget_window,
             widget::close_widget_window,
             widget::publish_widget,
-            widget::toggle_widget_visibility,
             widget::open_devtools,
             system::get_system_info,
             analytics::track_analytics_event,

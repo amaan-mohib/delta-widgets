@@ -8,8 +8,8 @@ import {
 } from "../../../common/utils";
 import { IWidgetElement } from "../../../types/manifest";
 import { useVariableStore } from "../../stores/useVariableStore";
-import { invoke } from "@tauri-apps/api/core";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
+import { commands } from "../../../common/commands";
 
 const ATTACK = 0.6; // how fast it rises (lower = faster)
 const DECAY = 0.9; // how slow it falls (higher = slower)
@@ -55,7 +55,8 @@ const VisualizerComponent: React.FC<VisualizerComponentProps> = ({
   }
 
   useEffect(() => {
-    invoke("start_audio_capture")
+    commands
+      .startAudioCapture()
       .then(() => {
         useDataTrackStore.setState({ audioSampleCapturing: true });
       })

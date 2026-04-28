@@ -10,7 +10,7 @@ use std::{
     sync::Mutex,
     time::{Duration, SystemTime},
 };
-use tauri::{Manager, PhysicalPosition, PhysicalSize};
+use tauri::{Emitter, Manager, PhysicalPosition, PhysicalSize};
 use tauri_plugin_system_info::SysInfoState;
 use tokio::time::{sleep, Instant};
 use windows::{
@@ -182,6 +182,7 @@ fn save_window_state(window: &tauri::WebviewWindow, config_path: String) {
 
 pub fn attach_window_events(new_window: tauri::WebviewWindow, clean_path: String) {
     let debounce_state = std::sync::Arc::new(Mutex::new(None::<Instant>));
+    let fired = std::sync::Arc::new(std::sync::Once::new());
     new_window.clone().on_window_event(move |event| {
         match event {
             tauri::WindowEvent::Moved(_) | tauri::WindowEvent::Resized(_) => {
@@ -217,6 +218,15 @@ pub fn attach_window_events(new_window: tauri::WebviewWindow, clean_path: String
                 if new_window.is_minimized().unwrap() {
                     new_window.unminimize().unwrap();
                 }
+            }
+            tauri::WindowEvent::CloseRequested { .. } | tauri::WindowEvent::Destroyed => {
+                fired.call_once(|| {
+                    let _ = new_window.app_handle().emit_to(
+                        "main",
+                        "creator-close",
+                        clean_path.clone(),
+                    );
+                });
             }
             _ => {}
         };

@@ -5,7 +5,7 @@ import { toBlob } from "html-to-image";
 import { ILiteWidget, IWidget } from "../../types/manifest";
 import { formatInTimeZone } from "date-fns-tz";
 import { emitTo } from "@tauri-apps/api/event";
-import { getManifestPath } from "../../main/utils/widgets";
+import { getManifestPath } from "../../common";
 
 const DATE_REGEX = /^(.+?)(?::\[(.+?)\])?$/g;
 

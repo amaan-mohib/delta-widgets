@@ -3,7 +3,7 @@ import { nanoid } from "nanoid";
 import React from "react";
 import { fileOrFolderPicker } from "../../../main/utils/widgets";
 import { DeleteRegular, DocumentRegular } from "@fluentui/react-icons";
-import { invoke } from "@tauri-apps/api/core";
+import { commands } from "../../../common/commands";
 
 interface IImageData {
   key: string;
@@ -25,7 +25,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ setImage, imageData }) => {
     });
     if (path) {
       const key = `${nanoid()}.${path.split(".").at(-1)}`;
-      await invoke("copy_custom_assets", {
+      await commands.copyCustomAssets({
         key,
         path,
       });

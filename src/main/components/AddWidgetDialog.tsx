@@ -13,13 +13,13 @@ import { CodeRegular, FolderRegular, LinkRegular } from "@fluentui/react-icons";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   addWidget,
-  closeWidgetWindow,
   createWidgetWindow,
   fileOrFolderPicker,
   removeWidget,
 } from "../utils/widgets";
 import { useDataStore } from "../stores/useDataStore";
 import { useAddDialogStore } from "../stores/useAddDialogStore";
+import { closeWidgetWindow } from "../../common";
 
 const URL_REGEX =
   /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/;

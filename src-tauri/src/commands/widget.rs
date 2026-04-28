@@ -387,26 +387,6 @@ pub async fn publish_widget(app: tauri::AppHandle, path: String) -> Result<Strin
 }
 
 #[tauri::command]
-pub async fn toggle_widget_visibility(_app: tauri::AppHandle, visibility: bool, path: String) {
-    let clean_path = serde_json::from_str::<String>(&path).unwrap();
-    let config_content = fs::read_to_string(&clean_path).unwrap();
-
-    // Parse the existing JSON
-    let mut config: Value = match serde_json::from_str(&config_content) {
-        Ok(json) => json,
-        Err(_) => json!({}),
-    };
-
-    if let Value::Object(ref mut map) = config {
-        map.insert(String::from("visible"), json!(visibility));
-    }
-    // Write the updated JSON back to the file
-    if let Ok(json_string) = serde_json::to_string_pretty(&config) {
-        let _ = fs::write(&clean_path, json_string);
-    }
-}
-
-#[tauri::command]
 pub async fn open_devtools(app: tauri::AppHandle, label: String) {
     #[allow(unused)]
     if let Some(window) = app.get_webview_window(&label) {

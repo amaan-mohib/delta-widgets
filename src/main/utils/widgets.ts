@@ -1,5 +1,5 @@
 import { path } from "@tauri-apps/api";
-import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { message, open } from "@tauri-apps/plugin-dialog";
 import {
   exists,
@@ -16,6 +16,12 @@ import { nanoid } from "nanoid";
 import { ILiteWidget, IWidget } from "../../types/manifest";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { Buffer } from "buffer";
+import { commands } from "../../common/commands";
+import {
+  closeWidgetWindow,
+  getManifestFromPath,
+  getManifestPath,
+} from "../../common";
 
 export const getWidgetsDirPath = async (saves?: boolean) => {
   const appDataDir = await path.appDataDir();
@@ -166,7 +172,7 @@ export const addWidget = async (
         existingManifest.file === data.path &&
         key === existingManifest.key;
       if (!skipCopy) {
-        await invoke("copy_custom_assets_dir", { key, path: data.path });
+        await commands.copyCustomAssetsDir({ key, path: data.path });
       }
       manifest = {
         ...(existingManifest || {}),
@@ -315,17 +321,9 @@ export const createCreatorWindow = async (
   } else {
     projectFolder = await path.resolve(manifestPath, "..");
   }
-  await invoke("create_creator_window", {
+  await commands.createCreatorWindow({
     manifestPath: projectFolder,
   });
-};
-
-/** Get manifest path with manifest.json attached */
-export const getManifestPath = async (manifestPath: string) => {
-  if (!manifestPath.endsWith("manifest.json")) {
-    manifestPath = await path.resolve(manifestPath, "manifest.json");
-  }
-  return manifestPath;
 };
 
 export const createWidgetWindow = async (
@@ -336,12 +334,13 @@ export const createWidgetWindow = async (
   try {
     const pathWithJSON = await getManifestPath(manifestPath);
     if (toggleVisibility) {
-      await invoke("toggle_widget_visibility", {
-        visibility: true,
+      await commands.updateManifestValue({
+        field: "visible",
+        value: true,
         path: JSON.stringify(pathWithJSON),
       });
     }
-    await invoke("create_widget_window", {
+    await commands.createWidgetWindow({
       path: JSON.stringify(pathWithJSON),
       isPreview,
     });
@@ -359,39 +358,10 @@ export const createWidgetWindow = async (
   }
 };
 
-export const closeWidgetWindow = async (
-  label: string,
-  toggleVisibility?: boolean,
-  path?: string,
-) => {
-  try {
-    if (toggleVisibility && path) {
-      const pathWithJSON = await getManifestPath(path);
-      await invoke("toggle_widget_visibility", {
-        visibility: false,
-        path: JSON.stringify(pathWithJSON),
-      });
-    }
-    await invoke("close_widget_window", { label });
-  } catch (error) {
-    console.error(error);
-    await message("Could not close widget window", {
-      title: "Error",
-      kind: "error",
-    });
-  }
-};
-
-export const getManifestFromPath = async (manifestPath: string) => {
-  manifestPath = await getManifestPath(manifestPath);
-  const manifest = await readTextFile(manifestPath);
-  return JSON.parse(manifest) as Omit<IWidget, "path">;
-};
-
 export const publishWidget = async (manifestPath: string) => {
   try {
     const path = await getManifestPath(manifestPath);
-    return await invoke<string>("publish_widget", {
+    return await commands.publishWidget({
       path: JSON.stringify(path),
     });
   } catch (error) {
@@ -408,7 +378,7 @@ export const toggleAlwaysOnTop = async (
   value: boolean,
 ) => {
   const path = await getManifestPath(manifestPath);
-  await invoke("update_manifest_value", {
+  await commands.updateManifestValue({
     field: "alwaysOnTop",
     value,
     path: JSON.stringify(path),
@@ -417,7 +387,7 @@ export const toggleAlwaysOnTop = async (
 
 export const togglePinned = async (manifestPath: string, value: boolean) => {
   const path = await getManifestPath(manifestPath);
-  await invoke("update_manifest_value", {
+  await commands.updateManifestValue({
     field: "pinned",
     value,
     path: JSON.stringify(path),
@@ -466,7 +436,7 @@ export const createUrlThumbnail = async (url: string) => {
       }
     }
     if (shouldCreate) {
-      size = await invoke<number>("create_url_thumbnail", {
+      size = await commands.createUrlThumbnail({
         url: urlObj.origin,
         fileName,
       });
