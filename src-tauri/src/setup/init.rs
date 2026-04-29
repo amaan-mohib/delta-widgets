@@ -16,9 +16,9 @@ use crate::{
     setup::utils::copy_embedded_dir,
 };
 
-static TEMPLATES: Dir = include_dir!("$CARGO_MANIFEST_DIR/widget_templates");
+pub static TEMPLATES: Dir = include_dir!("$CARGO_MANIFEST_DIR/widget_templates");
 
-fn init_updater(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+fn init_updater(app: &tauri::App) -> anyhow::Result<()> {
     if !cfg!(debug_assertions) {
         app.handle()
             .plugin(tauri_plugin_updater::Builder::new().build())?;
@@ -48,7 +48,7 @@ fn init_updater(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn init_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+fn init_tray(app: &tauri::App) -> anyhow::Result<()> {
     let show_i = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&show_i, &quit_i])?;
@@ -77,7 +77,7 @@ fn init_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn init_autostart(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+fn init_autostart(app: &tauri::App) -> anyhow::Result<()> {
     #[cfg(target_os = "windows")]
     let is_autostart = std::env::args().any(|arg| arg == "--autostart");
 
@@ -88,7 +88,7 @@ fn init_autostart(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let is_autostart = std::env::args().any(|arg| arg == "--autostart");
 
     let Some(main_window) = app.get_webview_window("main") else {
-        return Err("no main window found".into());
+        anyhow::bail!("no main window found");
     };
     if is_autostart {
         main_window.hide()?; // keep window hidden
@@ -126,7 +126,7 @@ fn init_autostart(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn init_widgets(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+fn init_widgets(app: &tauri::App) -> anyhow::Result<()> {
     let widgets_dir = app
         .path()
         .resolve("widgets", tauri::path::BaseDirectory::AppData)?
@@ -199,7 +199,7 @@ fn init_widgets(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub fn init_app(app: &&mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+pub fn init_app(app: &&mut tauri::App) -> anyhow::Result<()> {
     ensure_paths(&app);
     init_updater(&app)?;
     init_tray(&app)?;

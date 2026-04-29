@@ -60,4 +60,6 @@ export const templateWidgets: Record<string, string> = {
   media: "templates/media/thumb.png",
   ram: "templates/ram/thumb.png",
   weather: "templates/weather/thumb.png",
+  "visualizer-delta-default": "templates/visualizer/thumb.png",
+  "media-viz-delta-default": "templates/media-viz/thumb.png",
 };

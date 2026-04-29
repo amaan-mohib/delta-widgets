@@ -1,0 +1,105 @@
+{
+  "dimensions": {
+    "height": 238,
+    "width": 420
+  },
+  "elements": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "data": {
+                "amplitudeMultiplier": 1,
+                "color": "#59bfffff",
+                "fillColor": "#edd84c63",
+                "gap": 8,
+                "strokeWidth": "8px",
+                "type": "bar"
+              },
+              "id": "audio-visualizer-OoT6",
+              "label": "audio-visualizer-OoT6",
+              "styles": {
+                "backgroundColor": "rgba(211, 32, 32, 0)",
+                "backgroundImage": ""
+              },
+              "type": "audio-visualizer"
+            }
+          ],
+          "id": "container-8Imc",
+          "styles": {
+            "background": "transparent",
+            "borderRadius": 2,
+            "display": "flex",
+            "flex": 1,
+            "height": "100%",
+            "padding": 5,
+            "width": "100%"
+          },
+          "type": "container"
+        },
+        {
+          "children": [
+            {
+              "data": {
+                "text": "<p><strong>{{media:title}}</strong> - {{media:artist}}</p>"
+              },
+              "id": "text-dmNk",
+              "label": "text-dmNk",
+              "styles": {
+                "fontSize": "12px",
+                "lineHeight": "12px"
+              },
+              "type": "text"
+            },
+            {
+              "data": {
+                "size": "small",
+                "type": "subtle"
+              },
+              "id": "button-dDgp",
+              "label": "button-dDgp",
+              "styles": {},
+              "type": "toggle-visualizer"
+            }
+          ],
+          "data": {
+            "imageData": null
+          },
+          "id": "container-bKHF",
+          "label": "container-bKHF",
+          "styles": {
+            "alignItems": "center",
+            "background": "transparent",
+            "borderRadius": 2,
+            "display": "flex",
+            "flex": 0.01,
+            "height": "100%",
+            "justifyContent": "space-between",
+            "padding": 5,
+            "width": "100%"
+          },
+          "type": "container"
+        }
+      ],
+      "data": {},
+      "id": "container",
+      "label": "container",
+      "styles": {
+        "background": "transparent",
+        "backgroundColor": "rgba(13, 0, 68, 0.90)",
+        "backgroundImage": "",
+        "borderRadius": "10px",
+        "display": "flex",
+        "flex": 1,
+        "flexDirection": "column",
+        "padding": "5px",
+        "width": "100%"
+      },
+      "type": "container"
+    }
+  ],
+  "key": "visualizer-delta-default",
+  "label": "Visualizer",
+  "widgetType": "json"
+}

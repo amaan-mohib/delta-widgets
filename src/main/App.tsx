@@ -112,7 +112,9 @@ function App() {
     <main className="container">
       {showSettings ? <SettingsSidebar /> : <Sidebar />}
 
-      <div style={{ flex: 1 }} ref={containerRef}>
+      <div
+        style={{ flex: 1, ...(showSettings ? { minHeight: "100vh" } : {}) }}
+        ref={containerRef}>
         {loading ? (
           <div className={styles.container} role="list">
             {Array(9)
