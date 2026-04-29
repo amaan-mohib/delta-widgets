@@ -8,7 +8,7 @@ use tauri::{
 };
 use tauri_plugin_autostart::ManagerExt;
 
-use crate::commands::store;
+use crate::commands::store::{self, KVPair};
 use crate::migrations::all_migrations;
 use crate::{commands::widget::create_widget_window, setup::utils::ensure_paths};
 use crate::{
@@ -110,7 +110,13 @@ fn init_autostart(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         }
         None => {
             // Default to enabled if not set
-            let _ = store::write_to_store(app.handle(), "autostart", serde_json::json!(true));
+            let _ = store::write_to_store(
+                app.handle(),
+                vec![KVPair {
+                    key: "autostart".to_string(),
+                    value: serde_json::json!(true),
+                }],
+            );
             if !autostart_enabled {
                 autostart_manager.enable()?;
             }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Card,
   makeStyles,
@@ -58,6 +58,7 @@ function App() {
     showSettings,
   } = useDataStore();
   const [key, setKey] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     updateAllWidgets();
@@ -67,6 +68,9 @@ function App() {
 
   useEffect(() => {
     const unsub = listen<string>("creator-close", () => {
+      if (containerRef.current) {
+        containerRef.current.style.minHeight = `${containerRef.current.clientHeight}px`;
+      }
       updateAllWidgets().then(() => {
         setKey((prev) => prev + 1);
       });
@@ -108,7 +112,7 @@ function App() {
     <main className="container">
       {showSettings ? <SettingsSidebar /> : <Sidebar />}
 
-      <div style={{ flex: 1 }}>
+      <div style={{ flex: 1 }} ref={containerRef}>
         {loading ? (
           <div className={styles.container} role="list">
             {Array(9)

@@ -15,8 +15,12 @@ const General: React.FC<IProps> = () => {
       await autostart.enable();
     }
     await commands.writeToStoreCmd({
-      key: "autostart",
-      value: !autostartEnabled,
+      pairs: [
+        {
+          key: "autostart",
+          value: !autostartEnabled,
+        },
+      ],
     });
     setAutostartEnabled((prev) => !prev);
   }, [autostartEnabled]);

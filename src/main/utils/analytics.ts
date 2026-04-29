@@ -10,8 +10,12 @@ export const getOrCreateClientId = async () => {
   } else {
     const clientId = nanoid();
     await commands.writeToStoreCmd({
-      key: "clientId",
-      value: clientId,
+      pairs: [
+        {
+          key: "clientId",
+          value: clientId,
+        },
+      ],
     });
     return clientId;
   }
@@ -44,8 +48,12 @@ export const trackInstall = async () => {
 
     await sendMixpanelEvent("install", {});
     await commands.writeToStoreCmd({
-      key: "installTracked",
-      value: true,
+      pairs: [
+        {
+          key: "installTracked",
+          value: true,
+        },
+      ],
     });
   } catch (error) {
     console.error("Error tracking install:", error);
@@ -70,8 +78,12 @@ export const trackUpdated = async () => {
       }
 
       await commands.writeToStoreCmd({
-        key: "lastUpdatedVersion",
-        value: currentVersion,
+        pairs: [
+          {
+            key: "lastUpdatedVersion",
+            value: currentVersion,
+          },
+        ],
       });
     }
   } catch (error) {

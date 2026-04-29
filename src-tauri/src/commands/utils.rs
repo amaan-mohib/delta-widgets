@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use base64::{prelude::BASE64_STANDARD, Engine};
 use image::GenericImageView;
 use serde_json::{json, Value};
@@ -14,7 +15,7 @@ use tauri::{Emitter, Manager, PhysicalPosition, PhysicalSize};
 use tauri_plugin_system_info::SysInfoState;
 use tokio::time::{sleep, Instant};
 use windows::{
-    core::{Error, PCWSTR},
+    core::PCWSTR,
     ApplicationModel::AppDisplayInfo,
     Foundation::Size,
     Storage::Streams::{Buffer, DataReader, InputStreamOptions},
@@ -254,15 +255,13 @@ pub fn compare_if_no_thumb(bytes: &[u8]) -> bool {
     diff < 5.0
 }
 
-fn generate_webp_preview(src: &str, dst: &Path) -> Result<(), String> {
+fn generate_webp_preview(src: &str, dst: &Path) -> anyhow::Result<()> {
     use image::ImageReader;
 
-    let file = std::fs::File::open(src).map_err(|e| e.to_string())?;
-    let reader = ImageReader::new(std::io::BufReader::new(file))
-        .with_guessed_format()
-        .map_err(|e| e.to_string())?;
+    let file = std::fs::File::open(src)?;
+    let reader = ImageReader::new(std::io::BufReader::new(file)).with_guessed_format()?;
 
-    let img = reader.decode().map_err(|e| e.to_string())?;
+    let img = reader.decode()?;
 
     let (w, h) = img.dimensions();
 
@@ -281,14 +280,14 @@ fn generate_webp_preview(src: &str, dst: &Path) -> Result<(), String> {
     let encoder = webp::Encoder::from_rgba(&rgba, rgba.width(), rgba.height());
     let webp = encoder.encode(70.0);
 
-    fs::write(dst, &*webp).map_err(|e| e.to_string())?;
+    fs::write(dst, &*webp)?;
 
     Ok(())
 }
 
-pub fn get_wallpaper_preview(app: &tauri::AppHandle) -> Result<String, String> {
-    let wallpaper_path = wallpaper::get().map_err(|e| e.to_string())?;
-    let cache_dir = app.path().app_cache_dir().map_err(|e| e.to_string())?;
+pub fn get_wallpaper_preview(app: &tauri::AppHandle) -> anyhow::Result<String> {
+    let wallpaper_path = wallpaper::get().map_err(|e| anyhow!("{:?}", e))?;
+    let cache_dir = app.path().app_cache_dir()?;
     let cached_file = cache_dir.join("wallpaper.webp");
     let should_regenerate = match fs::metadata(&cached_file) {
         Ok(meta) => {
@@ -339,7 +338,7 @@ pub fn get_app_icon(
     app: &tauri::AppHandle,
     app_id: &String,
     app_info: &AppDisplayInfo,
-) -> Result<String, Error> {
+) -> anyhow::Result<String> {
     let buffer = Buffer::Create(5_000_000)?;
     let _ = app_info
         .GetLogo(Size {
@@ -356,8 +355,7 @@ pub fn get_app_icon(
 
     let encoded_app_id = get_encoded_app_id(app_id);
     let icon_path = get_player_icon_path(app, &encoded_app_id);
-    fs::write(&icon_path, &bytes)
-        .map_err(|e| Error::new(windows::core::HRESULT(1), e.to_string()))?;
+    fs::write(&icon_path, &bytes)?;
 
     Ok(icon_path.to_string_lossy().to_string())
 }
@@ -416,7 +414,7 @@ pub fn get_exe_display_name(exe_path: &Path) -> Option<String> {
     None
 }
 
-pub fn get_win32_icon(app: &tauri::AppHandle, app_id: &String) -> Result<(String, String), String> {
+pub fn get_win32_icon(app: &tauri::AppHandle, app_id: &String) -> anyhow::Result<(String, String)> {
     let state = SysInfoState::default();
     let mut sysinfo = state.sysinfo.lock().unwrap();
     std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
@@ -448,7 +446,7 @@ pub fn get_win32_icon(app: &tauri::AppHandle, app_id: &String) -> Result<(String
         match get_icon_by_path(p) {
             Ok(i) => {
                 icon_path = get_player_icon_path(app, &encoded_app_id);
-                i.save(&icon_path).map_err(|e| e.to_string())?;
+                i.save(&icon_path)?;
             }
             Err(e) => {
                 eprintln!("{e}");
@@ -456,7 +454,7 @@ pub fn get_win32_icon(app: &tauri::AppHandle, app_id: &String) -> Result<(String
         }
 
         let name_path = get_player_name_path(app, &encoded_app_id);
-        fs::write(&name_path, &app_name).map_err(|e| e.to_string())?;
+        fs::write(&name_path, &app_name)?;
     }
 
     Ok((

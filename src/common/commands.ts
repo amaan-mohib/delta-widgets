@@ -57,7 +57,7 @@ export const commands = {
     distinctId: string;
     extraProperties: Record<string, any>;
   }) => invoke<void>("track_analytics_event", params),
-  writeToStoreCmd: (params: { key: string; value: any }) =>
+  writeToStoreCmd: (params: { pairs: { key: string; value: any }[] }) =>
     invoke<void>("write_to_store_cmd", params),
   migrate: (params: { direction: "up" | "down" }) =>
     invoke<void>("migrate", params),

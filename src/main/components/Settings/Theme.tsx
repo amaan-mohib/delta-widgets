@@ -30,16 +30,20 @@ interface ThemeProps {}
 
 const onSave = async (mode: string, color: string, overrideTheme: boolean) => {
   await commands.writeToStoreCmd({
-    key: "mode",
-    value: mode,
-  });
-  await commands.writeToStoreCmd({
-    key: "color",
-    value: color,
-  });
-  await commands.writeToStoreCmd({
-    key: "overrideTheme",
-    value: overrideTheme,
+    pairs: [
+      {
+        key: "mode",
+        value: mode,
+      },
+      {
+        key: "color",
+        value: color,
+      },
+      {
+        key: "overrideTheme",
+        value: overrideTheme,
+      },
+    ],
   });
 };
 
