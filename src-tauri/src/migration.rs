@@ -38,7 +38,7 @@ pub trait Migration {
     }
 
     fn add_new_widget(&self, new_widget_name: &str, widgets_root_path: &PathBuf) -> Result<()> {
-        let new_widget_path = widgets_root_path.join(new_widget_name);
+        let new_widget_path = widgets_root_path.join(format!("{new_widget_name}-delta-default"));
         if new_widget_path.exists() {
             return Ok(());
         }
@@ -53,7 +53,7 @@ pub trait Migration {
     }
 
     fn remove_widget(&self, widget_name: &str, widgets_root_path: &PathBuf) -> Result<()> {
-        let widget_path = widgets_root_path.join(widget_name);
+        let widget_path = widgets_root_path.join(format!("{widget_name}-delta-default"));
         if !widget_path.exists() {
             return Ok(());
         }
