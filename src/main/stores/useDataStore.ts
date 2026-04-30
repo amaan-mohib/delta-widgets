@@ -18,6 +18,7 @@ interface IDataStore {
   updateAllWidgets: () => Promise<void>;
   createWidget: () => Promise<void>;
   editWidget: (widget: ILiteWidget) => Promise<void>;
+  openWhatsNew: boolean;
 }
 
 type TWidgetWithDate = ILiteWidget & { modifiedAt: number };
@@ -83,4 +84,5 @@ export const useDataStore = create<IDataStore>((set, get) => ({
     set({ settingsActiveTab: tab });
   },
   showSettings: false,
+  openWhatsNew: false,
 }));

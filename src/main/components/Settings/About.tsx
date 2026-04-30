@@ -36,7 +36,7 @@ interface AboutProps {}
 
 const About: React.FC<AboutProps> = () => {
   const [appName, setAppName] = useState<string>("Delta Widgets");
-  const [version, setVersion] = useState<string>("v0.0.1");
+  const [version, setVersion] = useState<string>("0.0.1");
   const [updateData, setUpdateData] = useState<Update | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [updateLoading, setUpdateLoading] = useState<boolean>(false);

@@ -19,6 +19,7 @@ import Settings from "./components/Settings";
 import MartketplaceWaitlist from "./components/MartketplaceWaitlist";
 import "./App.css";
 import AddWidgetDialog from "./components/AddWidgetDialog";
+import WhatsNew from "./components/WhatsNew";
 
 const useStyles = makeStyles({
   container: {
@@ -170,6 +171,7 @@ function App() {
       </div>
 
       <AddWidgetDialog />
+      <WhatsNew />
       <Toaster toasterId={"toaster"} />
     </main>
   );
