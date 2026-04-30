@@ -374,13 +374,14 @@ pub fn get_exe_display_name(exe_path: &Path) -> Option<String> {
 
     let mut buffer = vec![0u8; size as usize];
     unsafe {
-        GetFileVersionInfoW(
+        if let Err(err) = GetFileVersionInfoW(
             PCWSTR(path_wide.as_ptr()),
             Some(0),
             size,
             buffer.as_mut_ptr() as _,
-        )
-        .ok()?
+        ) {
+            eprintln!("error file info: {:?}", err);
+        };
     };
 
     // Try FileDescription first, fall back to ProductName
@@ -422,21 +423,30 @@ pub fn get_win32_icon(app: &tauri::AppHandle, app_id: &String) -> anyhow::Result
 
     let processes = sysinfo.sys.processes();
 
+    let app_id_stem = Path::new(&app_id)
+        .file_stem()
+        .unwrap_or(app_id.as_ref())
+        .to_string_lossy();
+
     let mut ps: Option<_> = None;
     let mut app_name = String::new();
     for (_, p) in processes {
         if let Some(exe) = p.exe() {
             let n = exe
-                .file_prefix()
-                .get_or_insert_default()
+                .file_stem()
+                .unwrap_or_default()
                 .to_string_lossy()
                 .to_lowercase();
-            if n.ends_with(&app_id.to_lowercase()) {
+            if n.ends_with(&app_id_stem.to_lowercase()) {
                 ps = Some(exe);
                 app_name = get_exe_display_name(exe).unwrap_or_default();
                 break;
             }
         }
+    }
+
+    if app_name.is_empty() {
+        app_name = app_id_stem.to_string();
     }
 
     let mut icon_path = PathBuf::new();
