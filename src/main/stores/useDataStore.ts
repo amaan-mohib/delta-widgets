@@ -34,8 +34,6 @@ export const useDataStore = create<IDataStore>((set, get) => ({
   },
   updateAllWidgets: async () => {
     try {
-      set({ loading: true });
-
       const allWidgets = await commands.getAllWidgets();
       const installedWidgets: TWidgetWithDate[] = [];
       const draftWidgets: TWidgetWithDate[] = [];
