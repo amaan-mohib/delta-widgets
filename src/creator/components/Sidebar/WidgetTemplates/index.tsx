@@ -43,6 +43,13 @@ const templates = [
     manifest: "/templates/weather/manifest.json",
   },
   {
+    name: "Audio Visualizer",
+    description:
+      "A widget that visualizes the any currently playing media in the form of bars or waveforms.",
+    image: "/templates/visualizer/thumb.png",
+    manifest: "/templates/visualizer/manifest.json",
+  },
+  {
     name: "Disks",
     description:
       "A widget that displays information about the system's disks, including usage and available space.",

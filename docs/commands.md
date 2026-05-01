@@ -11,7 +11,7 @@ Here's a list of available commands, their purpose, and usage examples.
     import { invoke } from "@tauri-apps/api/core";
     ```
 
-    your app must be built using a frontend bundler (like Vite or Webpack).
+    Your app must be built using a frontend bundler (like Vite or Webpack).
 
     If you're running in a raw browser (before build), use:
 
@@ -21,11 +21,24 @@ Here's a list of available commands, their purpose, and usage examples.
 
 ## Command Reference
 
-| Command           | Description                                    | Parameters                  | Returns                                 |
-| ----------------- | ---------------------------------------------- | --------------------------- | --------------------------------------- |
-| `get_system_info` | Get system info like CPU, RAM, uptime.         | _None_                      | Promise<[SystemInfo](#systeminfo)\>     |
-| `get_media`       | Fetch currently playing media details.         | _None_                      | Promise<[MediaObject[]](#mediaobject)\> |
-| `media_action`    | Perform action on the currently playing media. | [MediaAction](#mediaaction) | Promise<void\>                          |
+| Command                    | Description                                                                   | Parameters                  | Returns                                 |
+| -------------------------- | ----------------------------------------------------------------------------- | --------------------------- | --------------------------------------- |
+| `get_system_info`          | Returns current system information such as CPU usage, memory usage, etc.      | _None_                      | Promise<[SystemInfo](#systeminfo)\>     |
+| `start_media_listener_cmd` | Starts the system media session listener required for `media_updated` events. | _None_                      | Promise<void\>                          |
+| `stop_media_listener_cmd`  | Stops the active system media session listener.                               | _None_                      | Promise<void\>                          |
+| `get_media`                | Returns metadata for all currently available media sessions.                  | _None_                      | Promise<[MediaObject[]](#mediaobject)\> |
+| `media_action`             | Perform action on the currently playing media.                                | [MediaAction](#mediaaction) | Promise<void\>                          |
+| `start_audio_capture`      | Starts capturing live system audio samples for waveform visualization.        | _None_                      | Promise<void\>                          |
+| `stop_audio_capture`       | Stops the active system audio capture stream.                                 | _None_                      | Promise<void\>                          |
+| `get_current_device_cmd`   | Returns the ID of the current audio output device.                            | _None_                      | Promise<String\>                        |
+
+Use `start_media_listener_cmd` to begin monitoring system media metadata. Once started, the application will emit a `media_updated` event whenever information about the currently playing media changes (such as title, artist, album art, or playback state).
+
+To receive live system audio waveform samples, call `start_audio_capture`. This starts an audio capture stream that emits `audio-samples` events approximately every 33 ms.
+
+Because continuous audio capture can increase CPU usage, it is recommended to call `stop_audio_capture` when audio sample updates are no longer needed.
+
+See the list of all available events [here](events.md).
 
 ### SystemInfo
 
@@ -58,6 +71,16 @@ Here's a list of available commands, their purpose, and usage examples.
 | `timeline_properties` | [MediaTimelineProperties](#mediatimelineproperties)? | Optional timeline properties             |
 | `is_current_session`  | bool                                                 | Indicates if this is the current session |
 
+!!! info
+
+    Binary data needs to be converted to base64 to use it as an image. Example:
+
+    ```js
+    const src = `data:image/png;base64,${Buffer.from(thumbnail).toString(
+      "base64"
+    )}`;
+    ```
+
 #### MediaPlaybackInfo
 
 | Parameter    | Type                                            | Description                    |
@@ -89,10 +112,20 @@ Here's a list of available commands, their purpose, and usage examples.
 
 #### MediaPlayerInfo
 
-| Parameter | Type     | Description                    |
-| --------- | -------- | ------------------------------ |
-| `name`    | String   | Name of the media player       |
-| `icon`    | Number[] | Binary data of the player icon |
+| Parameter | Type   | Description                                    |
+| --------- | ------ | ---------------------------------------------- |
+| `name`    | String | Name of the media player                       |
+| `icon`    | String | Local file path to the media player icon image |
+
+!!! info
+
+    The `icon` field returns a local filesystem path. To use it as an image source inside a Tauri application, convert it using `convertFileSrc`.
+
+    ```js
+    import { convertFileSrc } from "@tauri-apps/api/core";
+
+    const src = convertFileSrc(icon);
+    ```
 
 ### MediaAction
 
@@ -101,16 +134,6 @@ Here's a list of available commands, their purpose, and usage examples.
 | `player_id` | String                                                          | Unique identifier for the player                                                        |
 | `action`    | "play" \| "pause" \| "toggle" \| "next" \| "prev" \| "position" | The media action to perform                                                             |
 | `position`  | Option<Number\>                                                 | Optional position parameter for seeking, but required if using `"position"` as `action` |
-
-!!! info
-
-    Binary data needs to be converted to base64 to use it as an image. Example:
-
-    ```js
-    const src = `data:image/png;base64,${Buffer.from(thumbnail).toString(
-      "base64"
-    )}`;
-    ```
 
 ## Best Practices
 

@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { getStore } from "../../common";
 import { useThemeStore } from "./useThemeStore";
 import { getResolvedTheme } from "../../common/themes";
-import { invoke } from "@tauri-apps/api/core";
 import { tokens } from "@fluentui/react-components";
+import { commands } from "../../common/commands";
 
 export const useTheme = () => {
   const { mode, color } = useThemeStore();
@@ -28,12 +28,12 @@ export const useTheme = () => {
           window.matchMedia("(prefers-color-scheme: dark)").matches;
         modeValue = isSysDark ? "dark" : "light";
       }
-      const themeApplied = await invoke<boolean>("apply_blur_theme", {
+      const themeApplied = await commands.applyBlurTheme({
         mode: modeValue,
         label: "main",
       });
-      const mainWindow =
-        document.querySelector<HTMLDivElement>(".main-window")!;
+      const mainWindow = document.querySelector<HTMLDivElement>(".main-window");
+      if (!mainWindow) return;
       if (themeApplied) {
         mainWindow.style.backgroundColor = "transparent";
         document.body.style.backgroundColor = "transparent";

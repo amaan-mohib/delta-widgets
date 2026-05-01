@@ -2,70 +2,22 @@ mod commands;
 pub mod migration;
 pub mod migrations;
 mod plugins;
+mod setup;
 
-use commands::{analytics, media, migrate, store, system, widget};
-use include_dir::{include_dir, Dir, DirEntry};
+use commands::{analytics, audio, media, migrate, services, store, system, widget};
 use log::LevelFilter;
 use plugins::localhost;
-use serde_json::Value;
-use std::{env, fs, sync::OnceLock};
-use tauri::{
-    menu::{Menu, MenuItem},
-    tray::TrayIconBuilder,
-    Manager,
-};
-use tauri::{AppHandle, Emitter};
-use tauri_plugin_autostart::ManagerExt;
+use setup::init::init_app;
+use std::{env, sync::OnceLock};
+use tauri::Manager;
 use tauri_plugin_log::{Target, TargetKind};
 
-use crate::commands::widget::create_widget_window;
-use crate::migration::{run_migrations, Direction};
-use crate::migrations::all_migrations;
-
-static GLOBAL_APP_HANDLE: OnceLock<AppHandle> = OnceLock::new();
 static CUSTOM_SERVER_PORT: OnceLock<u16> = OnceLock::new();
-
-static TEMPLATES: Dir = include_dir!("$CARGO_MANIFEST_DIR/widget_templates");
-
-fn ensure_paths(app: &AppHandle) {
-    let app_data = app.path().app_data_dir().unwrap();
-    let app_cache = app.path().app_cache_dir().unwrap();
-
-    fs::create_dir_all(&app_data).expect("Failed to create AppData dir");
-    fs::create_dir_all(&app_cache).expect("Failed to create AppCache dir");
-}
-
-pub fn emit_global_event(event: &str) {
-    if let Some(app_handle) = GLOBAL_APP_HANDLE.get() {
-        app_handle.emit(event, ()).unwrap();
-    }
-}
 pub fn get_custom_server_port() -> u16 {
     match CUSTOM_SERVER_PORT.get() {
         Some(port) => *port,
         None => panic!("Custom server port is not set"),
     }
-}
-
-fn copy_embedded_dir(dir: &Dir, target: &std::path::Path) -> std::io::Result<()> {
-    fs::create_dir_all(target)?;
-
-    for entry in dir.entries() {
-        match entry {
-            DirEntry::Dir(subdir) => {
-                copy_embedded_dir(subdir, &target.join(subdir.path().file_name().unwrap()))?;
-            }
-            DirEntry::File(file) => {
-                let dest_path = target.join(file.path().file_name().unwrap());
-                if let Some(parent) = dest_path.parent() {
-                    fs::create_dir_all(parent)?;
-                }
-                fs::write(&dest_path, file.contents())?;
-            }
-        }
-    }
-
-    Ok(())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -105,185 +57,35 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_prevent_default::debug())
         .plugin(localhost::Builder::new(port).build())
+        .manage(std::sync::Mutex::new(audio::AudioState::new()))
+        .manage(tokio::sync::Mutex::new(media::MediaState::new()))
         .invoke_handler(tauri::generate_handler![
             media::get_media,
+            media::start_media_listener_cmd,
+            media::stop_media_listener_cmd,
             media::media_action,
+            services::get_all_widgets,
+            services::copy_custom_assets,
+            services::copy_custom_assets_dir,
+            services::apply_blur_theme,
+            services::create_url_thumbnail,
+            services::update_manifest_value,
             widget::create_creator_window,
             widget::create_widget_window,
             widget::close_widget_window,
-            widget::copy_custom_assets,
             widget::publish_widget,
-            widget::toggle_widget_visibility,
-            widget::toggle_always_on_top,
-            widget::copy_custom_assets_dir,
-            widget::apply_blur_theme,
             widget::open_devtools,
             system::get_system_info,
             analytics::track_analytics_event,
             store::write_to_store_cmd,
             migrate::migrate,
+            audio::start_audio_capture,
+            audio::stop_audio_capture,
+            audio::restart_audio_capture,
+            audio::get_current_device_cmd,
         ])
         .setup(|app| {
-            if !cfg!(debug_assertions) {
-                app.handle()
-                    .plugin(tauri_plugin_updater::Builder::new().build())?;
-                let app_handle = app.handle().clone();
-                tauri::async_runtime::spawn(async move {
-                    use tauri_plugin_notification::NotificationExt;
-                    use tauri_plugin_updater::UpdaterExt;
-
-                    if let Ok(Some(update)) = app_handle.updater().unwrap().check().await {
-                        app_handle
-                            .notification()
-                            .builder()
-                            .title("An update is available!")
-                            .body(format!(
-                                "A new version (v{}) of the app is available to download.",
-                                update.version
-                            ))
-                            .show()
-                            .unwrap();
-                    }
-                });
-            } else {
-                println!("Updater disabled in dev mode");
-            }
-            let app_handle = app.handle().clone();
-            ensure_paths(&app_handle);
-
-            let show_i = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
-            let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&show_i, &quit_i])?;
-            let tray = TrayIconBuilder::new()
-                .menu(&menu)
-                .icon(app.default_window_icon().unwrap().clone())
-                .tooltip("Delta Widgets")
-                .title("Delta Widgets")
-                .build(app)?;
-
-            tray.on_menu_event(|app, event| match event.id.as_ref() {
-                "show" => {
-                    let window = app.get_webview_window("main").unwrap();
-                    window.show().unwrap();
-                    window.set_focus().unwrap();
-                }
-                "quit" => {
-                    println!("quit menu item was clicked");
-                    app.exit(0);
-                }
-                _ => {
-                    println!("menu item {:?} not handled", event.id);
-                }
-            });
-
-            #[cfg(target_os = "windows")]
-            let is_autostart = std::env::args().any(|arg| arg == "--autostart");
-
-            #[cfg(target_os = "macos")]
-            let is_autostart = std::env::var("TAURI_AUTOSTART").is_ok();
-
-            #[cfg(target_os = "linux")]
-            let is_autostart = std::env::args().any(|arg| arg == "--autostart");
-
-            let main_window = app.get_webview_window("main").unwrap();
-            if is_autostart {
-                main_window.hide().unwrap(); // keep window hidden
-            } else {
-                main_window.show().unwrap(); // show normally
-            }
-            let autostart_manager = app.autolaunch();
-            let autostart_enabled = autostart_manager.is_enabled().unwrap_or(false);
-            let store = store::get_or_create_store(app.handle()).unwrap();
-
-            let store_autostart = store.get("autostart").and_then(Value::as_bool);
-            match store_autostart {
-                Some(autostart) => {
-                    if autostart && !autostart_enabled {
-                        autostart_manager.enable().unwrap();
-                    } else if !autostart && autostart_enabled {
-                        autostart_manager.disable().unwrap();
-                    }
-                }
-                None => {
-                    // Default to enabled if not set
-                    let _ =
-                        store::write_to_store(app.handle(), "autostart", serde_json::json!(true));
-                    if !autostart_enabled {
-                        autostart_manager.enable().unwrap();
-                    }
-                }
-            }
-
-            let widgets_dir = app
-                .path()
-                .resolve("widgets", tauri::path::BaseDirectory::AppData)
-                .unwrap()
-                .to_path_buf();
-
-            tauri::async_runtime::spawn(async move {
-                let mut paths: Vec<String> = vec![];
-                widgets_dir
-                    .exists()
-                    .then(|| {
-                        println!("Widgets directory exists: {:?}", widgets_dir.display());
-                    })
-                    .unwrap_or_else(|| {
-                        println!(
-                            "Widgets directory does not exist, creating: {:?}",
-                            widgets_dir.display()
-                        );
-                        fs::create_dir_all(&widgets_dir)
-                            .expect("Failed to create widgets directory");
-                    });
-
-                let is_dir_empty = widgets_dir
-                    .read_dir()
-                    .map(|mut i| i.next().is_none())
-                    .unwrap_or(false);
-                if is_dir_empty {
-                    copy_embedded_dir(&TEMPLATES, &widgets_dir)
-                        .expect("Failed to copy widgets directory");
-                }
-                if let Err(e) = run_migrations(&app_handle, all_migrations(), Direction::Up) {
-                    eprintln!("Migration failed: {:?}", e);
-                }
-
-                let entries = widgets_dir
-                    .read_dir()
-                    .expect("Cannot read widgets directory");
-                for entry in entries {
-                    let entry_path = entry.unwrap().path();
-                    let manifest_path = entry_path.join("manifest.json");
-                    if manifest_path.exists() {
-                        if let Ok(json) = fs::read_to_string(&manifest_path)
-                            .and_then(|contents| {
-                                Ok(serde_json::from_str::<serde_json::Value>(&contents))
-                            })
-                            .expect("Cannot read manifest")
-                        {
-                            let visible = json
-                                .get("visible")
-                                .and_then(Value::as_bool)
-                                .unwrap_or_else(|| false);
-
-                            if visible {
-                                paths.push(manifest_path.to_str().unwrap().to_string());
-                            }
-                        }
-                    }
-                }
-                for path in paths {
-                    create_widget_window(
-                        app_handle.clone(),
-                        serde_json::json!(path).to_string(),
-                        Some(false),
-                    )
-                    .await;
-                }
-            });
-
-            // store.close_resource();
-
+            init_app(&app)?;
             Ok(())
         })
         .on_window_event(|window, event| match event {
@@ -298,12 +100,9 @@ pub fn run() {
         })
         .build(tauri::generate_context!())
         .expect("error while running tauri application")
-        .run(move |app_handle, event| match event {
+        .run(move |_, event| match event {
             tauri::RunEvent::Ready => {
                 println!("Tauri application is ready");
-                GLOBAL_APP_HANDLE
-                    .set(app_handle.clone())
-                    .expect("Failed to set global app handle");
                 CUSTOM_SERVER_PORT
                     .set(port)
                     .expect("Failed to set global port");

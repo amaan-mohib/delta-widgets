@@ -1,7 +1,7 @@
 import { getVersion } from "@tauri-apps/api/app";
-import { invoke } from "@tauri-apps/api/core";
 import { nanoid } from "nanoid";
 import { getStore } from "../../common";
+import { commands } from "../../common/commands";
 
 export const getOrCreateClientId = async () => {
   const store = await getStore();
@@ -9,9 +9,13 @@ export const getOrCreateClientId = async () => {
     return store.clientId as string;
   } else {
     const clientId = nanoid();
-    await invoke("write_to_store_cmd", {
-      key: "clientId",
-      value: clientId,
+    await commands.writeToStoreCmd({
+      pairs: [
+        {
+          key: "clientId",
+          value: clientId,
+        },
+      ],
     });
     return clientId;
   }
@@ -19,7 +23,7 @@ export const getOrCreateClientId = async () => {
 
 export const sendMixpanelEvent = async (
   event: string,
-  properties: Record<string, any>
+  properties: Record<string, any>,
 ) => {
   if (import.meta.env.MODE === "development") {
     console.log("Mixpanel event (dev mode):", { event, properties });
@@ -27,7 +31,7 @@ export const sendMixpanelEvent = async (
   }
   try {
     const clientId = await getOrCreateClientId();
-    await invoke("track_analytics_event", {
+    await commands.trackAnalyticsEvent({
       event,
       distinctId: clientId,
       extraProperties: properties,
@@ -43,9 +47,13 @@ export const trackInstall = async () => {
     if (store.installTracked) return;
 
     await sendMixpanelEvent("install", {});
-    await invoke("write_to_store_cmd", {
-      key: "installTracked",
-      value: true,
+    await commands.writeToStoreCmd({
+      pairs: [
+        {
+          key: "installTracked",
+          value: true,
+        },
+      ],
     });
   } catch (error) {
     console.error("Error tracking install:", error);
@@ -69,9 +77,13 @@ export const trackUpdated = async () => {
         });
       }
 
-      await invoke("write_to_store_cmd", {
-        key: "lastUpdatedVersion",
-        value: currentVersion,
+      await commands.writeToStoreCmd({
+        pairs: [
+          {
+            key: "lastUpdatedVersion",
+            value: currentVersion,
+          },
+        ],
       });
     }
   } catch (error) {

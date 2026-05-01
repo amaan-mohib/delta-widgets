@@ -16,13 +16,15 @@ import { useDynamicTextStore } from "../stores/useVariableStore";
 import { path } from "@tauri-apps/api";
 import { appCacheDir } from "@tauri-apps/api/path";
 import { convertFileSrc } from "@tauri-apps/api/core";
+import VisualizerComponent from "./audio-visualizer-components/VisualizerComponent";
+import AudioToggleComponent from "./audio-visualizer-components/ToggleComponent";
 
 interface ElementProps {
   component: IWidgetElement;
 }
 
 const getComponentStyles = (
-  styles: IWidgetElement["styles"]
+  styles: IWidgetElement["styles"],
 ): React.CSSProperties => {
   const rowSpan = styles.gridItem?.rowSpan || 1;
   const colSpan = styles.gridItem?.columnSpan || 1;
@@ -102,7 +104,7 @@ const Element: React.FC<ElementProps> = ({ component }) => {
       const dir = await path.resolve(
         await appCacheDir(),
         "assets",
-        data.imageData?.key || ""
+        data.imageData?.key || "",
       );
       setBgImage(convertFileSrc(dir));
     })();
@@ -123,7 +125,7 @@ const Element: React.FC<ElementProps> = ({ component }) => {
                     component.data?.imageData
                       ? `url('${bgImage}')`
                       : component.styles.backgroundImage || "",
-                    textVariables
+                    textVariables,
                   ),
                   backgroundRepeat: "no-repeat",
                   backgroundPosition: "center",
@@ -229,6 +231,30 @@ const Element: React.FC<ElementProps> = ({ component }) => {
         }}
         styles={["default", "gridItem"]}>
         <ProgressComponent component={component} />
+      </WrapperElement>
+    );
+  }
+  if (component.type === "audio-visualizer") {
+    return (
+      <WrapperElement
+        component={{
+          ...component,
+          styles: {
+            ...component.styles,
+            width: "100%",
+            minWidth: 150,
+            gridItem: component.styles.gridItem,
+          },
+        }}
+        styles={["default", "gridItem"]}>
+        <VisualizerComponent component={component} />
+      </WrapperElement>
+    );
+  }
+  if (component.type === "toggle-visualizer") {
+    return (
+      <WrapperElement component={component} styles={["gridItem", "textAlign"]}>
+        <AudioToggleComponent component={component} />
       </WrapperElement>
     );
   }

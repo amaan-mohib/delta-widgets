@@ -19,6 +19,7 @@ The Visual Editor is the easiest way to build widgets without coding. It uses a 
 - **Image** – Display images from local files, URLs, or variable sources.
 - **Progress Slider** – Useful for volume bars, progress indicators, or custom metrics.
 - **Media Controls** – Play, pause, skip, and display media playback info.
+- **Audio visualizer** – Display audio visualizer of different types, like, Soundbar, Waveform or Filled waveform.
 - **Custom Button** _(planned)_ – Will allow adding custom actions.
 
 ### Templates
@@ -188,6 +189,7 @@ Sometimes you don't need to build from scratch — you can just load a webpage a
 
 - A title bar is added to URL widgets so you can drag the widget around your desktop.
 - The title bar cannot be removed (it ensures the window remains draggable).
+- The widget can be pinned, removing the title bar, but that would mean you cannot drag the widget around.
 
 ### Limitations
 

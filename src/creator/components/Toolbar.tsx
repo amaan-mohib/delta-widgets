@@ -23,12 +23,10 @@ import {
 import { message } from "@tauri-apps/plugin-dialog";
 import { useDataTrackStore } from "../stores/useDataTrackStore";
 import {
-  closeWidgetWindow,
   createWidgetWindow,
   openManifestFolder,
   publishWidget,
   sanitizeString,
-  updateManifest,
 } from "../../main/utils/widgets";
 import { listen } from "@tauri-apps/api/event";
 import CustomVariablesDialog from "./CustomVariablesDialog";
@@ -37,6 +35,9 @@ import CancelZone from "./DnD/CancelZone";
 import { useToolbarActions } from "../hooks/useToolbarActions";
 import { ThemePicker } from "../theme/Theme";
 import { Webview } from "@tauri-apps/api/webview";
+import { updateManifest } from "../../widget/utils/utils";
+import { getAllWebviewWindows } from "@tauri-apps/api/webviewWindow";
+import { closeWidgetWindow } from "../../common";
 
 interface ToolbarProps {}
 
@@ -47,7 +48,7 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
   const isSaving = useDataTrackStore((state) => state.isSaving);
   const selectedId = useDataTrackStore((state) => state.selectedId);
   const [elementMap, undoStack, redoStack] = useManifestStore(
-    useShallow((state) => [state.elementMap, state.undoStack, state.redoStack])
+    useShallow((state) => [state.elementMap, state.undoStack, state.redoStack]),
   );
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isCustomFieldsOpen, setIsCustomFieldsOpen] = useState(false);
@@ -61,7 +62,7 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
       isPublished: !!manifest?.published,
       manifestKey: manifest?.key || "",
     }),
-    [manifest]
+    [manifest],
   );
 
   useEffect(() => {
@@ -69,7 +70,7 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
     Webview.getByLabel(`widget-preview-${manifestKey}`).then(
       (previewWindow) => {
         setIsPreviewing(!!previewWindow);
-      }
+      },
     );
   }, [manifestKey]);
 
@@ -97,7 +98,9 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
       return;
     }
 
-    useManifestStore.getState().updateManifest({ key, label });
+    useManifestStore
+      .getState()
+      .updateManifest(isPublished ? { label } : { key, label });
     setEditName(false);
   }, []);
 
@@ -112,8 +115,16 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
 
   const publish = useCallback(async () => {
     useDataTrackStore.setState({ isSaving: true });
-    await publishWidget(manifest?.path || "");
+    const widgetPath = await publishWidget(manifest?.path || "");
     useDataTrackStore.setState({ isSaving: false });
+    const win = await getAllWebviewWindows();
+    const isVisible = win
+      .map((i) => i.label)
+      .find((i) => i === `widget-${manifest?.key || ""}`);
+    if (isVisible && widgetPath) {
+      await closeWidgetWindow(`widget-${manifest?.key || ""}`);
+      await createWidgetWindow(widgetPath);
+    }
     window.location.reload();
   }, [manifest]);
 
@@ -123,7 +134,7 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
         {!editName ? (
           <Tooltip content="Project name" relationship="label">
             <Button
-              disabled={isSaving || isPreviewing || isPublished}
+              disabled={isSaving || isPreviewing}
               size="small"
               appearance="secondary"
               icon={<EditRegular />}
@@ -193,7 +204,7 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
             <Tooltip key={item.label} content={item.label} relationship="label">
               <ToolbarButton icon={item.icon} onClick={item.onClick} />
             </Tooltip>
-          ) : null
+          ) : null,
         )}
       </ToolbarGroup>
       <ToolbarGroup style={{ display: "flex", alignItems: "center" }}>
@@ -212,7 +223,7 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
           <ToolbarButton
             icon={<FolderRegular />}
             onClick={async () => {
-              openManifestFolder(manifest!);
+              manifest && openManifestFolder(manifest.path);
             }}
           />
         </Tooltip>
@@ -233,7 +244,7 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
           content={
             isPublished && manifest?.publishedAt
               ? `Last published: ${new Date(
-                  manifest.publishedAt
+                  manifest.publishedAt,
                 ).toLocaleString()}`
               : "Add the widget to the Installed list"
           }

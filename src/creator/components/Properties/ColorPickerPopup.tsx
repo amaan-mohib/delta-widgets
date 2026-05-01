@@ -18,14 +18,8 @@ import {
 } from "@fluentui/react-color-picker-preview";
 
 const useStyles = makeStyles({
-  example: {
-    width: "300px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-  },
   previewColor: {
-    margin: "10px 0",
+    margin: "5px 0",
     width: "30px",
     height: "30px",
     borderRadius: "4px",
@@ -56,7 +50,7 @@ export const ColorPickerPopup = ({
 }) => {
   const styles = useStyles();
   const [previewColor, setPreviewColor] = React.useState(
-    new TinyColor(color).toHsv()
+    new TinyColor(color).toHsv(),
   );
   const [hex, setHex] = React.useState(new TinyColor(color).toHex8String());
 
@@ -103,7 +97,7 @@ export const ColorPickerPopup = ({
                       setPreviewColor(newColor.toHsv());
                     }
                     setHex((oldValue) =>
-                      HEX_COLOR_REGEX.test(value) ? value : oldValue
+                      HEX_COLOR_REGEX.test(value) ? value : oldValue,
                     );
                   }}
                 />

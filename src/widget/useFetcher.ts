@@ -1,18 +1,17 @@
 import { listen } from "@tauri-apps/api/event";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { IWidgetElement, TCustomFields } from "../types/manifest";
-import { invoke } from "@tauri-apps/api/core";
 import debounce from "lodash.debounce";
-import { IMedia, ISystemInformation } from "./types/variables";
 import { useVariableStore } from "./stores/useVariableStore";
 import { getCityFromIp, getWeather } from "./utils/weather";
 import { useDataTrackStore } from "./stores/useDataTrackStore";
+import { commands } from "../common/commands";
 
 const extractDynamicVariables = (
   elements: IWidgetElement[],
   results = new Set<string>(),
   typesSet = new Set<string>(),
-  fontsSet = new Set<string>()
+  fontsSet = new Set<string>(),
 ) => {
   elements.forEach((element) => {
     typesSet.add(element.type);
@@ -59,7 +58,7 @@ const extractDynamicVariables = (
 function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
   const { typesSet, dynamicVariables, fontsSet } = useMemo(
     () => extractDynamicVariables(elements),
-    [elements]
+    [elements],
   );
   const [currentDate, setCurrentDate] = useState(new Date());
   const [systemInfoCounter, setSystemInfoCounter] = useState(0);
@@ -75,30 +74,44 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
     useVariableStore.setState({ customFields: customFieldsData });
   }, [customFields]);
 
+  const getMediaRef = useRef(
+    debounce(
+      () => {
+        commands
+          .getMedia()
+          .then((data) => {
+            useVariableStore.setState({ media: data });
+            const selectedMedia = useVariableStore.getState().currentMedia;
+            const currentMedia = data.find((media) => media.is_current_session);
+
+            const selectedMediaNotInList = !data.find(
+              (media) => media.player_id === selectedMedia?.player_id,
+            );
+            if (currentMedia && (!selectedMedia || selectedMediaNotInList)) {
+              useVariableStore.setState({ currentMedia });
+            } else if (data.length > 0) {
+              useVariableStore.setState({ currentMedia: data[0] });
+            } else {
+              useVariableStore.setState({ currentMedia: null });
+            }
+          })
+          .catch(console.error);
+      },
+      300,
+      { leading: true },
+    ),
+  );
+
   useEffect(() => {
     if (!dynamicVariables.has("media")) return;
+    const getMedia = getMediaRef.current;
 
-    const getMedia = debounce(() => {
-      invoke<IMedia[]>("get_media")
-        .then((data) => {
-          useVariableStore.setState({ media: data });
-          const selectedMedia = useVariableStore.getState().currentMedia;
-          const currentMedia = data.find((media) => media.is_current_session);
-          const selectedMediaNotInList = !data.find(
-            (media) => media.player_id === selectedMedia?.player_id
-          );
-          if (currentMedia && (!selectedMedia || selectedMediaNotInList)) {
-            useVariableStore.setState({ currentMedia });
-          } else if (data.length > 0) {
-            useVariableStore.setState({ currentMedia: data[0] });
-          } else {
-            useVariableStore.setState({ currentMedia: null });
-          }
-        })
-        .catch(console.error);
-    }, 300);
-
-    getMedia();
+    commands
+      .startMediaListenerCmd()
+      .then(() => {
+        getMedia();
+      })
+      .catch(console.error);
 
     const unsub = listen("media_updated", () => {
       getMedia();
@@ -133,7 +146,7 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
 
     (async () => {
       try {
-        const data = await invoke<ISystemInformation>("get_system_info", {
+        const data = await commands.getSystemInfo({
           hasNetwork: typesSet.has("network"),
         });
         useVariableStore.setState({ systemInfo: data });
@@ -167,14 +180,28 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
       }
     })();
 
-    const timeout = setTimeout(() => {
-      setWeatherCounter((prev) => prev + 1);
-    }, 60 * 60 * 1000);
+    const timeout = setTimeout(
+      () => {
+        setWeatherCounter((prev) => prev + 1);
+      },
+      60 * 60 * 1000,
+    );
 
     return () => {
       clearTimeout(timeout);
     };
   }, [dynamicVariables, weatherCounter, typesSet]);
+
+  useEffect(() => {
+    if (!typesSet.has("audio-visualizer")) return;
+
+    const unsub = listen<number[]>("audio-samples", (event) => {
+      useVariableStore.setState({ audioSamples: event.payload });
+    });
+    return () => {
+      unsub.then((f) => f());
+    };
+  }, [typesSet]);
 
   useEffect(() => {
     if (fontsSet.size > 0) {

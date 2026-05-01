@@ -1,14 +1,29 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   useDynamicTextStore,
   useVariableStore,
 } from "./stores/useVariableStore";
 import { Buffer } from "buffer";
 import { formatDate, formatDuration, humanStorageSize } from "./utils/utils";
+import { convertFileSrc } from "@tauri-apps/api/core";
+
+const FALLBACK_THUMB_URL =
+  "https://cdn.pixabay.com/photo/2017/03/13/04/25/play-button-2138735_1280.png";
+const FALLBACK_PLAYER_ICON =
+  "https://i.pinimg.com/736x/bd/47/48/bd47480253e31367320c6f31eb2844ea.jpg";
+
+const bytesChanged = (a: number[] | null, b: number[] | null) => {
+  if (a === b) return false;
+  if (!a || !b || a.length !== b.length) return true;
+  return a.some((byte, i) => byte !== b[i]);
+};
 
 const useVariableUpdater = () => {
   const { currentDate, currentMedia, systemInfo, weatherInfo, customFields } =
     useVariableStore();
+  const thumbnailBytesRef = useRef<number[] | null>(null);
+  const thumbnailUrlRef = useRef<string | null>(null);
+  const playerIconUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     const formatDateSafely = (format: string) => {
@@ -74,6 +89,21 @@ const useVariableUpdater = () => {
       return;
     }
 
+    const thumbnailBytes =
+      currentMedia.thumbnail.length > 0 ? currentMedia.thumbnail : null;
+
+    if (bytesChanged(thumbnailBytesRef.current, thumbnailBytes)) {
+      thumbnailUrlRef.current = thumbnailBytes
+        ? `data:image/png;base64,${Buffer.from(thumbnailBytes).toString(
+            "base64",
+          )}`
+        : currentMedia.player && currentMedia.player.icon
+          ? convertFileSrc(currentMedia.player.icon)
+          : FALLBACK_THUMB_URL;
+
+      thumbnailBytesRef.current = thumbnailBytes;
+    }
+
     useDynamicTextStore.setState({
       media: (formatStr?: string) => {
         switch (formatStr) {
@@ -82,85 +112,79 @@ const useVariableUpdater = () => {
           case "title":
             return currentMedia.title || "NA";
           case "player":
-            return currentMedia.player.name || currentMedia.player_id || "NA";
+            return currentMedia.player?.name || currentMedia.player_id || "NA";
           case "status":
-            return currentMedia.playback_info.status || "NA";
+            return currentMedia.playback_info?.status || "NA";
           case "thumbnail":
-            const thumbnail =
-              currentMedia.thumbnail.length > 0
-                ? currentMedia.thumbnail
-                : currentMedia.player.icon.length > 0
-                ? currentMedia.player.icon
-                : [];
-
-            return thumbnail.length > 0
-              ? `data:image/png;base64,${Buffer.from(thumbnail).toString(
-                  "base64"
-                )}`
-              : "https://cdn.pixabay.com/photo/2017/03/13/04/25/play-button-2138735_1280.png";
+            return thumbnailUrlRef.current ?? FALLBACK_THUMB_URL;
           case "player_icon":
-            return currentMedia.player.icon &&
-              currentMedia.player.icon.length > 0
-              ? `data:image/png;base64,${Buffer.from(
-                  currentMedia.player.icon
-                ).toString("base64")}`
-              : "https://i.pinimg.com/736x/bd/47/48/bd47480253e31367320c6f31eb2844ea.jpg";
+            return currentMedia.player && currentMedia.player.icon
+              ? convertFileSrc(currentMedia.player.icon)
+              : FALLBACK_PLAYER_ICON;
           case "position":
-            return String(currentMedia.timeline_properties.position) || "0";
+            return currentMedia.timeline_properties
+              ? String(currentMedia.timeline_properties.position || "0")
+              : "0";
           case "duration":
-            return String(
-              currentMedia.timeline_properties.end_time -
-                currentMedia.timeline_properties.start_time || "0"
-            );
+            return currentMedia.timeline_properties
+              ? String(
+                  currentMedia.timeline_properties.end_time -
+                    currentMedia.timeline_properties.start_time || "0",
+                )
+              : "0";
           case "position_text":
             return formatDuration(
-              Number(currentMedia.timeline_properties.position) || 0
+              currentMedia.timeline_properties
+                ? Number(currentMedia.timeline_properties.position || 0)
+                : 0,
             );
           case "duration_text":
             return formatDuration(
-              Number(
-                currentMedia.timeline_properties.end_time -
-                  currentMedia.timeline_properties.start_time || "0"
-              )
+              currentMedia.timeline_properties
+                ? Number(
+                    currentMedia.timeline_properties.end_time -
+                      currentMedia.timeline_properties.start_time || "0",
+                  )
+                : 0,
             );
           case "next_enabled":
             return (
-              String(currentMedia.playback_info.controls.next_enabled) ||
+              String(!!currentMedia.playback_info?.controls.next_enabled) ||
               "false"
             );
           case "prev_enabled":
             return (
-              String(currentMedia.playback_info.controls.prev_enabled) ||
+              String(!!currentMedia.playback_info?.controls.prev_enabled) ||
               "false"
             );
           case "play_enabled":
             return (
-              String(currentMedia.playback_info.controls.play_enabled) ||
+              String(!!currentMedia.playback_info?.controls.play_enabled) ||
               "false"
             );
           case "pause_enabled":
             return (
-              String(currentMedia.playback_info.controls.pause_enabled) ||
+              String(!!currentMedia.playback_info?.controls.pause_enabled) ||
               "false"
             );
           case "stop_enabled":
             return (
-              String(currentMedia.playback_info.controls.stop_enabled) ||
+              String(!!currentMedia.playback_info?.controls.stop_enabled) ||
               "false"
             );
           case "shuffle_enabled":
             return (
-              String(currentMedia.playback_info.controls.shuffle_enabled) ||
+              String(!!currentMedia.playback_info?.controls.shuffle_enabled) ||
               "false"
             );
           case "repeat_enabled":
             return (
-              String(currentMedia.playback_info.controls.repeat_enabled) ||
+              String(!!currentMedia.playback_info?.controls.repeat_enabled) ||
               "false"
             );
           case "toggle_enabled":
             return (
-              String(currentMedia.playback_info.controls.toggle_enabled) ||
+              String(!!currentMedia.playback_info?.controls.toggle_enabled) ||
               "false"
             );
           default:
@@ -168,6 +192,15 @@ const useVariableUpdater = () => {
         }
       },
     });
+
+    return () => {
+      if (thumbnailUrlRef.current?.startsWith("blob:")) {
+        URL.revokeObjectURL(thumbnailUrlRef.current);
+      }
+      if (playerIconUrlRef.current?.startsWith("blob:")) {
+        URL.revokeObjectURL(playerIconUrlRef.current);
+      }
+    };
   }, [currentMedia]);
 
   useEffect(() => {
@@ -195,11 +228,11 @@ const useVariableUpdater = () => {
             return String(systemInfo.cpu?.count || 0);
           case "cpu_usage":
             return `${parseFloat(String(systemInfo.cpu?.usage || 0)).toFixed(
-              1
+              1,
             )}%`;
           case "cpu_speed":
             return `${parseFloat(
-              String((systemInfo.cpu?.speed || 0) / 1000)
+              String((systemInfo.cpu?.speed || 0) / 1000),
             ).toFixed(2)} Ghz`;
           case "memory_total":
             return humanStorageSize(systemInfo.total_memory || 0);
@@ -207,7 +240,7 @@ const useVariableUpdater = () => {
             return humanStorageSize(systemInfo.used_memory || 0);
           case "memory_available":
             return humanStorageSize(
-              (systemInfo.total_memory || 0) - (systemInfo.used_memory || 0)
+              (systemInfo.total_memory || 0) - (systemInfo.used_memory || 0),
             );
           case "memory_total_bytes":
             return String(systemInfo.total_memory || 0);
@@ -215,7 +248,7 @@ const useVariableUpdater = () => {
             return String(systemInfo.used_memory || 0);
           case "memory_available_bytes":
             return String(
-              (systemInfo.total_memory || 0) - (systemInfo.used_memory || 0)
+              (systemInfo.total_memory || 0) - (systemInfo.used_memory || 0),
             );
           case "swap_total":
             return humanStorageSize(systemInfo.total_swap || 0);
@@ -223,7 +256,7 @@ const useVariableUpdater = () => {
             return humanStorageSize(systemInfo.used_swap || 0);
           case "swap_available":
             return humanStorageSize(
-              (systemInfo.total_swap || 0) - (systemInfo.used_swap || 0)
+              (systemInfo.total_swap || 0) - (systemInfo.used_swap || 0),
             );
           case "swap_total_bytes":
             return String(systemInfo.total_swap || 0);
@@ -231,7 +264,7 @@ const useVariableUpdater = () => {
             return String(systemInfo.used_swap || 0);
           case "swap_available_bytes":
             return String(
-              (systemInfo.total_swap || 0) - (systemInfo.used_swap || 0)
+              (systemInfo.total_swap || 0) - (systemInfo.used_swap || 0),
             );
           case "battery_model":
             return battery?.model || "NA";
@@ -239,11 +272,11 @@ const useVariableUpdater = () => {
             return battery?.vendor || "NA";
           case "battery_health":
             return parseFloat(
-              String((battery?.state_of_health || 0) * 100)
+              String((battery?.state_of_health || 0) * 100),
             ).toFixed();
           case "battery_charge":
             return parseFloat(
-              String((battery?.state_of_charge || 0) * 100)
+              String((battery?.state_of_charge || 0) * 100),
             ).toFixed();
           case "battery_cycles":
             return String(battery?.cycle_count || 0);
@@ -270,15 +303,15 @@ const useVariableUpdater = () => {
             return weatherInfo.location?.country || "NA";
           case "temperature_celsius":
             return `${parseFloat(
-              String(weatherInfo.current?.temp_c || 0)
+              String(weatherInfo.current?.temp_c || 0),
             ).toFixed(1)}°C`;
           case "temperature_fahrenheit":
             return `${parseFloat(
-              String(weatherInfo.current?.temp_f || 0)
+              String(weatherInfo.current?.temp_f || 0),
             ).toFixed(1)}°F`;
           case "humidity":
             return `${parseFloat(
-              String(weatherInfo.current?.humidity || 0)
+              String(weatherInfo.current?.humidity || 0),
             ).toFixed(1)}%`;
           case "description":
             return weatherInfo.current?.condition.text || "NA";
