@@ -307,23 +307,31 @@ export const createCreatorWindow = async (
   manifestPath?: string | null,
   existingPath?: string,
 ) => {
-  let projectFolder = "";
-  if (!manifestPath) {
-    const existingManifest = existingPath
-      ? await getManifestFromPath(existingPath)
-      : null;
-    const label = existingManifest?.label || `Untitled-${nanoid(4)}`;
-    projectFolder = await createNewDraft({
-      key: sanitizeString(existingManifest?.key || label.toLowerCase()),
-      label,
-      ...(existingManifest || {}),
+  try {
+    let projectFolder = "";
+    if (!manifestPath) {
+      const existingManifest = existingPath
+        ? await getManifestFromPath(existingPath)
+        : null;
+      const label = existingManifest?.label || `Untitled-${nanoid(4)}`;
+      projectFolder = await createNewDraft({
+        key: sanitizeString(existingManifest?.key || label.toLowerCase()),
+        label,
+        ...(existingManifest || {}),
+      });
+    } else {
+      projectFolder = await path.resolve(manifestPath, "..");
+    }
+    await commands.createCreatorWindow({
+      manifestPath: projectFolder,
     });
-  } else {
-    projectFolder = await path.resolve(manifestPath, "..");
+  } catch (error) {
+    console.error("Error creating creator window:", error);
+    await message(`Something went wrong.`, {
+      title: "Error",
+      kind: "error",
+    });
   }
-  await commands.createCreatorWindow({
-    manifestPath: projectFolder,
-  });
 };
 
 export const createWidgetWindow = async (

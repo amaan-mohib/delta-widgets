@@ -19,7 +19,7 @@ import {
   ToastTitle,
   useToastController,
 } from "@fluentui/react-components";
-import React, { ReactNode, useEffect } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import {
   createCreatorWindow,
   createWidgetWindow,
@@ -71,11 +71,10 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   saves,
 }) => {
   const styles = useStyles();
-  const [visible, setVisible] = React.useState(widget.visible ?? false);
-  const [alwaysOnTop, setAlwaysOnTop] = React.useState(
-    widget.alwaysOnTop ?? false,
-  );
-  const [pinned, setPinned] = React.useState(widget.pinned ?? false);
+  const [visible, setVisible] = useState(widget.visible ?? false);
+  const [alwaysOnTop, setAlwaysOnTop] = useState(widget.alwaysOnTop ?? false);
+  const [pinned, setPinned] = useState(widget.pinned ?? false);
+  const loading = useDataStore((state) => state.openingCreator);
 
   const { updateAllWidgets, editWidget } = useDataStore();
   const { setDialogState, importHTML } = useAddDialogStore();
@@ -290,10 +289,16 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       role="listitem"
       key={widget.key}
       className={cardStyle}
+      disabled={loading}
       onClick={
         saves
-          ? () => {
-              createCreatorWindow(widget.path);
+          ? async () => {
+              try {
+                useDataStore.setState({ openingCreator: true });
+                await createCreatorWindow(widget.path);
+              } finally {
+                useDataStore.setState({ openingCreator: false });
+              }
             }
           : undefined
       }>
@@ -337,8 +342,9 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       <CardFooter className={styles.cardFooter}>
         {saves ? (
           <>
-            <Button icon={<EditRegular />} />
+            <Button disabled={loading} icon={<EditRegular />} />
             <Button
+              disabled={loading}
               icon={<DeleteRegular />}
               onClick={async (e) => {
                 e.stopPropagation();
