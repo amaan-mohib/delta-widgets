@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Card,
   makeStyles,
-  Spinner,
+  Skeleton,
+  SkeletonItem,
   Text,
   Toaster,
   tokens,
@@ -17,6 +18,8 @@ import SettingsSidebar from "./components/Settings/Sidebar";
 import Settings from "./components/Settings";
 import MartketplaceWaitlist from "./components/MartketplaceWaitlist";
 import "./App.css";
+import AddWidgetDialog from "./components/AddWidgetDialog";
+import WhatsNew from "./components/WhatsNew";
 
 const useStyles = makeStyles({
   container: {
@@ -39,7 +42,7 @@ const useStyles = makeStyles({
     gap: "5px",
   },
   card: {
-    minHeight: "130px",
+    minHeight: "180px",
     height: "100%",
   },
 });
@@ -56,6 +59,7 @@ function App() {
     showSettings,
   } = useDataStore();
   const [key, setKey] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     updateAllWidgets();
@@ -65,6 +69,9 @@ function App() {
 
   useEffect(() => {
     const unsub = listen<string>("creator-close", () => {
+      if (containerRef.current) {
+        containerRef.current.style.minHeight = `${containerRef.current.clientHeight}px`;
+      }
       updateAllWidgets().then(() => {
         setKey((prev) => prev + 1);
       });
@@ -106,10 +113,18 @@ function App() {
     <main className="container">
       {showSettings ? <SettingsSidebar /> : <Sidebar />}
 
-      <div style={{ flex: 1 }}>
+      <div
+        style={{ flex: 1, ...(showSettings ? { minHeight: "100vh" } : {}) }}
+        ref={containerRef}>
         {loading ? (
           <div className={styles.container} role="list">
-            <Spinner />
+            {Array(9)
+              .fill(null)
+              .map((_, i) => (
+                <Skeleton key={i}>
+                  <SkeletonItem className={styles.card} />
+                </Skeleton>
+              ))}
           </div>
         ) : showSettings ? (
           <div className={styles.container2}>
@@ -125,7 +140,6 @@ function App() {
                       key={widget.key}
                       widget={widget}
                       cardStyle={styles.card}
-                      updateAllWidgets={updateAllWidgets}
                     />
                   );
                 })}
@@ -142,7 +156,6 @@ function App() {
                       widget={widget}
                       cardStyle={styles.card}
                       saves
-                      updateAllWidgets={updateAllWidgets}
                     />
                   );
                 })}
@@ -157,6 +170,8 @@ function App() {
         )}
       </div>
 
+      <AddWidgetDialog />
+      <WhatsNew />
       <Toaster toasterId={"toaster"} />
     </main>
   );

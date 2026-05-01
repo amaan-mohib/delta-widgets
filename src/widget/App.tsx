@@ -1,17 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDataTrackStore } from "./stores/useDataTrackStore";
-import { disableWindowDrag, getManifestFromPath } from "../main/utils/widgets";
+import { disableWindowDrag, enableWindowDrag } from "../main/utils/widgets";
 import Element from "./components/Element";
 import useFetcher from "./useFetcher";
 import useVariableUpdater from "./useVariableUpdater";
 import FontPicker from "react-fontpicker-ts";
 import { useCustomAssets } from "../creator/hooks/useCustomAssets";
-
-import "./index.css";
 import { createThumb } from "./utils/utils";
 import { listen } from "@tauri-apps/api/event";
-import { templateWidgets } from "../common";
+import { getManifestFromPath, templateWidgets } from "../common";
 import Toolbar from "./components/Toolbar";
+
+import "./index.css";
 
 interface AppProps {}
 
@@ -30,7 +30,7 @@ const App: React.FC<AppProps> = () => {
       elements: manifest?.elements || [],
       customFields: manifest?.customFields || {},
     }),
-    [manifest]
+    [manifest],
   );
 
   useFetcher(elements, customFields);
@@ -89,7 +89,7 @@ const App: React.FC<AppProps> = () => {
         if (key === manifest.key) {
           createThumb(manifest, true).catch(console.error);
         }
-      }
+      },
     );
 
     return () => {
@@ -122,6 +122,8 @@ const App: React.FC<AppProps> = () => {
     }
     if (manifest.pinned) {
       disableWindowDrag();
+    } else {
+      enableWindowDrag();
     }
   }, [manifest]);
 

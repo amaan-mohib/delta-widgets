@@ -56,8 +56,9 @@ const GridItemProperties: React.FC<GridItemPropertiesProps> = ({
         Grid span
       </AccordionHeader>
       <AccordionPanel className={styles.panel}>
-        <Field orientation="horizontal" label="Rows">
+        <Field orientation="horizontal" label="Rows" size="small">
           <SpinButton
+            size="small"
             value={parseInt(String(gridItemStyles?.rowSpan || 1), 10) || 0}
             min={1}
             onChange={(event, data) => {
@@ -74,8 +75,9 @@ const GridItemProperties: React.FC<GridItemPropertiesProps> = ({
             }}
           />
         </Field>
-        <Field orientation="horizontal" label="Columns">
+        <Field orientation="horizontal" label="Columns" size="small">
           <SpinButton
+            size="small"
             value={parseInt(String(gridItemStyles?.columnSpan || 1), 10) || 0}
             min={1}
             onChange={(event, data) => {

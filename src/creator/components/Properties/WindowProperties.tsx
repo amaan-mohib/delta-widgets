@@ -8,7 +8,7 @@ interface WindowPropertiesProps {}
 
 const WindowProperties: React.FC<WindowPropertiesProps> = () => {
   const dimensions = useManifestStore(
-    (state) => state.manifest?.dimensions
+    (state) => state.manifest?.dimensions,
   ) || { width: 400, height: 300 };
 
   return (
@@ -23,6 +23,7 @@ const WindowProperties: React.FC<WindowPropertiesProps> = () => {
               label: "Width (px)",
               control: (
                 <SpinButton
+                  size="small"
                   value={dimensions.width}
                   onChange={(event, data) => {
                     spinButtonOnChange(
@@ -33,7 +34,7 @@ const WindowProperties: React.FC<WindowPropertiesProps> = () => {
                           .getState()
                           .updateWidgetDimensions(value, dimensions.height);
                       },
-                      400
+                      400,
                     );
                   }}
                 />
@@ -43,6 +44,7 @@ const WindowProperties: React.FC<WindowPropertiesProps> = () => {
               label: "Height (px)",
               control: (
                 <SpinButton
+                  size="small"
                   value={dimensions.height}
                   onChange={(event, data) => {
                     spinButtonOnChange(
@@ -53,7 +55,7 @@ const WindowProperties: React.FC<WindowPropertiesProps> = () => {
                           .getState()
                           .updateWidgetDimensions(dimensions.width, value);
                       },
-                      400
+                      400,
                     );
                   }}
                 />

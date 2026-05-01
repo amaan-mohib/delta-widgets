@@ -65,10 +65,11 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
               label: "Padding (px)",
               control: (
                 <SpinButton
+                  size="small"
                   min={0}
                   value={parseInt(
                     String(elementMap[selectedId].styles.padding || 0),
-                    10
+                    10,
                   )}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
@@ -86,10 +87,11 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
               label: "Roundness (px)",
               control: (
                 <SpinButton
+                  size="small"
                   min={0}
                   value={parseInt(
                     String(elementMap[selectedId].styles.borderRadius || 2),
-                    10
+                    10,
                   )}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
@@ -113,6 +115,7 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
               label: "Direction",
               control: (
                 <Toolbar
+                  size="small"
                   checkedValues={{
                     flexDirection: [
                       elementMap[selectedId].styles.flexDirection || "row",
@@ -151,6 +154,7 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
               label: "Align",
               control: (
                 <Toolbar
+                  size="small"
                   checkedValues={{
                     alignItems: [
                       elementMap[selectedId].styles.alignItems || "flex-start",
@@ -212,6 +216,7 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
               label: "Justify",
               control: (
                 <Toolbar
+                  size="small"
                   checkedValues={{
                     justifyContent: [
                       elementMap[selectedId].styles.justifyContent ||
@@ -308,10 +313,11 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
               label: "Gap (px)",
               control: (
                 <SpinButton
+                  size="small"
                   min={0}
                   value={parseInt(
                     String(elementMap[selectedId].styles.gap || 0),
-                    10
+                    10,
                   )}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
@@ -329,12 +335,13 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
               label: "Flex (%)",
               control: (
                 <SpinButton
+                  size="small"
                   step={10}
                   min={1}
                   max={100}
                   value={
                     parseFloat(
-                      String(elementMap[selectedId].styles.flex || 1)
+                      String(elementMap[selectedId].styles.flex || 1),
                     ) * 100
                   }
                   onChange={(event, data) => {
@@ -349,7 +356,7 @@ const ContainerProperties: React.FC<ContainerPropertiesProps> = () => {
                           },
                         });
                       },
-                      16
+                      16,
                     );
                   }}
                 />

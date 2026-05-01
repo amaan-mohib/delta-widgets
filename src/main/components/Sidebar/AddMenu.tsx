@@ -13,43 +13,14 @@ import {
   CodeRegular,
   LinkRegular,
 } from "@fluentui/react-icons";
-import React, { useCallback, useState } from "react";
-import { fileOrFolderPicker } from "../../utils/widgets";
-import AddWidgetDialog, { IDialogState } from "../AddWidgetDialog";
 import { useDataStore } from "../../stores/useDataStore";
+import { useAddDialogStore } from "../../stores/useAddDialogStore";
 
 interface AddMenuProps {}
 
 const AddMenu: React.FC<AddMenuProps> = () => {
-  const [dialogState, setDialogState] = useState<IDialogState>({
-    open: false,
-    type: "none",
-    path: "",
-  });
-  const updateAllWidgets = useDataStore((state) => state.updateAllWidgets);
+  const { importHTML, importJSON, setDialogState } = useAddDialogStore();
   const createWidget = useDataStore((state) => state.createWidget);
-
-  const importHTML = useCallback(async () => {
-    const { path } = await fileOrFolderPicker({
-      directory: true,
-      title: "Select HTML folder",
-    });
-    if (path) setDialogState({ open: true, type: "folder", path });
-  }, []);
-
-  const importJSON = useCallback(async () => {
-    const { path, manifest } = await fileOrFolderPicker({
-      title: "Select JSON file",
-      extensions: ["json"],
-    });
-    if (path && manifest)
-      setDialogState({
-        open: true,
-        type: "file",
-        path,
-        manifest,
-      });
-  }, []);
 
   return (
     <>
@@ -64,7 +35,7 @@ const AddMenu: React.FC<AddMenuProps> = () => {
             <MenuItem icon={<AppsRegular />} onClick={createWidget}>
               Custom
             </MenuItem>
-            <MenuItem icon={<CodeRegular />} onClick={importHTML}>
+            <MenuItem icon={<CodeRegular />} onClick={() => importHTML()}>
               HTML
             </MenuItem>
             <MenuItem
@@ -80,11 +51,6 @@ const AddMenu: React.FC<AddMenuProps> = () => {
           </MenuList>
         </MenuPopover>
       </Menu>
-      <AddWidgetDialog
-        dialogState={dialogState}
-        resetDialogState={setDialogState}
-        updateAllWidgets={updateAllWidgets}
-      />
     </>
   );
 };

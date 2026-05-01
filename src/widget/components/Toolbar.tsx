@@ -5,56 +5,41 @@ import {
   PinRegular,
   WindowDevToolsRegular,
 } from "@fluentui/react-icons";
-import { invoke } from "@tauri-apps/api/core";
 import React from "react";
 import { IWidget } from "../../types/manifest";
-import {
-  disableWindowDrag,
-  enableWindowDrag,
-  getManifestPath,
-  updateManifest,
-} from "../../main/utils/widgets";
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { togglePinned } from "../../main/utils/widgets";
 import { useDataTrackStore } from "../stores/useDataTrackStore";
 import { emitTo } from "@tauri-apps/api/event";
+import { message } from "@tauri-apps/plugin-dialog";
+import { commands } from "../../common/commands";
+import { closeWidgetWindow } from "../../common";
 
 interface ToolbarProps {}
 
 const closeWidget = async (manifest: IWidget) => {
   try {
-    const path = await getManifestPath(manifest.path);
-    await invoke("toggle_widget_visibility", {
-      visibility: false,
-      path: JSON.stringify(path),
-    });
-    await emitTo("main", "creator-close", {});
-    await invoke("close_widget_window", { label: `widget-${manifest.key}` });
+    await closeWidgetWindow(`widget-${manifest.key}`, true, manifest.path);
   } catch (error) {
     console.error(error);
   }
 };
 
-const pinWidget = async (manifest: IWidget, isPinned: boolean) => {
+const pinWidget = async (manifestPath: string, isPinned: boolean) => {
   try {
-    await updateManifest({
-      ...manifest,
-      pinned: isPinned,
-    });
-    const window = await WebviewWindow.getByLabel(`widget-${manifest.key}`);
-    window?.setResizable(!isPinned);
-    if (isPinned) {
-      disableWindowDrag();
-    } else {
-      enableWindowDrag();
-    }
+    await togglePinned(manifestPath, isPinned);
+    await emitTo("main", "creator-close", {});
   } catch (error) {
     console.error(error);
+    await message("Could not set pinned", {
+      title: "Error",
+      kind: "error",
+    });
   }
 };
 
 const openDevtools = async (manifest: IWidget) => {
   try {
-    await invoke("open_devtools", { label: `widget-${manifest.key}` });
+    await commands.openDevtools({ label: `widget-${manifest.key}` });
   } catch (error) {
     console.error(error);
   }
@@ -79,7 +64,7 @@ const Toolbar: React.FC<ToolbarProps> = () => {
         icon={manifest.pinned ? <PinOffRegular /> : <PinRegular />}
         size="small"
         onClick={() => {
-          pinWidget(manifest, !manifest.pinned);
+          pinWidget(manifest.path, !manifest.pinned);
           useDataTrackStore.setState({
             manifest: {
               ...manifest,

@@ -14,13 +14,14 @@ import DropZone from "../../DnD/DropZone";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { appCacheDir } from "@tauri-apps/api/path";
 import { path } from "@tauri-apps/api";
+import VisualizerComponent from "./VisualizerComponent";
 
 interface ComponentRenderProps {
   component: IWidgetElement;
 }
 
 const getComponentStyles = (
-  styles: IWidgetElement["styles"]
+  styles: IWidgetElement["styles"],
 ): React.CSSProperties => {
   const rowSpan = styles.gridItem?.rowSpan || 1;
   const colSpan = styles.gridItem?.columnSpan || 1;
@@ -73,7 +74,7 @@ const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
       const dir = await path.resolve(
         await appCacheDir(),
         "assets",
-        data.imageData?.key || ""
+        data.imageData?.key || "",
       );
       setBgImage(convertFileSrc(dir));
     })();
@@ -182,9 +183,19 @@ const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
   }
   if (
     component.type === "toggle-play" ||
+    component.type === "toggle-visualizer" ||
     component.type === "media-next" ||
     component.type === "media-prev"
   ) {
+    const getIcon = () => {
+      if (component.type === "toggle-play") return "PlayRegular";
+      if (component.type === "media-next") return "NextRegular";
+      if (component.type === "media-prev") return "PreviousRegular";
+      if (component.type === "toggle-visualizer")
+        return "SoundWaveCircleAddRegular";
+      return "PlayRegular";
+    };
+
     return (
       <Dropable
         id={component.id}
@@ -198,12 +209,7 @@ const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
             ...component,
             data: {
               ...(component.data || {}),
-              icon:
-                component.type === "toggle-play"
-                  ? "PlayRegular"
-                  : component.type === "media-next"
-                  ? "NextRegular"
-                  : "PreviousRegular",
+              icon: getIcon(),
             },
           }}
         />
@@ -238,6 +244,22 @@ const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
       </Dropable>
     );
   }
+  if (component.type === "audio-visualizer") {
+    return (
+      <Dropable
+        id={component.id}
+        styles={getComponentStyles({
+          width: "100%",
+          ...component.styles,
+          minWidth: 150,
+          gridItem: component.styles.gridItem,
+        })}
+        disableDrop>
+        <VisualizerComponent component={component} />
+      </Dropable>
+    );
+  }
+
   return (
     <Dropable
       id={component.id}

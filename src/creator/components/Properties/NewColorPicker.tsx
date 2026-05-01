@@ -10,14 +10,8 @@ import React, { useState } from "react";
 import ColorPicker from "react-best-gradient-color-picker";
 
 const useStyles = makeStyles({
-  example: {
-    width: "300px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-  },
   previewColor: {
-    margin: "10px 0",
+    margin: "5px 0",
     width: "30px",
     height: "30px",
     borderRadius: "4px",

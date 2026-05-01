@@ -3,40 +3,41 @@ use std::fs;
 use tauri::AppHandle;
 use tauri::Manager;
 
-pub fn get_or_create_store(app_handle: &AppHandle) -> Result<serde_json::Value, serde_json::Error> {
+pub fn get_or_create_store(app_handle: &AppHandle) -> anyhow::Result<serde_json::Value> {
     let store_path = app_handle
         .path()
-        .resolve("store.json", tauri::path::BaseDirectory::AppData)
-        .unwrap();
+        .resolve("store.json", tauri::path::BaseDirectory::AppData)?;
 
     if !store_path.exists() {
-        fs::write(&store_path, "{}").expect("Failed to create store file");
+        fs::write(&store_path, "{}")?;
     }
-    fs::read_to_string(&store_path)
-        .and_then(|contents| Ok(serde_json::from_str::<serde_json::Value>(&contents)))
-        .expect("Cannot read store file")
+    let contents = fs::read_to_string(&store_path)?;
+    Ok(serde_json::from_str::<serde_json::Value>(&contents)?)
 }
 
-pub fn write_to_store(
-    app_handle: &AppHandle,
-    key: &str,
-    value: serde_json::Value,
-) -> Result<(), std::io::Error> {
+#[derive(serde::Deserialize)]
+pub struct KVPair {
+    pub key: String,
+    pub value: Value,
+}
+
+pub fn write_to_store(app_handle: &AppHandle, pairs: Vec<KVPair>) -> anyhow::Result<()> {
     let store_path = app_handle
         .path()
-        .resolve("store.json", tauri::path::BaseDirectory::AppData)
-        .unwrap();
+        .resolve("store.json", tauri::path::BaseDirectory::AppData)?;
 
     let mut store = get_or_create_store(app_handle)?;
-    store[key] = value;
+    for pair in pairs {
+        store[pair.key] = pair.value;
+    }
 
-    fs::write(store_path, serde_json::to_string(&store).unwrap())?;
+    let contents = serde_json::to_string(&store)?;
+    fs::write(store_path, contents)?;
     Ok(())
 }
 
 #[tauri::command]
-pub async fn write_to_store_cmd(app: AppHandle, key: String, value: Value) -> Result<(), String> {
-    let value = serde_json::to_value(value).map_err(|e| e.to_string())?;
-    write_to_store(&app, &key, value).map_err(|e| e.to_string())?;
+pub async fn write_to_store_cmd(app: AppHandle, pairs: Vec<KVPair>) -> Result<(), String> {
+    write_to_store(&app, pairs).map_err(|e| e.to_string())?;
     Ok(())
 }

@@ -1,16 +1,17 @@
 import { path } from "@tauri-apps/api";
-import { exists, writeFile } from "@tauri-apps/plugin-fs";
+import { exists, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { format, intervalToDuration } from "date-fns";
 import { toBlob } from "html-to-image";
-import { IWidget } from "../../types/manifest";
+import { ILiteWidget, IWidget } from "../../types/manifest";
 import { formatInTimeZone } from "date-fns-tz";
 import { emitTo } from "@tauri-apps/api/event";
+import { getManifestPath } from "../../common";
 
 const DATE_REGEX = /^(.+?)(?::\[(.+?)\])?$/g;
 
 export const parseDynamicText = (
   text: string,
-  textVariables: Record<string, (format?: string) => string>
+  textVariables: Record<string, (format?: string) => string>,
 ) => {
   return text.replace(/\{\{(\w+)(?::([^}]+))?\}\}/g, (_, key, formatStr) => {
     if (textVariables[key]) {
@@ -49,7 +50,7 @@ export const formatDuration = (duration: number) => {
 
   const formatted = [hours || 0, minutes || 0, seconds || 0]
     .map((value, index) =>
-      index === 0 && hours ? hours : index !== 0 ? value : null
+      index === 0 && hours ? hours : index !== 0 ? value : null,
     )
     .filter((item) => item !== null)
     .map(zeroPad)
@@ -91,11 +92,10 @@ export function humanStorageSize(bytes: number, si = false, dp = 1) {
   return bytes.toFixed(dp) + " " + units[u];
 }
 
-export const createThumb = async (manifest: IWidget, refresh = false) => {
+export const createThumb = async (manifest: ILiteWidget, refresh = false) => {
+  const linksTransformed: HTMLLinkElement[] = [];
+
   try {
-    document.querySelectorAll("link").forEach((link) => {
-      link.setAttribute("crossorigin", "anonymous");
-    });
     const thumbPath = await path.resolve(manifest.path, "..", "thumb.png");
 
     if (!refresh) {
@@ -103,6 +103,19 @@ export const createThumb = async (manifest: IWidget, refresh = false) => {
       if (thumbExists) return;
     }
 
+    document.querySelectorAll("link").forEach((link) => {
+      link.setAttribute("crossorigin", "anonymous");
+      if (link.href.startsWith("https://fonts.googleapis.com/css2")) {
+        link.setAttribute(
+          "href",
+          link.href.replace(
+            "https://fonts.googleapis.com/css2",
+            "https://fonts.bunny.net/css",
+          ),
+        );
+        linksTransformed.push(link);
+      }
+    });
     const blob = await toBlob(document.getElementById("widget-window")!);
     if (blob) {
       const arrayBuffer = await blob.arrayBuffer();
@@ -111,14 +124,23 @@ export const createThumb = async (manifest: IWidget, refresh = false) => {
       await emitTo("main", "creator-close", {});
     }
   } catch (error) {
-    //skip logging error
     console.log(error);
+  } finally {
+    linksTransformed.forEach((link) => {
+      link.setAttribute(
+        "href",
+        link.href.replace(
+          "https://fonts.bunny.net/css",
+          "https://fonts.googleapis.com/css2",
+        ),
+      );
+    });
   }
 };
 
 export function forwardConsole(
   fnName: "log" | "debug" | "info" | "warn" | "error",
-  logger: (message: string) => Promise<void>
+  logger: (message: string) => Promise<void>,
 ) {
   const original = console[fnName];
   console[fnName] = (message) => {
@@ -126,3 +148,11 @@ export function forwardConsole(
     logger(message);
   };
 }
+
+export const updateManifest = async (manifest: IWidget) => {
+  const manifestPath = await getManifestPath(manifest.path);
+  await writeTextFile(
+    manifestPath,
+    JSON.stringify({ ...manifest, path: undefined }, null, 2),
+  );
+};

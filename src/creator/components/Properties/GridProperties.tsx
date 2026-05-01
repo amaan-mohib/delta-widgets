@@ -44,6 +44,7 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
               label: "Padding (px)",
               control: (
                 <SpinButton
+                  size="small"
                   value={parseInt(String(gridStyles.padding || 0), 10)}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
@@ -61,10 +62,11 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
               label: "Roundness (px)",
               control: (
                 <SpinButton
+                  size="small"
                   min={0}
                   value={parseInt(
                     String(elementMap[selectedId].styles.borderRadius || 2),
-                    10
+                    10,
                   )}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
@@ -82,6 +84,7 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
               label: "Gap (px)",
               control: (
                 <SpinButton
+                  size="small"
                   value={parseInt(String(gridStyles.gap || 0), 10)}
                   onChange={(event, data) => {
                     spinButtonOnChange(event, data, (value) => {
@@ -99,12 +102,13 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
               label: "Width (%)",
               control: (
                 <SpinButton
+                  size="small"
                   step={10}
                   min={1}
                   max={100}
                   value={
                     parseFloat(
-                      String(elementMap[selectedId].styles.flex || 1)
+                      String(elementMap[selectedId].styles.flex || 1),
                     ) * 100
                   }
                   onChange={(event, data) => {
@@ -118,7 +122,7 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
                           },
                         });
                       },
-                      1
+                      1,
                     );
                   }}
                 />
@@ -129,6 +133,7 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
               control: (
                 <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
                   <SpinButton
+                    size="small"
                     style={{ width: "140px" }}
                     value={parseInt(String(gridSize?.rows || 0), 10) || 0}
                     displayValue={String(gridSize?.rows || "auto")}
@@ -147,7 +152,7 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
                             },
                           });
                         },
-                        16
+                        16,
                       );
                     }}
                   />
@@ -184,6 +189,7 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
               control: (
                 <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
                   <SpinButton
+                    size="small"
                     style={{ width: "140px" }}
                     value={parseInt(String(gridSize?.columns || 0), 10) || 0}
                     displayValue={String(gridSize?.columns || "auto")}
@@ -202,7 +208,7 @@ const GridProperties: React.FC<GridPropertiesProps> = () => {
                             },
                           });
                         },
-                        16
+                        16,
                       );
                     }}
                   />

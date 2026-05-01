@@ -14,6 +14,7 @@ import {
   NumberSymbol24Regular,
   PlayCircle24Regular,
   PreviousRegular,
+  SoundWaveCircle24Regular,
   Square24Regular,
   Storage24Regular,
   TextField24Regular,
@@ -35,7 +36,7 @@ export const components: {
   type: string;
   key: string;
   icon: ReactNode;
-  category?: "media" | "date" | "system";
+  category?: "media" | "date" | "system" | "visualizer";
   data: () => IWidgetElement;
 }[] = [
   {
@@ -260,6 +261,32 @@ export const components: {
       },
     }),
   },
+  {
+    name: "Visualizer",
+    key: "audio-visualizer",
+    type: "audio-visualizer",
+    category: "visualizer",
+    icon: <SoundWaveCircle24Regular />,
+    data: () => ({
+      id: `audio-visualizer-${nanoid(4)}`,
+      type: "audio-visualizer",
+      data: {},
+      styles: {},
+    }),
+  },
+  {
+    name: "Start/Stop",
+    key: "toggle-visualizer",
+    type: "toggle-visualizer",
+    category: "visualizer",
+    icon: <VideoPlayPauseRegular style={{ fontSize: "24px" }} />,
+    data: () => ({
+      id: `button-${nanoid(4)}`,
+      type: "toggle-visualizer",
+      styles: {},
+      data: {},
+    }),
+  },
 ];
 
 export const componentTypeToDataMap: Record<string, () => IWidgetElement> = {};
@@ -305,20 +332,24 @@ const categoryGroup = {
   media: "Media",
   date: "Date",
   system: "System",
+  visualizer: "Audio Visualizer",
 };
 
 const ComponentList: React.FC<ComponentListProps> = () => {
   const styles = useStyles();
   const draggingId = useDataTrackStore((state) => state.activeId);
   const groupedComponents = useMemo(() => {
-    const grouped = components.reduce((acc, item) => {
-      const category = item.category || "common";
-      if (!acc[category]) {
-        acc[category] = [];
-      }
-      acc[category].push(item);
-      return acc;
-    }, {} as Record<string, typeof components>);
+    const grouped = components.reduce(
+      (acc, item) => {
+        const category = item.category || "common";
+        if (!acc[category]) {
+          acc[category] = [];
+        }
+        acc[category].push(item);
+        return acc;
+      },
+      {} as Record<string, typeof components>,
+    );
     return grouped;
   }, []);
 
@@ -348,7 +379,7 @@ const ComponentList: React.FC<ComponentListProps> = () => {
             </AccordionItem>
           ) : (
             []
-          )
+          ),
         )}
       </Accordion>
       <DragOverlay dropAnimation={null} modifiers={[restrictToWindowEdges]}>

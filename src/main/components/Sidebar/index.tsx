@@ -21,6 +21,7 @@ import {
   Drafts20Regular,
   ErrorCircle20Color,
   Heart20Color,
+  Megaphone20Regular,
   QuestionCircle20Regular,
   Settings20Regular,
 } from "@fluentui/react-icons";
@@ -32,6 +33,35 @@ import DiscordIcon from "../icons/Discord";
 export const sidebarWidth = 250;
 
 interface SidebarProps {}
+
+export const commonItems = [
+  {
+    value: "donate",
+    text: "Donate",
+    href: "https://buymeacoffee.com/amaan.mohib",
+    icon: <Heart20Color />,
+  },
+  {
+    value: "whats-new",
+    text: "What's new",
+    onClick: () => {
+      useDataStore.setState({ openWhatsNew: true });
+    },
+    icon: <Megaphone20Regular />,
+  },
+  {
+    value: "discord",
+    text: "Discord",
+    href: "https://discord.gg/wDE8KNx8fB",
+    icon: <DiscordIcon width={20} height={20} />,
+  },
+  {
+    value: "help",
+    text: "Help",
+    href: "https://amaan-mohib.github.io/delta-widgets/",
+    icon: <QuestionCircle20Regular />,
+  },
+];
 
 const useStyles = makeStyles({
   drawer: {
@@ -131,30 +161,18 @@ const Sidebar: React.FC<SidebarProps> = () => {
               Update available
             </NavItem>
           )}
-          <NavItem
-            className={styles.navItem}
-            value={"donate"}
-            href="https://buymeacoffee.com/amaan.mohib"
-            target="_blank"
-            icon={<Heart20Color />}>
-            Donate
-          </NavItem>
-          <NavItem
-            className={styles.navItem}
-            value={"discord"}
-            href="https://discord.gg/wDE8KNx8fB"
-            target="_blank"
-            icon={<DiscordIcon width={20} height={20} />}>
-            Discord
-          </NavItem>
-          <NavItem
-            className={styles.navItem}
-            value={"help"}
-            href="https://amaan-mohib.github.io/delta-widgets/"
-            target="_blank"
-            icon={<QuestionCircle20Regular />}>
-            Help
-          </NavItem>
+          {commonItems.map((item) => (
+            <NavItem
+              key={item.value}
+              className={styles.navItem}
+              value={item.value}
+              href={item.href}
+              target="_blank"
+              icon={item.icon}
+              onClick={item.onClick}>
+              {item.text}
+            </NavItem>
+          ))}
           <NavItem
             className={styles.navItem}
             value={"settings"}

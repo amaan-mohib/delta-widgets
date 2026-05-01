@@ -52,3 +52,8 @@ input {
   opacity: 1;
   transition: 0.4s;
 }
+
+.media-btn-player-icon > .fui-MenuButton__icon,
+.media-item-player-icon > .fui-MenuItem__icon {
+  overflow: hidden;
+}

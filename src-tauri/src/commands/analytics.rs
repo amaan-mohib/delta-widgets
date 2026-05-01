@@ -12,6 +12,10 @@ pub async fn track_analytics_event(
     let client = Client::new();
     let token = option_env!("MIXPANEL_TOKEN").unwrap_or("");
 
+    if token.is_empty() {
+        return Err("No API token found".to_string());
+    }
+
     let mut properties = serde_json::Map::new();
     properties.insert("distinct_id".to_string(), json!(distinct_id));
     properties.insert("token".to_string(), json!(token));
