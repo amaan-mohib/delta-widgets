@@ -1,27 +1,28 @@
 import { useEffect, useMemo } from "react";
 import { path } from "@tauri-apps/api";
 import { appCacheDir } from "@tauri-apps/api/path";
-import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { IWidget } from "../../types/manifest";
+import { commands } from "../../common/commands";
 
 const addStyleSheet = async (
   href: string,
   key: string,
-  createHref?: boolean
+  createHref?: boolean,
 ) => {
   if (createHref) {
-    await invoke<string>("copy_custom_assets", {
+    await commands.copyCustomAssets({
       key,
       path: href,
     });
 
     href = convertFileSrc(
-      await path.resolve(await appCacheDir(), "assets", key)
+      await path.resolve(await appCacheDir(), "assets", key),
     );
   }
 
   const isAlreadyLoaded = document.head.querySelector<HTMLLinkElement>(
-    `#${key}`
+    `#${key}`,
   );
 
   if (!isAlreadyLoaded) {
@@ -37,7 +38,7 @@ const addStyleSheet = async (
 
 const removeExtraStylesheets = (keys: string[]) => {
   const styles = Array.from(
-    document.head.querySelectorAll<HTMLLinkElement>(".custom-stylesheet")
+    document.head.querySelectorAll<HTMLLinkElement>(".custom-stylesheet"),
   );
   styles.forEach((link) => {
     if (!keys.includes(link.id)) {

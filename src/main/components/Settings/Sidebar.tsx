@@ -16,15 +16,13 @@ import {
   Color20Filled,
   Color20Regular,
   Flag20Regular,
-  Heart20Color,
   Info20Filled,
   Info20Regular,
-  QuestionCircle20Regular,
   Settings20Filled,
   Settings20Regular,
 } from "@fluentui/react-icons";
 import { TSettingsActiveTab, useDataStore } from "../../stores/useDataStore";
-import { sidebarWidth } from "../Sidebar";
+import { commonItems, sidebarWidth } from "../Sidebar";
 
 interface SidebarProps {}
 
@@ -113,22 +111,18 @@ const SettingsSidebar: React.FC<SidebarProps> = () => {
             </NavItem>
           ))}
           <NavDivider style={{ marginTop: "auto" }} />
-          <NavItem
-            className={styles.navItem}
-            value={"donate"}
-            href="https://buymeacoffee.com/amaan.mohib"
-            target="_blank"
-            icon={<Heart20Color />}>
-            Donate
-          </NavItem>
-          <NavItem
-            className={styles.navItem}
-            value={"help"}
-            href="https://amaan-mohib.github.io/delta-widgets/"
-            target="_blank"
-            icon={<QuestionCircle20Regular />}>
-            Help
-          </NavItem>
+          {commonItems.map((item) => (
+            <NavItem
+              key={item.value}
+              className={styles.navItem}
+              value={item.value}
+              href={item.href}
+              target="_blank"
+              icon={item.icon}
+              onClick={item.onClick}>
+              {item.text}
+            </NavItem>
+          ))}
           <NavItem
             className={styles.navItem}
             value={"report"}

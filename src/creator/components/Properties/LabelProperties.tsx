@@ -23,6 +23,7 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "column",
     gap: "12px",
+    padding: "10px 0",
   },
 });
 
@@ -36,9 +37,15 @@ const LabelProperties: React.FC<LabelPropertiesProps> = ({ selectedId }) => {
         Info
       </AccordionHeader>
       <AccordionPanel className={styles.panel}>
-        <Field key={"label"} orientation="horizontal" label={"Label"}>
+        <Field key={"id"} orientation="horizontal" label={"ID"} size="small">
+          <Input value={selectedId} disabled readOnly />
+        </Field>
+        <Field
+          key={"label"}
+          orientation="horizontal"
+          label={"Label"}
+          size="small">
           <Input
-            style={{ width: 160 }}
             value={elementMap[selectedId].label || `#${selectedId}`}
             onChange={(_, { value }) => {
               useManifestStore
@@ -47,9 +54,12 @@ const LabelProperties: React.FC<LabelPropertiesProps> = ({ selectedId }) => {
             }}
           />
         </Field>
-        <Field key={"className"} orientation="horizontal" label={"CSS Class"}>
+        <Field
+          key={"className"}
+          orientation="horizontal"
+          label={"CSS Class"}
+          size="small">
           <Input
-            style={{ width: 160 }}
             placeholder="Enter classname"
             value={elementMap[selectedId].data?.className || ""}
             onChange={(_, { value }) => {

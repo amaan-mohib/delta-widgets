@@ -1,9 +1,12 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::fs;
 use std::path::Path;
+use std::{fs, path::PathBuf};
 use tauri::{AppHandle, Manager};
+
+use crate::setup::init::TEMPLATES;
+use crate::setup::utils::copy_embedded_dir;
 
 pub enum Direction {
     Up,
@@ -26,6 +29,36 @@ pub trait Migration {
 
         file_content = serde_json::to_string_pretty(&json)?;
         std::fs::write(path, file_content)?;
+
+        Ok(())
+    }
+
+    fn seed_new_widget(&self) -> Option<&str> {
+        None
+    }
+
+    fn add_new_widget(&self, new_widget_name: &str, widgets_root_path: &PathBuf) -> Result<()> {
+        let new_widget_path = widgets_root_path.join(format!("{new_widget_name}-delta-default"));
+        if new_widget_path.exists() {
+            return Ok(());
+        }
+        let Some(widget_dir) = TEMPLATES.get_dir(new_widget_name) else {
+            anyhow::bail!("No such widget found: {}", new_widget_name)
+        };
+
+        copy_embedded_dir(widget_dir, &new_widget_path)?;
+        println!("Copied new widget: {}", new_widget_name);
+
+        Ok(())
+    }
+
+    fn remove_widget(&self, widget_name: &str, widgets_root_path: &PathBuf) -> Result<()> {
+        let widget_path = widgets_root_path.join(format!("{widget_name}-delta-default"));
+        if !widget_path.exists() {
+            return Ok(());
+        }
+
+        fs::remove_dir_all(widget_path)?;
 
         Ok(())
     }
@@ -66,10 +99,14 @@ pub fn run_migrations(
                 let name = migration.name().to_string();
                 if !state.applied.contains(&name) {
                     println!("⬆️ Running migration: {}", name);
-                    for widget in &widget_dirs {
-                        let manifest_path = widget.path().join("manifest.json");
-                        migration.apply_to_file(&manifest_path, Direction::Up)?;
-                    }
+                    if let Some(new_widget_name) = migration.seed_new_widget() {
+                        migration.add_new_widget(new_widget_name, &widgets_root)?;
+                    } else {
+                        for widget in &widget_dirs {
+                            let manifest_path = widget.path().join("manifest.json");
+                            migration.apply_to_file(&manifest_path, Direction::Up)?;
+                        }
+                    };
                     state.applied.push(name);
                 } else {
                     println!("✅ Skipped already applied migration: {}", name);
@@ -81,9 +118,13 @@ pub fn run_migrations(
             if let Some(last) = state.applied.pop() {
                 println!("⬇️ Rolling back migration: {}", &last);
                 if let Some(migration) = migrations.into_iter().find(|m| m.name() == last) {
-                    for widget in &widget_dirs {
-                        let manifest_path = widget.path().join("manifest.json");
-                        migration.apply_to_file(&manifest_path, Direction::Down)?;
+                    if let Some(widget_name) = migration.seed_new_widget() {
+                        migration.remove_widget(widget_name, &widgets_root)?;
+                    } else {
+                        for widget in &widget_dirs {
+                            let manifest_path = widget.path().join("manifest.json");
+                            migration.apply_to_file(&manifest_path, Direction::Down)?;
+                        }
                     }
                 }
                 println!("🎉 Rolled back last migration");

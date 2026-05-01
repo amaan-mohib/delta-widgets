@@ -9,3 +9,4 @@
 *.jpg
 *.png
 !icons/*
+!no-thumb.png

@@ -8,9 +8,9 @@ import {
 } from "@fluentui/react-components";
 import React, { useEffect, useState } from "react";
 import { getStore } from "../../../common";
-import { invoke } from "@tauri-apps/api/core";
 import { blue, defaultTheme, green, red, yellow } from "../../../common/themes";
 import { useThemeStore } from "../../theme/useThemeStore";
+import { commands } from "../../../common/commands";
 
 const modes = [
   { label: "Light", value: "light" },
@@ -29,17 +29,21 @@ const colors = [
 interface ThemeProps {}
 
 const onSave = async (mode: string, color: string, overrideTheme: boolean) => {
-  await invoke("write_to_store_cmd", {
-    key: "mode",
-    value: mode,
-  });
-  await invoke("write_to_store_cmd", {
-    key: "color",
-    value: color,
-  });
-  await invoke("write_to_store_cmd", {
-    key: "overrideTheme",
-    value: overrideTheme,
+  await commands.writeToStoreCmd({
+    pairs: [
+      {
+        key: "mode",
+        value: mode,
+      },
+      {
+        key: "color",
+        value: color,
+      },
+      {
+        key: "overrideTheme",
+        value: overrideTheme,
+      },
+    ],
   });
 };
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { IWidget } from "../../types/manifest";
+import { ILiteWidget } from "../../types/manifest";
 import {
   AppsColor,
   DocumentColor,
@@ -12,9 +12,10 @@ import { exists } from "@tauri-apps/plugin-fs";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { nanoid } from "nanoid";
 import { templateWidgets } from "../../common";
+import { createUrlThumbnail } from "../utils/widgets";
 
 interface WidgetPreviewProps {
-  widget: IWidget;
+  widget: ILiteWidget;
   isDraft?: boolean;
 }
 
@@ -78,12 +79,36 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({ widget, isDraft }) => {
       .catch(console.error);
   }, [path, widgetType]);
 
+  useEffect(() => {
+    if (widgetType !== "url" || !url) return;
+
+    createUrlThumbnail(url)
+      .then((p) => {
+        setThumbPath(p || "");
+      })
+      .catch(console.error);
+  }, [url, widgetType]);
+
   if (widgetType === "url") {
     const location = new URL(url || "");
     return (
       <div className={styles.container}>
         <div className={styles.url}>
-          <LinkColor fontSize={48} />
+          {thumbPath ? (
+            <img
+              style={{
+                padding: 2,
+                borderRadius: 8,
+                height: 48,
+                width: 48,
+                objectFit: "contain",
+              }}
+              src={thumbPath}
+              alt={label}
+            />
+          ) : (
+            <LinkColor fontSize={48} />
+          )}
           <Caption1 className={styles.urlText}>{location.hostname}</Caption1>
         </div>
       </div>
