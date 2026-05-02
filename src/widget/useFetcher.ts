@@ -63,6 +63,8 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [systemInfoCounter, setSystemInfoCounter] = useState(0);
   const [weatherCounter, setWeatherCounter] = useState(0);
+  const lastMediaFetchedRef = useRef(0);
+  const lastAudioFetchedRef = useRef(0);
 
   useEffect(() => {
     if (!customFields) return;
@@ -94,6 +96,7 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
             } else {
               useVariableStore.setState({ currentMedia: null });
             }
+            lastMediaFetchedRef.current = Date.now();
           })
           .catch(console.error);
       },
@@ -116,9 +119,21 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
     const unsub = listen("media_updated", () => {
       getMedia();
     });
+
+    const interval = setInterval(() => {
+      const { currentMedia } = useVariableStore.getState();
+      const isPlaying = currentMedia?.playback_info?.status === "playing";
+      const isStale = Date.now() - lastMediaFetchedRef.current >= 1000;
+
+      if (isPlaying && isStale) {
+        getMedia();
+      }
+    }, 1000);
+
     return () => {
       getMedia.cancel();
       unsub.then((f) => f());
+      clearInterval(interval);
     };
   }, [dynamicVariables]);
 
@@ -197,9 +212,21 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
 
     const unsub = listen<number[]>("audio-samples", (event) => {
       useVariableStore.setState({ audioSamples: event.payload });
+      lastAudioFetchedRef.current = Date.now();
     });
+
+    const interval = setInterval(() => {
+      const lastPayload = useVariableStore.getState().audioSamples ?? [];
+      const isStale = Date.now() - lastAudioFetchedRef.current >= 1000;
+
+      if (isStale && lastPayload.length > 0) {
+        useVariableStore.setState({ audioSamples: [] });
+      }
+    }, 1000);
+
     return () => {
       unsub.then((f) => f());
+      clearInterval(interval);
     };
   }, [typesSet]);
 
