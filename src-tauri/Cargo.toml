@@ -1,6 +1,6 @@
 [package]
 name = "delta_widgets"
-version = "1.0.2"
+version = "1.0.3"
 description = "Widget maker for Windows (for now)"
 authors = ["amaan-mohib"]
 edition = "2021"
