@@ -24,11 +24,13 @@ import {
   Megaphone20Regular,
   QuestionCircle20Regular,
   Settings20Regular,
+  Sparkle20Regular,
 } from "@fluentui/react-icons";
 import AddMenu from "./AddMenu";
 import { check } from "@tauri-apps/plugin-updater";
 import { useDataStore } from "../../stores/useDataStore";
 import DiscordIcon from "../icons/Discord";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 export const sidebarWidth = 250;
 
@@ -144,6 +146,23 @@ const Sidebar: React.FC<SidebarProps> = () => {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               Marketplace
               <Badge appearance="tint">New</Badge>
+            </div>
+          </NavItem>
+          <NavItem
+            className={styles.navItem}
+            onClick={() => {
+              const window = new WebviewWindow("assistant", {
+                url: "/ai-index.html",
+                title: "Assistant",
+                width: 400,
+                height: 500,
+              });
+              window.show();
+            }}
+            value={"assistant"}
+            icon={<Sparkle20Regular />}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              Assistant
             </div>
           </NavItem>
           <NavDivider style={{ marginTop: "auto" }} />

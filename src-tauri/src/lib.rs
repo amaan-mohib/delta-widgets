@@ -1,10 +1,11 @@
 mod commands;
+mod db;
 pub mod migration;
 pub mod migrations;
 mod plugins;
 mod setup;
 
-use commands::{analytics, audio, media, migrate, services, store, system, widget};
+use commands::{analytics, audio, chat, media, migrate, services, store, system, widget};
 use log::LevelFilter;
 use plugins::localhost;
 use setup::init::init_app;
@@ -75,6 +76,7 @@ pub fn run() {
             widget::close_widget_window,
             widget::publish_widget,
             widget::open_devtools,
+            widget::get_existing_keys_cmd,
             system::get_system_info,
             analytics::track_analytics_event,
             store::write_to_store_cmd,
@@ -83,6 +85,13 @@ pub fn run() {
             audio::stop_audio_capture,
             audio::restart_audio_capture,
             audio::get_current_device_cmd,
+            chat::create_chat,
+            chat::get_all_chats,
+            chat::load_chat,
+            chat::upsert_message,
+            chat::update_chat_name,
+            chat::update_chat_widget_keys,
+            chat::get_chat_by_id,
         ])
         .setup(|app| {
             init_app(&app)?;

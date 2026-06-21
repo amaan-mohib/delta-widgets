@@ -20,6 +20,22 @@ export interface ICopyAssets {
   path: string;
 }
 
+export interface IChat {
+  id: string;
+  name: string;
+  data: any;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface IMessage {
+  id: string;
+  chat_id: string;
+  content: any;
+  created_at: number;
+  updated_at: number;
+}
+
 export const commands = {
   getMedia: () => invoke<IMedia[]>("get_media"),
   startMediaListenerCmd: () => invoke<void>("start_media_listener_cmd"),
@@ -65,4 +81,20 @@ export const commands = {
   stopAudioCapture: () => invoke<void>("stop_audio_capture"),
   restartAudioCapture: () => invoke<void>("restart_audio_capture"),
   getCurrentDeviceCmd: () => invoke<void>("get_current_device_cmd"),
+  createChat: (params: { input: { id: string; name: string; data: any } }) =>
+    invoke<void>("create_chat", params),
+  getAllChats: () => invoke<IChat[]>("get_all_chats"),
+  loadChat: (params: { chatId: string }) =>
+    invoke<IMessage[]>("load_chat", params),
+  upsertMessage: (params: {
+    input: { id: string; chat_id: string; content: any };
+  }) => invoke("upsert_message", params),
+  updateChatName: (params: { name: string; chatId: string }) =>
+    invoke<void>("update_chat_name", params),
+  getExistingKeysCmd: (params: { currentFolder: string }) =>
+    invoke<Record<string, null>>("get_existing_keys_cmd", params),
+  updateChatWidgetKeys: (params: { chatId: string; key: string }) =>
+    invoke<void>("update_chat_widget_keys", params),
+  getChatById: (params: { id: string }) =>
+    invoke<void>("get_chat_by_id", params),
 };

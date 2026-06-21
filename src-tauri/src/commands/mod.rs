@@ -1,5 +1,6 @@
 pub mod analytics;
 pub mod audio;
+pub mod chat;
 pub mod media;
 pub mod migrate;
 pub mod services;
