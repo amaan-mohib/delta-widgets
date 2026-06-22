@@ -11,7 +11,9 @@ import {
   type UIMessageChunk,
 } from "ai";
 import {
+  askUserTool,
   readJsonWidgetSchemaTool,
+  updateJsonWidgetTool,
   writeJsonWidgetTool,
 } from "../tools/widget_tools";
 import { commands } from "../../common/commands";
@@ -49,10 +51,25 @@ Use tools whenever possible and answer in brief and be precise with the question
 
 ## Widget Generation
 When the user wants to create a widget:
-1. Call read_widget_schema to get the required format and validation rules — retry until successful
-2. Available built-in templates for reference: battery, cpu, datetime, disks, media, media-viz, ram, visualizer, weather
-3. Generate the widget JSON and call write_widget_file
-4. Once saved, tell the user the creator window has opened where they can preview, edit, and publish — or ask you to make changes
+1. Use ask_user to determine the widget type — explain each option so the user can decide:
+   - **JSON:** Drag-and-drop, no coding, supports dynamic variables ({{time}}, {{media:title}}, {{system:cpu_usage}}). Best for clocks, system stats, media info. But uses a predefined component library (Microsoft Fluent UI) with basic text, layout and limited button handlers which the user might not want.
+   - **HTML:** Full custom layouts, animations, interactive behavior. Single file (HTML+CSS+JS inline). Best for advanced/custom designs.
+   - **URL:** Embeds an existing webpage. No coding but limited to what the page does. Must be created manually via Create > URL in the app.
+2. For URL: inform the user and stop.
+3. For JSON:
+   1. Call read_json_widget_schema to get the required format and validation rules — retry until successful
+   2. Available built-in templates for reference: battery, cpu, datetime, disks, media, media-viz, ram, visualizer, weather
+   3. Generate the widget JSON and call write_json_widget_file
+   4. Once saved, tell the user the creator window has opened where they can preview, edit, and update — or ask you to make changes
+4. For HTML:
+   a. Generate a single self-contained HTML file (CSS in <style>, JS in <script>, no external files or imports)
+   b. Call write_html_widget
+   c. Tell the user the widget is created, and can be toggled from the app.
+
+When the user wants to update a widget created in this chat:
+1. Call read_widget_schema if schema clarification is needed
+2. Apply the requested changes and call update_json_widget or update_html_widget accordingly
+3. Tell the user the creator window has reopened with the changes
 
 ## General
 - Only call read_widget_schema when generating a widget, not for general questions
@@ -107,7 +124,7 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
           .map((part) => part.text)
           .join(
             " ",
-          )}". Generate a concise, descriptive title (3-5 words) for this chat based on the user's first message. Focus on the main topic or question being asked.`,
+          )}". Generate a concise, descriptive title (3-5 words) for this chat based on the user's first message. Focus on the main topic or question being asked. Keep it plain text`,
       });
       await commands.updateChatName({ name: chatName, chatId: options.chatId });
       this.updateChatName(options.chatId, chatName);
@@ -127,6 +144,8 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
       tools: {
         read_json_widget_schema: readJsonWidgetSchemaTool,
         write_json_widget: writeJsonWidgetTool,
+        update_json_widget: updateJsonWidgetTool,
+        ask_user: askUserTool,
       },
       stopWhen: stepCountIs(10),
       experimental_context: {

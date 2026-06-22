@@ -59,3 +59,13 @@
   border-radius: 10px;
   max-width: 80%;
 }
+
+.ai-message {
+  ol,
+  ul {
+    padding-left: 15px;
+  }
+  pre {
+    overflow-x: auto;
+  }
+}

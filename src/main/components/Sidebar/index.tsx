@@ -30,7 +30,7 @@ import AddMenu from "./AddMenu";
 import { check } from "@tauri-apps/plugin-updater";
 import { useDataStore } from "../../stores/useDataStore";
 import DiscordIcon from "../icons/Discord";
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { commands } from "../../../common/commands";
 
 export const sidebarWidth = 250;
 
@@ -150,14 +150,8 @@ const Sidebar: React.FC<SidebarProps> = () => {
           </NavItem>
           <NavItem
             className={styles.navItem}
-            onClick={() => {
-              const window = new WebviewWindow("assistant", {
-                url: "/ai-index.html",
-                title: "Assistant",
-                width: 400,
-                height: 500,
-              });
-              window.show();
+            onClick={async () => {
+              await commands.createAssistantWindow();
             }}
             value={"assistant"}
             icon={<Sparkle20Regular />}>

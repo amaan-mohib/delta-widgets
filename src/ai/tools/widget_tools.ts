@@ -9,6 +9,7 @@ import {
 import { IWidget } from "../../types/manifest";
 import { path } from "@tauri-apps/api";
 import { emitTo } from "@tauri-apps/api/event";
+import getTemplateCategories from "../../creator/components/TemplateEditor/categories";
 
 const GridSizeSchema = z.object({
   rows: z.union([z.literal("auto"), z.number()]).optional(),
@@ -187,6 +188,15 @@ const templates = [
   "weather",
 ];
 
+export const askUserTool = tool({
+  description:
+    "Ask the user a clarifying question before proceeding. Use this to determine widget type or gather missing details.",
+  inputSchema: z.object({
+    question: z.string(),
+    options: z.array(z.string()).optional(),
+  }),
+});
+
 export const readJsonWidgetSchemaTool = tool({
   description:
     "Read the widget JSON schema and validation rules before generating a JSON widget and get required examples.",
@@ -211,11 +221,28 @@ export const readJsonWidgetSchemaTool = tool({
         return await response.json();
       }),
     );
-    return { schema: JSON_WIDGET_SCHEMA, validationRules, examples };
+    const categories = getTemplateCategories({});
+    const availableDynamicVariables = categories
+      .map((i) =>
+        i.templates.map((t) => ({
+          value: t.value,
+          description: t.description,
+        })),
+      )
+      .flat();
+    return {
+      schema: JSON_WIDGET_SCHEMA,
+      validationRules,
+      examples,
+      availableDynamicVariables,
+    };
   },
 });
 
-const validateWidget = async (widget: z.infer<typeof WidgetSchema>) => {
+const validateWidget = async (
+  widget: z.infer<typeof WidgetSchema>,
+  update?: boolean,
+) => {
   let errors: any[] = [];
   try {
     if (typeof widget === "string") {
@@ -228,13 +255,15 @@ const validateWidget = async (widget: z.infer<typeof WidgetSchema>) => {
       widget.key,
       "manifest.json",
     );
-    const existingKeys = await commands.getExistingKeysCmd({
-      currentFolder: widgetPath,
-    });
-    if (widget.key in existingKeys) {
-      errors.push(
-        `Widget key exists, please create another key which should not be any of these values: [${Object.keys(existingKeys).join()}]`,
-      );
+    if (!update) {
+      const existingKeys = await commands.getExistingKeysCmd({
+        currentFolder: widgetPath,
+      });
+      if (widget.key in existingKeys) {
+        errors.push(
+          `Widget key exists, please create another key which should not be any of these values: [${Object.keys(existingKeys).join()}]`,
+        );
+      }
     }
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -288,7 +317,72 @@ export const writeJsonWidgetTool = tool({
       chatId: currentChatId,
       key: widget.key,
     });
-    await createCreatorWindow(null, addedWidget.path);
+    await commands.closeWidgetWindow({ label: "creator" });
+    // do not put in drafts, will be directly published.
+    await createCreatorWindow(addedWidget.path);
+    await emitTo("main", "creator-close", {});
+
+    return { success: true };
+  },
+});
+
+export const updateJsonWidgetTool = tool({
+  description: `Updates an existing widget JSON file. Call read_widget_schema first if unsure about the schema. Returns validation errors if invalid so you can correct and retry.`,
+  inputSchema: z.object({
+    widget: WidgetSchema,
+  }),
+  execute: async ({ widget }, { experimental_context }) => {
+    const context = experimental_context as { chatId?: string };
+    const currentChatId = context?.chatId;
+
+    if (!currentChatId) {
+      throw new Error("Chat id now defined in tool context");
+    }
+
+    const chat = await commands
+      .getChatById({ id: currentChatId })
+      .catch(console.error);
+    if (!chat) {
+      throw new Error("Chat not found");
+    }
+    const chatWidgetKeys = chat.data?.widgetKeys || [];
+    if (!chatWidgetKeys.includes(widget.key)) {
+      return {
+        success: false,
+        errors: [`Widget key "${widget.key}" was not created in this chat.`],
+      };
+    }
+
+    const errors = await validateWidget(widget, true);
+    let errorObj = {
+      success: false,
+      errors,
+      widget,
+      schema: JSON_WIDGET_SCHEMA,
+    };
+    if (errors.length) {
+      return errorObj;
+    }
+
+    const { widgetsDir } = await getWidgetsDirPath();
+    const widgetPath = await path.resolve(
+      widgetsDir,
+      widget.key,
+      "manifest.json",
+    );
+    const updatedWidget = await addWidget("json", {
+      manifest: widget as IWidget,
+      label: widget.label,
+      existingManifestPath: widgetPath,
+    });
+    if (!updatedWidget) {
+      errorObj.errors.push(
+        "Something went wrong while updating widget, try again.",
+      );
+      return errorObj;
+    }
+    await commands.closeWidgetWindow({ label: "creator" });
+    await createCreatorWindow(updatedWidget.path);
     await emitTo("main", "creator-close", {});
 
     return { success: true };

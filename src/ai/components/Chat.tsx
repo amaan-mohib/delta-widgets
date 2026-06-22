@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { CustomChatTransport } from "../lib/customChatTransport";
 import { ollama } from "ai-sdk-ollama";
@@ -15,7 +15,7 @@ import {
   tokens,
   useToastController,
 } from "@fluentui/react-components";
-import { SendRegular } from "@fluentui/react-icons";
+import { ArrowDownRegular, SendRegular } from "@fluentui/react-icons";
 import { lastAssistantMessageIsCompleteWithToolCalls } from "ai";
 import { useChatStore } from "../stores/useChatStore";
 
@@ -35,6 +35,7 @@ const Chat: React.FC<ChatProps> = () => {
     id: chatId!,
     messages: initialMessages,
     transport: new CustomChatTransport(model, isNewChat, updateChatName),
+    experimental_throttle: 50,
     // sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     // async onToolCall({ toolCall }) {
     //   // Check if it's a dynamic tool first for proper type narrowing
@@ -68,6 +69,23 @@ const Chat: React.FC<ChatProps> = () => {
     //   }
     // },
   });
+  const containerRef = useRef(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const [showButton, setShowButton] = useState(false);
+
+  const handleScroll = () => {
+    if (!containerRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+
+    // Check if the user has scrolled up away from the bottom (with 50px buffer)
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+    setShowButton(!isAtBottom);
+  };
+
+  const scrollToBottom = () => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
     console.log({ messages });
@@ -76,8 +94,11 @@ const Chat: React.FC<ChatProps> = () => {
   const { dispatchToast } = useToastController("chat-toaster");
 
   return (
-    <div className="container">
-      <div className="message-container">
+    <div className="container" style={{ position: "relative" }}>
+      <div
+        className="message-container"
+        ref={containerRef}
+        onScroll={handleScroll}>
         {messages.map((message) => (
           <div
             key={message.id}
@@ -98,12 +119,31 @@ const Chat: React.FC<ChatProps> = () => {
                 return (
                   <div
                     key={`${message.id}-${part.type}-${i}`}
-                    style={{ padding: "2px 0" }}>
-                    <strong>Tool:</strong> {part.type.replace("tool-", "")}
+                    style={{ padding: "2px 0", fontSize: 12 }}>
+                    {part.type === "tool-read_json_widget_schema"
+                      ? "Reading widget schema"
+                      : null}
+                    {part.type === "tool-write_json_widget"
+                      ? "Creating widget"
+                      : null}
+                    {part.type === "tool-update_json_widget"
+                      ? "Updating widget"
+                      : null}
+                    {/* <strong>Tool:</strong> {part.type.replace("tool-", "")} */}
                   </div>
                 );
               }
             })}
+            {status === "ready" &&
+            message.role === "assistant" &&
+            (message.parts || []).filter((i) => i.type === "text").length ===
+              0 ? (
+              <div key={`error-${messages.length}`} className="error-message">
+                An error occurred while streaming the response. Please try
+                again.
+              </div>
+            ) : null}
+            <div ref={bottomRef} />
           </div>
         ))}
         {status === "submitted" || status === "streaming" ? (
@@ -111,12 +151,24 @@ const Chat: React.FC<ChatProps> = () => {
             <SkeletonItem size={32} />
           </Skeleton>
         ) : null}
+
         {status === "error" ? (
           <div className="error-message">
             An error occurred while sending the message. Please try again.
           </div>
         ) : null}
       </div>
+      {showButton && (
+        <Button
+          onClick={scrollToBottom}
+          icon={<ArrowDownRegular />}
+          appearance="primary"
+          shape="circular"
+          // size="large"
+          style={{ position: "absolute", bottom: "80px", left: "20px" }}>
+          New messages
+        </Button>
+      )}
       <form
         className="input-container"
         onSubmit={async (e) => {

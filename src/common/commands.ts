@@ -96,5 +96,6 @@ export const commands = {
   updateChatWidgetKeys: (params: { chatId: string; key: string }) =>
     invoke<void>("update_chat_widget_keys", params),
   getChatById: (params: { id: string }) =>
-    invoke<void>("get_chat_by_id", params),
+    invoke<IChat | undefined>("get_chat_by_id", params),
+  createAssistantWindow: () => invoke<void>("create_assistant_window"),
 };
