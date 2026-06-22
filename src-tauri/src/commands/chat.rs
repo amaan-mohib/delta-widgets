@@ -2,6 +2,7 @@ use crate::db::DatabaseState;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::prelude::*;
+use tauri::Manager;
 
 #[derive(Debug, FromRow, Serialize)]
 pub struct Chat {
@@ -238,6 +239,10 @@ pub async fn upsert_message(
 
 #[tauri::command]
 pub async fn create_assistant_window(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(existing_window) = app.get_webview_window("assistant") {
+        existing_window.set_focus().unwrap();
+        return Ok(());
+    };
     let new_window = tauri::WebviewWindowBuilder::new(
         &app,
         "assistant",
