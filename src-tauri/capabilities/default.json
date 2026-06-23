@@ -10,8 +10,8 @@
   ],
   "remote": {
     "urls": [
-      "http://*.localhost*",
-      "http://localhost*"
+      "http://*.localhost:*",
+      "http://localhost:*"
     ]
   },
   "permissions": [

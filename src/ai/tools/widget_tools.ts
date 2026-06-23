@@ -4,12 +4,15 @@ import { commands } from "../../common/commands";
 import {
   addWidget,
   createCreatorWindow,
+  createWidgetWindow,
   getWidgetsDirPath,
 } from "../../main/utils/widgets";
 import { IWidget } from "../../types/manifest";
 import { path } from "@tauri-apps/api";
 import { emitTo } from "@tauri-apps/api/event";
 import getTemplateCategories from "../../creator/components/TemplateEditor/categories";
+import { mkdir, writeTextFile } from "@tauri-apps/plugin-fs";
+import { closeWidgetWindow } from "../../common";
 
 const GridSizeSchema = z.object({
   rows: z.union([z.literal("auto"), z.number()]).optional(),
@@ -188,20 +191,141 @@ const templates = [
   "weather",
 ];
 
-export const askUserTool = tool({
-  description:
-    "Ask the user a clarifying question before proceeding. Use this to determine widget type or gather missing details.",
-  inputSchema: z.object({
-    question: z.string(),
-    options: z.array(z.string()).optional(),
-  }),
-});
+const tauriCommands = `Available Tauri commands via window.__TAURI__.core.invoke():
+## Command Reference
 
-export const readJsonWidgetSchemaTool = tool({
+| Command                    | Description                                                                   | Parameters                  | Returns                                 |
+| -------------------------- | ----------------------------------------------------------------------------- | --------------------------- | --------------------------------------- |
+| \`get_system_info\`          | Returns current system information such as CPU usage, memory usage, etc.      | _None_                      | Promise<[SystemInfo](#systeminfo)\>     |
+| \`start_media_listener_cmd\` | Starts the system media session listener required for \`media_updated\` events. | _None_                      | Promise<void\>                          |
+| \`stop_media_listener_cmd\`  | Stops the active system media session listener.                               | _None_                      | Promise<void\>                          |
+| \`get_media\`                | Returns metadata for all currently available media sessions.                  | _None_                      | Promise<[MediaObject[]](#mediaobject)\> |
+| \`media_action\`             | Perform action on the currently playing media.                                | [MediaAction](#mediaaction) | Promise<void\>                          |
+| \`start_audio_capture\`      | Starts capturing live system audio samples for waveform visualization.        | _None_                      | Promise<void\>                          |
+| \`stop_audio_capture\`       | Stops the active system audio capture stream.                                 | _None_                      | Promise<void\>                          |
+| \`get_current_device_cmd\`   | Returns the ID of the current audio output device.                            | _None_                      | Promise<String\>                        |
+
+Use \`start_media_listener_cmd\` to begin monitoring system media metadata. Once started, the application will emit a \`media_updated\` event whenever information about the currently playing media changes (such as title, artist, album art, or playback state).
+
+To receive live system audio waveform samples, call \`start_audio_capture\`. This starts an audio capture stream that emits \`audio-samples\` events approximately every 33 ms.
+
+Because continuous audio capture can increase CPU usage, it is recommended to call \`stop_audio_capture\` when audio sample updates are no longer needed.
+
+### SystemInfo
+
+| Parameter        | Type   | Description                                          |
+| ---------------- | ------ | ---------------------------------------------------- |
+| \`total_memory\`   | Number | Total memory available in bytes                      |
+| \`used_memory\`    | Number | Used memory in bytes                                 |
+| \`total_swap\`     | Number | Total swap memory in bytes                           |
+| \`used_swap\`      | Number | Used swap memory in bytes                            |
+| \`os_version\`     | String | Operating system version                             |
+| \`os_name\`        | String | Operating system name                                |
+| \`kernel_version\` | String | Kernel version                                       |
+| \`hostname\`       | String | System hostname                                      |
+| \`disks\`          | Array  | List of disk information                             |
+| \`batteries\`      | Array  | List of battery information                          |
+| \`cpus\`           | Array  | List of CPU information                              |
+| \`cpu\`            | Object | CPU summary containing count, speed, usage and brand |
+| \`networks\`       | Array  | List of network interfaces                           |
+
+### MediaObject
+
+| Parameter             | Type                                                 | Description                              |
+| --------------------- | ---------------------------------------------------- | ---------------------------------------- |
+| \`title\`               | String                                               | Title of the media                       |
+| \`artist\`              | String                                               | Artist name                              |
+| \`thumbnail\`           | Number[]                                             | Binary data of the media thumbnail       |
+| \`playback_info\`       | [MediaPlaybackInfo](#mediaplaybackinfo)?             | Optional playback information            |
+| \`player\`              | [MediaPlayerInfo](#mediaplayerinfo)?                 | Optional media player information        |
+| \`player_id\`           | String                                               | Unique identifier for the player         |
+| \`timeline_properties\` | [MediaTimelineProperties](#mediatimelineproperties)? | Optional timeline properties             |
+| \`is_current_session\`  | bool                                                 | Indicates if this is the current session |
+
+#### MediaPlaybackInfo
+
+| Parameter    | Type                                            | Description                    |
+| ------------ | ----------------------------------------------- | ------------------------------ |
+| \`controls\`   | [MediaPlaybackControls](#mediaplaybackcontrols) | Playback control states        |
+| \`status\`     | String                                          | Current playback status        |
+| \`is_shuffle\` | bool                                            | Whether shuffle mode is active |
+
+#### MediaPlaybackControls
+
+| Parameter         | Type | Description                           |
+| ----------------- | ---- | ------------------------------------- |
+| \`play_enabled\`    | bool | Whether play control is enabled       |
+| \`pause_enabled\`   | bool | Whether pause control is enabled      |
+| \`stop_enabled\`    | bool | Whether stop control is enabled       |
+| \`next_enabled\`    | bool | Whether next track control is enabled |
+| \`prev_enabled\`    | bool | Whether prev track control is enabled |
+| \`toggle_enabled\`  | bool | Whether toggle control is enabled     |
+| \`shuffle_enabled\` | bool | Whether shuffle control is enabled    |
+| \`repeat_enabled\`  | bool | Whether repeat control is enabled     |
+
+#### MediaTimelineProperties
+
+| Parameter    | Type | Description                      |
+| ------------ | ---- | -------------------------------- |
+| \`start_time\` | u128 | Start time of the media          |
+| \`end_time\`   | u128 | End time of the media            |
+| \`position\`   | u128 | Current position in the timeline |
+
+#### MediaPlayerInfo
+
+| Parameter | Type   | Description                                    |
+| --------- | ------ | ---------------------------------------------- |
+| \`name\`    | String | Name of the media player                       |
+| \`icon\`    | String | Local file path to the media player icon image |
+
+!!! info
+
+    The \`icon\` field returns a local filesystem path. To use it as an image source inside a Tauri application, convert it using \`convertFileSrc\`.
+
+    \`\`\`js
+    import { convertFileSrc } from "@tauri-apps/api/core";
+
+    const src = convertFileSrc(icon);
+    \`\`\`
+
+### MediaAction
+
+| Parameter   | Type                                                            | Description                                                                             |
+| ----------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| \`playerId\` | String                                                          | Unique identifier for the player                                                        |
+| \`action\`    | "play" \| "pause" \| "toggle" \| "next" \| "prev" \| "position" | The media action to perform                                                             |
+| \`position\`  | Option<Number\>                                                 | Optional position parameter for seeking, but required if using \`"position"\` as \`action\` |
+`;
+
+const tauriEvents = `Available Tauri events via window.__TAURI__.event.listen():
+### \`media_updated\`
+
+To listen for changes in the currently playing system media, first invoke \`start_media_listener_cmd\`. Once the listener is active, the application emits the \`media_updated\` event whenever media metadata or playback status changes.
+
+The \`media_updated\` event acts as a notification trigger. To retrieve the latest media information, call \`get_media\` inside the event listener.
+
+### \`audio-samples\`
+
+After starting system audio capture with \`start_audio_capture\`, the application begins emitting the \`audio-samples\` event at roughly 33 ms intervals.
+
+Each \`audio-samples\` event returns an array of approximately 256 numeric sample values representing the current system audio waveform.`;
+
+export const readWidgetSchemaTool = tool({
   description:
-    "Read the widget JSON schema and validation rules before generating a JSON widget and get required examples.",
-  inputSchema: z.object({ templates: z.array(z.string()).optional() }),
-  execute: async ({ templates: templateNames }) => {
+    "Read widget schema and context before generating a widget. For JSON widgets returns schema, validation rules, dynamic variables, and examples. For HTML widgets returns available Tauri commands and events.",
+  inputSchema: z.object({
+    templates: z.array(z.string()).optional(),
+    widgetType: z.enum(["json", "html"]),
+  }),
+  execute: async ({ templates: templateNames, widgetType }) => {
+    if (widgetType === "html") {
+      return {
+        tauriCommands,
+        tauriEvents,
+        nextTool: `write_html_widget if creating or update_html_widget if updating a HTML widget`,
+      };
+    }
+
     if (!templateNames) {
       templateNames = ["media", "datetime", "weather", "cpu"];
     }
@@ -235,6 +359,7 @@ export const readJsonWidgetSchemaTool = tool({
       validationRules,
       examples,
       availableDynamicVariables,
+      nextTool: `write_json_widget if creating or update_json_widget if updating a JSON widget`,
     };
   },
 });
@@ -249,13 +374,31 @@ const validateWidget = async (
       widget = JSON.parse(widget);
     }
     WidgetSchema.parse(widget);
-    const { widgetsDir } = await getWidgetsDirPath();
-    const widgetPath = await path.resolve(
-      widgetsDir,
-      widget.key,
-      "manifest.json",
-    );
+
+    if (widget.widgetType === "json") {
+      if (!widget.elements || widget.elements.length === 0) {
+        errors.push("A JSON widget must have elements");
+      }
+      if (widget.file || widget.url) {
+        errors.push("A JSON widget cannot have a file or url field");
+      }
+    }
+    if (widget.widgetType === "html") {
+      if (!widget.file) {
+        errors.push("An HTML widget must have file field");
+      }
+      if (widget.elements || widget.url) {
+        errors.push("An HTML widget cannot have an elements or url field");
+      }
+    }
+
     if (!update) {
+      const { widgetsDir } = await getWidgetsDirPath();
+      const widgetPath = await path.resolve(
+        widgetsDir,
+        widget.key,
+        "manifest.json",
+      );
       const existingKeys = await commands.getExistingKeysCmd({
         currentFolder: widgetPath,
       });
@@ -272,7 +415,6 @@ const validateWidget = async (
       }
     } else {
       console.log(error);
-
       errors.push((error as any).message || "Unknown error");
     }
   }
@@ -383,6 +525,112 @@ export const updateJsonWidgetTool = tool({
     }
     await commands.closeWidgetWindow({ label: "creator" });
     await createCreatorWindow(updatedWidget.path);
+    await emitTo("main", "creator-close", {});
+
+    return { success: true };
+  },
+});
+
+export const writeHtmlWidgetTool = tool({
+  description: `Creates a self-contained HTML widget. All CSS must be in <style> and JS in <script> tags — no external files.
+Call read_widget_schema first to get available Tauri commands and types.
+Note: window.__TAURI__ is available but fragile — avoid page reloads or redirects inside the widget.`,
+  inputSchema: z.object({
+    label: z.string(),
+    html: z
+      .string()
+      .describe(
+        "Complete HTML file with all CSS in <style> and JS in <script> tags inline.",
+      ),
+    dimensions: z.object({ height: z.number(), width: z.number() }),
+  }),
+  execute: async ({ label, html, dimensions }, { experimental_context }) => {
+    const context = experimental_context as { chatId?: string };
+    if (!context?.chatId)
+      throw new Error("Chat id not defined in tool context");
+
+    const { widgetsDir } = await getWidgetsDirPath();
+    const key = label.toLowerCase().replace(/\s+/g, "-");
+    const widgetDir = await path.resolve(widgetsDir, key);
+    const manifestPath = await path.resolve(widgetDir, "manifest.json");
+    const htmlFileFolder = await path.resolve(widgetDir, "files");
+    const htmlFilePath = await path.resolve(htmlFileFolder, "index.html");
+
+    const widget: z.infer<typeof WidgetSchema> = {
+      key,
+      label,
+      file: htmlFileFolder,
+      position: { x: 30, y: 30 },
+      dimensions,
+      widgetType: "html",
+      visible: true,
+    };
+
+    await mkdir(htmlFileFolder, { recursive: true });
+    await writeTextFile(htmlFilePath, html);
+
+    const errors = await validateWidget(widget);
+    let errorObj = {
+      success: false,
+      errors,
+      widget,
+      schema: JSON_WIDGET_SCHEMA,
+    };
+    if (errors.length) {
+      return errorObj;
+    }
+
+    await writeTextFile(manifestPath, JSON.stringify(widget));
+
+    await commands.updateChatWidgetKeys({ chatId: context.chatId, key });
+    await createWidgetWindow(manifestPath, false, false);
+    await emitTo("main", "creator-close", {});
+
+    return { success: true, widgetKey: key };
+  },
+});
+
+export const updateHtmlWidgetTool = tool({
+  description: `Update a self-contained HTML widget. All CSS must be in <style> and JS in <script> tags — no external files.
+Call read_widget_schema first to get available Tauri commands and types.
+Note: window.__TAURI__ is available but fragile — avoid page reloads or redirects inside the widget.`,
+  inputSchema: z.object({
+    key: z.string(),
+    html: z
+      .string()
+      .describe(
+        "Complete HTML file with all CSS in <style> and JS in <script> tags inline.",
+      ),
+  }),
+  execute: async ({ key, html }, { experimental_context }) => {
+    const context = experimental_context as { chatId?: string };
+    if (!context?.chatId)
+      throw new Error("Chat id not defined in tool context");
+
+    const chat = await commands
+      .getChatById({ id: context.chatId })
+      .catch(console.error);
+    if (!chat) {
+      throw new Error("Chat not found");
+    }
+    const chatWidgetKeys = chat.data?.widgetKeys || [];
+    if (!chatWidgetKeys.includes(key)) {
+      return {
+        success: false,
+        errors: [`Widget key "${key}" was not created in this chat.`],
+      };
+    }
+
+    const { widgetsDir } = await getWidgetsDirPath();
+
+    const widgetDir = await path.resolve(widgetsDir, key);
+    const manifestPath = await path.resolve(widgetDir, "manifest.json");
+    const htmlFileFolder = await path.resolve(widgetDir, "files");
+    const htmlFilePath = await path.resolve(htmlFileFolder, "index.html");
+    await writeTextFile(htmlFilePath, html);
+
+    await closeWidgetWindow(`widget-${key}`, true, manifestPath);
+    await createWidgetWindow(manifestPath, false, true);
     await emitTo("main", "creator-close", {});
 
     return { success: true };

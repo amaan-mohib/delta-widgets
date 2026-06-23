@@ -5,6 +5,19 @@
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
   --navbar-height: 40px;
+  --color-canvas-default: #ffffff;
+  --color-canvas-subtle: #f6f8fa;
+  --color-border-default: #d0d7de;
+  --color-border-muted: hsla(210, 18%, 87%, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-canvas-default: #0d1117;
+    --color-canvas-subtle: #161b22;
+    --color-border-default: #30363d;
+    --color-border-muted: #21262d;
+  }
 }
 
 * {
@@ -67,5 +80,33 @@
   }
   pre {
     overflow-x: auto;
+  }
+  table {
+    border-spacing: 0;
+    border-collapse: collapse;
+    display: block;
+    margin-top: 0;
+    margin-bottom: 16px;
+    width: max-content;
+    max-width: 100%;
+    overflow: auto;
+  }
+
+  tr {
+    border-top: 1px solid var(--color-border-muted);
+  }
+
+  td,
+  th {
+    padding: 6px 13px;
+    border: 1px solid var(--color-border-default);
+  }
+
+  th {
+    font-weight: 600;
+  }
+
+  table img {
+    background-color: transparent;
   }
 }

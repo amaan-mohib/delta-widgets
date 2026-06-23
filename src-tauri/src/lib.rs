@@ -94,7 +94,10 @@ pub fn run() {
             chat::get_chat_by_id,
             chat::create_assistant_window,
         ])
-        .setup(|app| {
+        .setup(move |app| {
+            CUSTOM_SERVER_PORT
+                .set(port)
+                .expect("Failed to set global port");
             init_app(&app)?;
             Ok(())
         })
@@ -113,9 +116,6 @@ pub fn run() {
         .run(move |_, event| match event {
             tauri::RunEvent::Ready => {
                 println!("Tauri application is ready");
-                CUSTOM_SERVER_PORT
-                    .set(port)
-                    .expect("Failed to set global port");
             }
             _ => {}
         });

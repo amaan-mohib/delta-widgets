@@ -18,6 +18,7 @@ import {
 import { ArrowDownRegular, SendRegular } from "@fluentui/react-icons";
 import { lastAssistantMessageIsCompleteWithToolCalls } from "ai";
 import { useChatStore } from "../stores/useChatStore";
+import remarkGfm from "remark-gfm";
 
 interface ChatProps {}
 
@@ -87,9 +88,9 @@ const Chat: React.FC<ChatProps> = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useEffect(() => {
-    console.log({ messages });
-  }, [messages]);
+  // useEffect(() => {
+  //   console.log({ messages });
+  // }, [messages]);
 
   const { dispatchToast } = useToastController("chat-toaster");
 
@@ -110,7 +111,9 @@ const Chat: React.FC<ChatProps> = () => {
             {message.parts?.map((part, i) => {
               if (part.type === "text") {
                 return (
-                  <Markdown key={`${message.id}-text-${i}`}>
+                  <Markdown
+                    key={`${message.id}-text-${i}`}
+                    remarkPlugins={[remarkGfm]}>
                     {part.text}
                   </Markdown>
                 );
@@ -120,13 +123,15 @@ const Chat: React.FC<ChatProps> = () => {
                   <div
                     key={`${message.id}-${part.type}-${i}`}
                     style={{ padding: "2px 0", fontSize: 12 }}>
-                    {part.type === "tool-read_json_widget_schema"
-                      ? "Reading widget schema"
+                    {part.type === "tool-read_widget_schema"
+                      ? "Gathering widget schema and examples"
                       : null}
-                    {part.type === "tool-write_json_widget"
+                    {part.type === "tool-write_json_widget" ||
+                    part.type === "tool-write_html_widget"
                       ? "Creating widget"
                       : null}
-                    {part.type === "tool-update_json_widget"
+                    {part.type === "tool-update_json_widget" ||
+                    part.type === "tool-update_html_widget"
                       ? "Updating widget"
                       : null}
                     {/* <strong>Tool:</strong> {part.type.replace("tool-", "")} */}

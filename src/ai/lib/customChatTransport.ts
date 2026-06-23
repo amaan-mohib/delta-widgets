@@ -11,16 +11,14 @@ import {
   type UIMessageChunk,
 } from "ai";
 import {
-  askUserTool,
-  readJsonWidgetSchemaTool,
+  readWidgetSchemaTool,
+  updateHtmlWidgetTool,
   updateJsonWidgetTool,
+  writeHtmlWidgetTool,
   writeJsonWidgetTool,
 } from "../tools/widget_tools";
 import { commands } from "../../common/commands";
-// When generating a widget, always call read_widget_schema first until you get the successfully schema to understand the required format, which also provides examples of valid widgets.
-// The available example templates are: battery, cpu, datetime, disks, media, media-viz, ram, visualizer, weather.
-// After successfully writing a widget file, inform the user that the creator window has opened and they can edit and publish from there, or ask you to make further changes.
-// 1. Use ask_user to clarify their needs if not specified (widget type: JSON/HTML/URL, purpose, style preferences)
+
 const systemPrompt = `You are AI assistant for application called Delta Widgets.
 
 Never introduce yourself unless the user explicitly asks who you are.
@@ -51,7 +49,7 @@ Use tools whenever possible and answer in brief and be precise with the question
 
 ## Widget Generation
 When the user wants to create a widget:
-1. Use ask_user to determine the widget type — explain each option so the user can decide:
+1. Ask the user to determine the widget type — explain each option so the user can decide:
    - **JSON:** Drag-and-drop, no coding, supports dynamic variables ({{time}}, {{media:title}}, {{system:cpu_usage}}). Best for clocks, system stats, media info. But uses a predefined component library (Microsoft Fluent UI) with basic text, layout and limited button handlers which the user might not want.
    - **HTML:** Full custom layouts, animations, interactive behavior. Single file (HTML+CSS+JS inline). Best for advanced/custom designs.
    - **URL:** Embeds an existing webpage. No coding but limited to what the page does. Must be created manually via Create > URL in the app.
@@ -64,6 +62,8 @@ When the user wants to create a widget:
 4. For HTML:
    a. Generate a single self-contained HTML file (CSS in <style>, JS in <script>, no external files or imports)
    b. Call write_html_widget
+   c. Make sure to add the CSS property "-webkit-app-region: drag;" to the body or a container div to make the widget draggable.
+   d. window.__TAURI__ gets populated after some time, access them only after they are available.
    c. Tell the user the widget is created, and can be toggled from the app.
 
 When the user wants to update a widget created in this chat:
@@ -142,10 +142,11 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
       toolChoice: "auto",
       system: systemPrompt,
       tools: {
-        read_json_widget_schema: readJsonWidgetSchemaTool,
+        read_widget_schema: readWidgetSchemaTool,
         write_json_widget: writeJsonWidgetTool,
         update_json_widget: updateJsonWidgetTool,
-        ask_user: askUserTool,
+        write_html_widget: writeHtmlWidgetTool,
+        update_html_widget: updateHtmlWidgetTool,
       },
       stopWhen: stepCountIs(10),
       experimental_context: {
@@ -173,8 +174,6 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
       generateMessageId: createIdGenerator({ prefix: "msg" }),
       onFinish: async ({ responseMessage }) => {
         try {
-          console.log({ responseMessage });
-
           await commands.upsertMessage({
             input: {
               chat_id: options.chatId,

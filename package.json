@@ -55,6 +55,7 @@
     "react-quill": "^2.0.0",
     "react-resizable": "github:amaan-mohib/react-resizable",
     "react-zoom-pan-pinch": "^3.7.0",
+    "remark-gfm": "^4.0.1",
     "tauri-plugin-system-info-api": "^2.0.10",
     "zod": "^4.4.3",
     "zustand": "^5.0.3"
