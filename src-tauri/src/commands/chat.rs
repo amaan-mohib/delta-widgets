@@ -1,4 +1,10 @@
-use crate::db::DatabaseState;
+use crate::{
+    commands::utils::{
+        query_media_history_util, query_media_search, query_media_stats, query_top_artist,
+        query_top_media,
+    },
+    db::DatabaseState,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::prelude::*;
@@ -235,6 +241,40 @@ pub async fn upsert_message(
         .map_err(|e| e.to_string())?;
 
     Ok(())
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MediaQueryIntent {
+    History,
+    TopMedia,
+    TopArtists,
+    Stats,
+    Search,
+}
+#[derive(Debug, Deserialize)]
+pub struct MediaQueryRequest {
+    pub intent: MediaQueryIntent,
+    pub start_time: Option<String>,
+    pub end_time: Option<String>,
+    pub search_query: Option<String>,
+    pub limit: Option<i64>,
+}
+
+#[tauri::command]
+pub async fn query_media_history(
+    state: tauri::State<'_, DatabaseState>,
+    input: MediaQueryRequest,
+) -> Result<serde_json::Value, String> {
+    let pool = &state.0;
+
+    match input.intent {
+        MediaQueryIntent::History => query_media_history_util(pool, input).await,
+        MediaQueryIntent::TopMedia => query_top_media(pool, input).await,
+        MediaQueryIntent::TopArtists => query_top_artist(pool, input).await,
+        MediaQueryIntent::Stats => query_media_stats(pool, input).await,
+        MediaQueryIntent::Search => query_media_search(pool, input).await,
+    }
 }
 
 #[tauri::command]

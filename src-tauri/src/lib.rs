@@ -92,6 +92,7 @@ pub fn run() {
             chat::update_chat_name,
             chat::update_chat_widget_keys,
             chat::get_chat_by_id,
+            chat::query_media_history,
             chat::create_assistant_window,
         ])
         .setup(move |app| {

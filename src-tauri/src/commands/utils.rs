@@ -1,7 +1,11 @@
 use anyhow::anyhow;
 use base64::{prelude::BASE64_STANDARD, Engine};
 use image::GenericImageView;
+use serde::Serialize;
 use serde_json::{json, Value};
+use sqlx::prelude::FromRow;
+use sqlx::types::chrono::{DateTime, Local};
+use sqlx::{Pool, Sqlite};
 use std::os::windows::ffi::OsStrExt;
 use std::{
     collections::HashMap,
@@ -11,7 +15,7 @@ use std::{
     sync::Mutex,
     time::{Duration, SystemTime},
 };
-use tauri::{Emitter, Manager, PhysicalPosition, PhysicalSize};
+use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize};
 use tauri_plugin_system_info::SysInfoState;
 use tokio::time::{sleep, Instant};
 use windows::{
@@ -22,6 +26,10 @@ use windows::{
     Win32::Storage::FileSystem::{GetFileVersionInfoSizeW, GetFileVersionInfoW, VerQueryValueW},
 };
 use windows_icons::get_icon_by_path;
+
+use crate::commands::chat::MediaQueryRequest;
+use crate::commands::media::MediaInfo;
+use crate::db::DatabaseState;
 
 static NO_THUMB_BYTES: &'static [u8] = include_bytes!("no-thumb.png");
 
@@ -471,4 +479,330 @@ pub fn get_win32_icon(app: &tauri::AppHandle, app_id: &String) -> anyhow::Result
         icon_path.to_string_lossy().to_string(),
         app_name.to_string(),
     ))
+}
+
+pub async fn upsert_media_history(app: &AppHandle, media: &MediaInfo) -> Result<(), String> {
+    if !media.is_current_session {
+        return Ok(());
+    }
+
+    let (title, thumbnail, player_name, duration) = (
+        &media.title,
+        &media.thumbnail,
+        media
+            .player
+            .as_ref()
+            .map(|p| p.name.as_str())
+            .unwrap_or("Unknown Player"),
+        media
+            .timeline_properties
+            .as_ref()
+            .map(|t| (t.end_time - t.start_time) as i64)
+            .unwrap_or_default(),
+    );
+
+    let (artist, album) = match media.artist.split_once(" — ") {
+        Some((artist, album)) => (artist, album),
+        None => (media.artist.as_str(), ""),
+    };
+
+    let db_state = app.state::<DatabaseState>();
+    let pool = &db_state.0;
+    let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
+
+    sqlx::query(
+        r#"
+        INSERT INTO media_history (player_name, title, artist, album, duration, thumbnail)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(player_name, title, artist, album) DO NOTHING;
+    "#,
+    )
+    .bind(player_name)
+    .bind(title)
+    .bind(artist)
+    .bind(album)
+    .bind(&duration)
+    .bind(thumbnail)
+    .execute(&mut *tx)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let media_id: i64 = sqlx::query_scalar(
+        r#"
+        SELECT id
+        FROM media_history
+        WHERE player_name = ?
+          AND title = ?
+          AND artist = ?
+          AND album = ?
+        LIMIT 1;
+        "#,
+    )
+    .bind(player_name)
+    .bind(title)
+    .bind(artist)
+    .bind(album)
+    .fetch_one(&mut *tx)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let media_plays_id: Option<i64> = sqlx::query_scalar(
+        r#"
+        SELECT id
+        FROM media_plays
+        WHERE media_id = ?
+        AND (unixepoch('now') - unixepoch(played_at)) * 1000 < duration_ms
+        LIMIT 1;
+        "#,
+    )
+    .bind(&media_id)
+    .fetch_optional(&mut *tx)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    if media_plays_id.is_none() {
+        sqlx::query(
+            r#"
+            INSERT INTO media_plays (media_id, duration_ms)
+            VALUES (?, ?);
+        "#,
+        )
+        .bind(&media_id)
+        .bind(&duration)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
+
+        sqlx::query("UPDATE media_history SET play_count = play_count + 1 WHERE id = ?;")
+            .bind(&media_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| e.to_string())?;
+    }
+
+    tx.commit().await.map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[derive(Debug, FromRow, Serialize)]
+pub struct MediaHistoryResponse {
+    id: i64,
+    title: String,
+    artist: String,
+    album: String,
+    player_name: String,
+    thumbnail: Vec<u8>,
+    duration_ms: i64,
+    played_at: DateTime<Local>,
+}
+pub async fn query_media_history_util(
+    pool: &Pool<Sqlite>,
+    request: MediaQueryRequest,
+) -> Result<serde_json::Value, String> {
+    let rows = sqlx::query_as::<_, MediaHistoryResponse>(
+        r#"
+        SELECT
+            mh.id,
+            mh.title,
+            mh.artist,
+            mh.album,
+            mh.player_name,
+            mh.thumbnail,
+            mp.duration_ms,
+            mp.played_at
+        FROM media_plays mp
+        JOIN media_history mh ON mh.id = mp.media_id
+        WHERE (? IS NULL OR mp.played_at >= ?)
+          AND (? IS NULL OR mp.played_at <= ?)
+        ORDER BY mp.played_at DESC
+        LIMIT ?
+        "#,
+    )
+    .bind(&request.start_time)
+    .bind(&request.start_time)
+    .bind(&request.end_time)
+    .bind(&request.end_time)
+    .bind(request.limit.unwrap_or(100))
+    .fetch_all(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    serde_json::to_value(rows).map_err(|e| e.to_string())
+}
+
+#[derive(Debug, FromRow, Serialize)]
+pub struct TopMediaResponse {
+    id: i64,
+    title: String,
+    artist: String,
+    album: String,
+    player_name: String,
+    play_count: i64,
+    last_played_at: DateTime<Local>,
+}
+pub async fn query_top_media(
+    pool: &Pool<Sqlite>,
+    request: MediaQueryRequest,
+) -> Result<serde_json::Value, String> {
+    let rows = sqlx::query_as::<_, TopMediaResponse>(
+        r#"
+        SELECT
+            mh.id,
+            mh.title,
+            mh.artist,
+            mh.album,
+            mh.player_name,
+            mh.play_count,
+            MAX(mp.played_at) AS last_played_at
+        FROM media_history mh
+        JOIN media_plays mp ON mp.media_id = mh.id
+        WHERE (? IS NULL OR mp.played_at >= ?)
+        AND (? IS NULL OR mp.played_at <= ?)
+        GROUP BY mh.id
+        ORDER BY play_count DESC
+        LIMIT ?;
+        "#,
+    )
+    .bind(&request.start_time)
+    .bind(&request.start_time)
+    .bind(&request.end_time)
+    .bind(&request.end_time)
+    .bind(request.limit.unwrap_or(100))
+    .fetch_all(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    serde_json::to_value(rows).map_err(|e| e.to_string())
+}
+
+#[derive(Debug, FromRow, Serialize)]
+pub struct TopArtistResponse {
+    artist: String,
+    play_count: i64,
+    unique_media: i64,
+    last_played_at: DateTime<Local>,
+}
+pub async fn query_top_artist(
+    pool: &Pool<Sqlite>,
+    request: MediaQueryRequest,
+) -> Result<serde_json::Value, String> {
+    let rows = sqlx::query_as::<_, TopArtistResponse>(
+        r#"
+        SELECT
+            mh.artist,
+            mh.play_count,
+            COUNT(DISTINCT mh.id) AS unique_media,
+            MAX(mp.played_at) AS last_played_at
+        FROM media_history mh
+        JOIN media_plays mp ON mp.media_id = mh.id
+        WHERE mh.artist IS NOT NULL
+        AND mh.artist != ''
+        AND (? IS NULL OR mp.played_at >= ?)
+        AND (? IS NULL OR mp.played_at <= ?)
+        GROUP BY mh.artist
+        ORDER BY mh.play_count DESC
+        LIMIT ?;
+        "#,
+    )
+    .bind(&request.start_time)
+    .bind(&request.start_time)
+    .bind(&request.end_time)
+    .bind(&request.end_time)
+    .bind(request.limit.unwrap_or(100))
+    .fetch_all(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    serde_json::to_value(rows).map_err(|e| e.to_string())
+}
+
+#[derive(Debug, FromRow, Serialize)]
+pub struct MediaSearchResponse {
+    id: i64,
+    title: String,
+    artist: String,
+    album: String,
+    player_name: String,
+    play_count: i64,
+    last_played_at: DateTime<Local>,
+}
+pub async fn query_media_search(
+    pool: &Pool<Sqlite>,
+    request: MediaQueryRequest,
+) -> Result<serde_json::Value, String> {
+    let search = format!("%{}%", request.search_query.unwrap_or_default());
+    let rows = sqlx::query_as::<_, MediaSearchResponse>(
+        r#"
+        SELECT
+            mh.id,
+            mh.title,
+            mh.artist,
+            mh.album,
+            mh.player_name,
+            mh.play_count,
+            MAX(mp.played_at) AS last_played_at
+        FROM media_history mh
+        LEFT JOIN media_plays mp ON mp.media_id = mh.id
+        WHERE
+            LOWER(mh.title) LIKE LOWER(?)
+            OR LOWER(mh.artist) LIKE LOWER(?)
+            OR LOWER(mh.album) LIKE LOWER(?)
+            OR LOWER(mh.player_name) LIKE LOWER(?)
+        GROUP BY mh.id
+        ORDER BY mh.play_count DESC
+        LIMIT ?;
+        "#,
+    )
+    .bind(&search)
+    .bind(&search)
+    .bind(&search)
+    .bind(&search)
+    .bind(request.limit.unwrap_or(100))
+    .fetch_all(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    serde_json::to_value(rows).map_err(|e| e.to_string())
+}
+
+#[derive(Debug, FromRow, Serialize)]
+pub struct MediaStatsResponse {
+    total_plays: i64,
+    unique_media: i64,
+    unique_artists: i64,
+    unique_players: i64,
+    total_duration_ms: i64,
+    first_play: DateTime<Local>,
+    last_play: DateTime<Local>,
+}
+pub async fn query_media_stats(
+    pool: &Pool<Sqlite>,
+    request: MediaQueryRequest,
+) -> Result<serde_json::Value, String> {
+    let rows = sqlx::query_as::<_, MediaStatsResponse>(
+        r#"
+        SELECT
+            COUNT(mp.id) AS total_plays,
+            COUNT(DISTINCT mh.id) AS unique_media,
+            COUNT(DISTINCT mh.artist) AS unique_artists,
+            COUNT(DISTINCT mh.player_name) AS unique_players,
+            COALESCE(SUM(mp.duration_ms), 0) AS total_duration_ms,
+            MIN(mp.played_at) AS first_play,
+            MAX(mp.played_at) AS last_play
+        FROM media_plays mp
+        JOIN media_history mh ON mh.id = mp.media_id
+        WHERE (? IS NULL OR mp.played_at >= ?)
+        AND (? IS NULL OR mp.played_at <= ?);
+        "#,
+    )
+    .bind(&request.start_time)
+    .bind(&request.start_time)
+    .bind(&request.end_time)
+    .bind(&request.end_time)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    serde_json::to_value(rows).map_err(|e| e.to_string())
 }

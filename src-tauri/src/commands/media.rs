@@ -27,15 +27,16 @@ use windows::{
 
 use crate::commands::utils::{
     get_app_icon, get_encoded_app_id, get_player_icon_path, get_win32_icon, read_cached_app_name,
+    upsert_media_history,
 };
 
-#[derive(serde::Serialize, Debug)]
+#[derive(serde::Serialize, Debug, Clone)]
 pub struct MediaTimelineProperties {
-    start_time: u128,
-    end_time: u128,
+    pub start_time: u128,
+    pub end_time: u128,
     position: u128,
 }
-#[derive(serde::Serialize, Debug)]
+#[derive(serde::Serialize, Debug, Clone)]
 pub struct MediaPlaybackControls {
     play_enabled: bool,
     pause_enabled: bool,
@@ -46,28 +47,28 @@ pub struct MediaPlaybackControls {
     shuffle_enabled: bool,
     repeat_enabled: bool,
 }
-#[derive(serde::Serialize, Debug)]
+#[derive(serde::Serialize, Debug, Clone)]
 pub struct MediaPlayerInfo {
-    name: String,
+    pub name: String,
     icon: String,
     is_uwp: bool,
 }
-#[derive(serde::Serialize, Debug)]
+#[derive(serde::Serialize, Debug, Clone)]
 pub struct MediaPlaybackInfo {
     controls: MediaPlaybackControls,
     status: String,
     is_shuffle: bool,
 }
-#[derive(serde::Serialize, Debug)]
+#[derive(serde::Serialize, Debug, Clone)]
 pub struct MediaInfo {
-    title: String,
-    artist: String,
-    thumbnail: Vec<u8>,
+    pub title: String,
+    pub artist: String,
+    pub thumbnail: Vec<u8>,
     playback_info: Option<MediaPlaybackInfo>,
-    player: Option<MediaPlayerInfo>,
+    pub player: Option<MediaPlayerInfo>,
     player_id: String,
-    timeline_properties: Option<MediaTimelineProperties>,
-    is_current_session: bool,
+    pub timeline_properties: Option<MediaTimelineProperties>,
+    pub is_current_session: bool,
 }
 
 // create the error type that represents all errors possible in our program
@@ -478,7 +479,6 @@ fn build_media_info(
     let title = props.Title()?.to_string();
     let artist = props.Artist()?.to_string();
     let thumbnail = get_media_thumbnail(props.Thumbnail()).unwrap_or_default();
-    // println!("{} - {}", title, artist);
 
     let playback = playback_info
         .Controls()
@@ -506,17 +506,26 @@ fn build_media_info(
         });
 
     let player = get_player_info(app, player_id.clone()).ok();
-
-    Ok(MediaInfo {
+    let timeline_properties = get_timeline_properties(&timeline_data).ok();
+    let media_info = MediaInfo {
         title,
         artist,
         thumbnail,
         playback_info: playback,
         player,
         player_id,
-        timeline_properties: get_timeline_properties(&timeline_data).ok(),
+        timeline_properties,
         is_current_session,
-    })
+    };
+
+    let app = app.clone();
+    let media_info_db = media_info.clone();
+    tauri::async_runtime::spawn(async move {
+        if let Err(e) = upsert_media_history(&app, &media_info_db).await {
+            eprintln!("Failed to upsert media history: {e}");
+        }
+    });
+    Ok(media_info)
 }
 
 pub async fn start_media_listener(

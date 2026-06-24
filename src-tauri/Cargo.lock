@@ -837,8 +837,10 @@ checksum = "7e36cc9d416881d2e24f9a963be5fb1cd90966419ac844274161d10488b3e825"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
+ "js-sys",
  "num-traits",
  "serde",
+ "wasm-bindgen",
  "windows-targets 0.52.6",
 ]
 
@@ -1201,6 +1203,7 @@ version = "1.0.3"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
+ "chrono",
  "cpal",
  "http",
  "image",
