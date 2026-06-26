@@ -1,10 +1,11 @@
 use anyhow::anyhow;
 use base64::{prelude::BASE64_STANDARD, Engine};
+use chrono::Utc;
 use image::GenericImageView;
 use serde::Serialize;
 use serde_json::{json, Value};
 use sqlx::prelude::FromRow;
-use sqlx::types::chrono::{DateTime, Local};
+use sqlx::types::chrono::DateTime;
 use sqlx::{Pool, Sqlite};
 use std::os::windows::ffi::OsStrExt;
 use std::{
@@ -482,7 +483,12 @@ pub fn get_win32_icon(app: &tauri::AppHandle, app_id: &String) -> anyhow::Result
 }
 
 pub async fn upsert_media_history(app: &AppHandle, media: &MediaInfo) -> Result<(), String> {
-    if !media.is_current_session {
+    let position = media
+        .timeline_properties
+        .as_ref()
+        .map(|t| t.position)
+        .unwrap_or_default();
+    if !media.is_current_session || media.title.is_empty() || position == 0 {
         return Ok(());
     }
 
@@ -512,9 +518,10 @@ pub async fn upsert_media_history(app: &AppHandle, media: &MediaInfo) -> Result<
 
     sqlx::query(
         r#"
-        INSERT INTO media_history (player_name, title, artist, album, duration, thumbnail)
+        INSERT INTO media_history (player_name, title, artist, album, duration_ms, thumbnail)
         VALUES (?, ?, ?, ?, ?, ?)
-        ON CONFLICT(player_name, title, artist, album) DO NOTHING;
+        ON CONFLICT(player_name, title, artist, album)
+        DO UPDATE SET duration_ms = EXCLUDED.duration_ms, thumbnail = EXCLUDED.thumbnail;
     "#,
     )
     .bind(player_name)
@@ -551,14 +558,23 @@ pub async fn upsert_media_history(app: &AppHandle, media: &MediaInfo) -> Result<
         SELECT id
         FROM media_plays
         WHERE media_id = ?
-        AND (unixepoch('now') - unixepoch(played_at)) * 1000 < duration_ms
+        AND (unixepoch('now') + 1 - unixepoch(played_at)) * 1000 < ?
         LIMIT 1;
         "#,
     )
     .bind(&media_id)
+    .bind(&duration)
     .fetch_optional(&mut *tx)
     .await
     .map_err(|e| e.to_string())?;
+
+    sqlx::query("UPDATE media_plays SET duration_ms = ? WHERE media_id = ? AND duration_ms != ?;")
+        .bind(&duration)
+        .bind(&media_id)
+        .bind(&duration)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| e.to_string())?;
 
     if media_plays_id.is_none() {
         sqlx::query(
@@ -594,7 +610,7 @@ pub struct MediaHistoryResponse {
     player_name: String,
     thumbnail: Vec<u8>,
     duration_ms: i64,
-    played_at: DateTime<Local>,
+    played_at: DateTime<Utc>,
 }
 pub async fn query_media_history_util(
     pool: &Pool<Sqlite>,
@@ -639,7 +655,7 @@ pub struct TopMediaResponse {
     album: String,
     player_name: String,
     play_count: i64,
-    last_played_at: DateTime<Local>,
+    last_played_at: DateTime<Utc>,
 }
 pub async fn query_top_media(
     pool: &Pool<Sqlite>,
@@ -681,7 +697,7 @@ pub struct TopArtistResponse {
     artist: String,
     play_count: i64,
     unique_media: i64,
-    last_played_at: DateTime<Local>,
+    last_played_at: DateTime<Utc>,
 }
 pub async fn query_top_artist(
     pool: &Pool<Sqlite>,
@@ -725,7 +741,7 @@ pub struct MediaSearchResponse {
     album: String,
     player_name: String,
     play_count: i64,
-    last_played_at: DateTime<Local>,
+    last_played_at: DateTime<Utc>,
 }
 pub async fn query_media_search(
     pool: &Pool<Sqlite>,
@@ -773,8 +789,8 @@ pub struct MediaStatsResponse {
     unique_artists: i64,
     unique_players: i64,
     total_duration_ms: i64,
-    first_play: DateTime<Local>,
-    last_play: DateTime<Local>,
+    first_play: DateTime<Utc>,
+    last_play: DateTime<Utc>,
 }
 pub async fn query_media_stats(
     pool: &Pool<Sqlite>,

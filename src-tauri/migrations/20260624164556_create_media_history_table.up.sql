@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS media_history (
     duration_ms INTEGER,
     thumbnail BLOB,
     play_count INTEGER NOT NULL DEFAULT 0,
-    created_at INTEGER NOT NULL DEFAULT (unixepoch('now'))
-    UNIQUE(player_name, title, artist)
+    created_at INTEGER NOT NULL DEFAULT (unixepoch('now')),
+    UNIQUE(player_name, title, artist, album)
 );
 
 CREATE TABLE IF NOT EXISTS media_plays (

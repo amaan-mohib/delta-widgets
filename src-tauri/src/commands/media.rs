@@ -34,7 +34,7 @@ use crate::commands::utils::{
 pub struct MediaTimelineProperties {
     pub start_time: u128,
     pub end_time: u128,
-    position: u128,
+    pub position: u128,
 }
 #[derive(serde::Serialize, Debug, Clone)]
 pub struct MediaPlaybackControls {
