@@ -65,6 +65,7 @@ pub fn run() {
             media::start_media_listener_cmd,
             media::stop_media_listener_cmd,
             media::media_action,
+            media::get_media_metadata,
             services::get_all_widgets,
             services::copy_custom_assets,
             services::copy_custom_assets_dir,

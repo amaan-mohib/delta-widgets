@@ -98,4 +98,21 @@ export const commands = {
   getChatById: (params: { id: string }) =>
     invoke<IChat | undefined>("get_chat_by_id", params),
   createAssistantWindow: () => invoke<void>("create_assistant_window"),
+  queryMediaHistory: (params: {
+    input: {
+      intent: "history" | "top_media" | "top_artists" | "stats" | "search";
+      start_time?: string;
+      end_time?: string;
+      search_query?: string;
+      limit?: number;
+    };
+  }) => invoke<any>("query_media_history", params),
+  getMediaMetadata: (params: { mediaId: number }) =>
+    invoke<{
+      id: number;
+      title: string;
+      artist: string;
+      album: string;
+      thumbnail: number[];
+    }>("get_media_metadata", params),
 };

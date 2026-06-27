@@ -2,6 +2,14 @@ import { create } from "zustand";
 import { commands, IChat } from "../../common/commands";
 import { nanoid } from "nanoid";
 
+export interface IMedia {
+  id: number;
+  title: string;
+  artist: string;
+  album: string;
+  thumbnail: number[];
+}
+
 interface IChatStore {
   chatId: string | null;
   initialMessages: any[];
@@ -12,6 +20,8 @@ interface IChatStore {
   updateChatName: (id: string, name: string) => void;
   loadChat: (id?: string) => Promise<void>;
   getAllChats: () => Promise<void>;
+  getMediaMetadata: (id: number) => Promise<IMedia | null>;
+  mediaCache: Record<number, IMedia>;
 }
 
 export const useChatStore = create<IChatStore>((set, get) => ({
@@ -65,4 +75,24 @@ export const useChatStore = create<IChatStore>((set, get) => ({
       set({ chats: [] });
     }
   },
+  async getMediaMetadata(id) {
+    try {
+      const cachedMedia = get().mediaCache[id];
+      if (cachedMedia) {
+        return cachedMedia;
+      }
+      const media = await commands.getMediaMetadata({ mediaId: id });
+      if (media) {
+        const mediaCache = get().mediaCache;
+        mediaCache[id] = media;
+        set({ mediaCache });
+        return media;
+      }
+      return null;
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  },
+  mediaCache: {},
 }));

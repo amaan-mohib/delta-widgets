@@ -11,6 +11,7 @@ import {
   type UIMessageChunk,
 } from "ai";
 import {
+  queryMediaHistory,
   readWidgetSchemaTool,
   updateHtmlWidgetTool,
   updateJsonWidgetTool,
@@ -74,6 +75,7 @@ When the user wants to update a widget created in this chat:
 - Only call read_widget_schema when generating a widget, not for general questions
 - Never guess the widget schema format — always read it first
 
+## Media History
 You must call the tool query_media_history when the user asks questions about their media or music history.
 
 Media history contains all system media sessions, not only music.
@@ -81,7 +83,9 @@ Results may include music, podcasts, videos, ads, browser media, etc.
 Do not assume an item is a song unless the metadata strongly suggests it.
 
 When the user asks about a relative time period (yesterday, last week, this morning, etc),
-convert it into an absolute time range before calling tools.
+convert it into an absolute time range in UTC before calling media tools.
+
+If the tool has empty result, inform the user that there is not enough data available and ask them make sure to enable a widget with media information.
 
 Current datetime: ${new Date().toISOString()}
 Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
@@ -158,6 +162,7 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
         update_json_widget: updateJsonWidgetTool,
         write_html_widget: writeHtmlWidgetTool,
         update_html_widget: updateHtmlWidgetTool,
+        query_media_history: queryMediaHistory,
       },
       stopWhen: stepCountIs(10),
       experimental_context: {

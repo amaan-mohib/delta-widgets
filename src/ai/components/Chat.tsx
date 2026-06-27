@@ -19,6 +19,7 @@ import { ArrowDownRegular, SendRegular } from "@fluentui/react-icons";
 import { lastAssistantMessageIsCompleteWithToolCalls } from "ai";
 import { useChatStore } from "../stores/useChatStore";
 import remarkGfm from "remark-gfm";
+import MediaToolOutput from "./MediaToolOutput";
 
 interface ChatProps {}
 
@@ -88,10 +89,6 @@ const Chat: React.FC<ChatProps> = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // useEffect(() => {
-  //   console.log({ messages });
-  // }, [messages]);
-
   const { dispatchToast } = useToastController("chat-toaster");
 
   return (
@@ -134,7 +131,9 @@ const Chat: React.FC<ChatProps> = () => {
                     part.type === "tool-update_html_widget"
                       ? "Updating widget"
                       : null}
-                    {/* <strong>Tool:</strong> {part.type.replace("tool-", "")} */}
+                    {part.type === "tool-query_media_history" && (
+                      <MediaToolOutput part={part} />
+                    )}
                   </div>
                 );
               }

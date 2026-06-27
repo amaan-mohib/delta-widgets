@@ -1,4 +1,5 @@
 use serde::{ser::Serializer, Serialize};
+use sqlx::prelude::FromRow;
 use std::{
     collections::{HashMap, HashSet},
     sync::Arc,
@@ -25,9 +26,12 @@ use windows::{
     System::AppDiagnosticInfo,
 };
 
-use crate::commands::utils::{
-    get_app_icon, get_encoded_app_id, get_player_icon_path, get_win32_icon, read_cached_app_name,
-    upsert_media_history,
+use crate::{
+    commands::utils::{
+        get_app_icon, get_encoded_app_id, get_player_icon_path, get_win32_icon,
+        read_cached_app_name, upsert_media_history,
+    },
+    db::DatabaseState,
 };
 
 #[derive(serde::Serialize, Debug, Clone)]
@@ -281,6 +285,7 @@ pub struct MediaState {
     session_manager: Option<MediaSessionManager>,
     is_listening: bool,
     fetch_lock: Arc<Mutex<()>>,
+    pub last_upsert_at: i64,
     pub listening_windows: HashSet<String>,
 }
 
@@ -291,6 +296,7 @@ impl MediaState {
             session_manager: None,
             is_listening: false,
             fetch_lock: Arc::new(Mutex::new(())),
+            last_upsert_at: chrono::Utc::now().timestamp_millis(),
             listening_windows: HashSet::new(),
         }
     }
@@ -741,4 +747,40 @@ pub async fn media_action(
     .await??;
 
     Ok(())
+}
+
+#[derive(Debug, FromRow, Serialize)]
+pub struct MediaMetadataResponse {
+    id: i64,
+    title: String,
+    artist: String,
+    album: String,
+    thumbnail: Vec<u8>,
+}
+
+#[tauri::command]
+pub async fn get_media_metadata(
+    state: State<'_, DatabaseState>,
+    media_id: i64,
+) -> Result<MediaMetadataResponse, String> {
+    let pool = &state.0;
+    let row = sqlx::query_as::<_, MediaMetadataResponse>(
+        r#"
+        SELECT
+            id,
+            title,
+            artist,
+            album,
+            thumbnail
+        FROM media_history
+        WHERE id = ?
+        LIMIT 1;
+        "#,
+    )
+    .bind(&media_id)
+    .fetch_one(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(row)
 }

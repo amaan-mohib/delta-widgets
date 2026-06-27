@@ -29,7 +29,7 @@ use windows::{
 use windows_icons::get_icon_by_path;
 
 use crate::commands::chat::MediaQueryRequest;
-use crate::commands::media::MediaInfo;
+use crate::commands::media::{MediaInfo, MediaState};
 use crate::db::DatabaseState;
 
 static NO_THUMB_BYTES: &'static [u8] = include_bytes!("no-thumb.png");
@@ -483,6 +483,24 @@ pub fn get_win32_icon(app: &tauri::AppHandle, app_id: &String) -> anyhow::Result
 }
 
 pub async fn upsert_media_history(app: &AppHandle, media: &MediaInfo) -> Result<(), String> {
+    let should_upsert = {
+        let media_state = app.state::<tokio::sync::Mutex<MediaState>>();
+        let mut state = media_state.lock().await;
+
+        let now = chrono::Utc::now().timestamp_millis();
+
+        if now - state.last_upsert_at <= 3000 {
+            false
+        } else {
+            state.last_upsert_at = now;
+            true
+        }
+    };
+
+    if !should_upsert {
+        return Ok(());
+    }
+
     let position = media
         .timeline_properties
         .as_ref()
@@ -558,7 +576,8 @@ pub async fn upsert_media_history(app: &AppHandle, media: &MediaInfo) -> Result<
         SELECT id
         FROM media_plays
         WHERE media_id = ?
-        AND (unixepoch('now') + 1 - unixepoch(played_at)) * 1000 < ?
+        AND (unixepoch('now') - unixepoch(played_at)) * 1000 < (? - 2000)
+        ORDER BY played_at DESC
         LIMIT 1;
         "#,
     )
@@ -608,7 +627,6 @@ pub struct MediaHistoryResponse {
     artist: String,
     album: String,
     player_name: String,
-    thumbnail: Vec<u8>,
     duration_ms: i64,
     played_at: DateTime<Utc>,
 }
@@ -624,7 +642,6 @@ pub async fn query_media_history_util(
             mh.artist,
             mh.album,
             mh.player_name,
-            mh.thumbnail,
             mp.duration_ms,
             mp.played_at
         FROM media_plays mp
