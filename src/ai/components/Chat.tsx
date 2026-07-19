@@ -7,24 +7,20 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import Markdown from "react-markdown";
 import {
   Button,
-  Input,
   Skeleton,
   SkeletonItem,
-  Textarea,
   Toaster,
   tokens,
-  useToastController,
 } from "@fluentui/react-components";
-import { ArrowDownRegular, SendRegular } from "@fluentui/react-icons";
-import { lastAssistantMessageIsCompleteWithToolCalls } from "ai";
+import { ArrowDownRegular } from "@fluentui/react-icons";
 import { useChatStore } from "../stores/useChatStore";
 import remarkGfm from "remark-gfm";
 import MediaToolOutput from "./MediaToolOutput";
+import ChatInput from "./ChatInput";
 
 interface ChatProps {}
 
 const Chat: React.FC<ChatProps> = () => {
-  const [input, setInput] = useState("");
   // const model = ollama("phi4-mini:3.8b-q4_K_M");
   // const model = createGoogleGenerativeAI({
   //   apiKey: import.meta.env.VITE_GEMINI_KEY,
@@ -32,48 +28,24 @@ const Chat: React.FC<ChatProps> = () => {
   const model = createOpenRouter({
     apiKey: import.meta.env.VITE_OPEN_ROUTER_KEY,
   })("openrouter/free");
-  const { chatId, initialMessages, isNewChat, updateChatName } = useChatStore();
-  const { messages, sendMessage, status, addToolOutput } = useChat({
+  const { chatId, initialMessages, updateChatName, loadChat, pendingMessage } =
+    useChatStore();
+  const { messages, sendMessage, status } = useChat({
     id: chatId!,
     messages: initialMessages,
-    transport: new CustomChatTransport(model, isNewChat, updateChatName),
+    transport: new CustomChatTransport(model, updateChatName),
     experimental_throttle: 50,
-    // sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
-    // async onToolCall({ toolCall }) {
-    //   // Check if it's a dynamic tool first for proper type narrowing
-    //   if (toolCall.dynamic) {
-    //     return;
-    //   }
-
-    //   if (toolCall.toolName === "getWeatherInformation") {
-    //     try {
-    //       const getWeatherInformation = async (input: string) => {
-    //         // Simulate fetching weather information based on the input
-    //         // In a real-world scenario, you would call an actual weather API here
-    //         return `The weather in ${input} is sunny with a high of 25°C.`;
-    //       };
-    //       const weather = await getWeatherInformation(toolCall.input as string);
-
-    //       // No await - avoids potential deadlocks
-    //       addToolOutput({
-    //         tool: "getWeatherInformation",
-    //         toolCallId: toolCall.toolCallId,
-    //         output: weather,
-    //       });
-    //     } catch (err) {
-    //       addToolOutput({
-    //         tool: "getWeatherInformation",
-    //         toolCallId: toolCall.toolCallId,
-    //         state: "output-error",
-    //         errorText: "Unable to get the weather information",
-    //       });
-    //     }
-    //   }
-    // },
   });
   const containerRef = useRef(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [showButton, setShowButton] = useState(false);
+
+  useEffect(() => {
+    if (pendingMessage && chatId) {
+      sendMessage({ text: pendingMessage });
+      useChatStore.setState({ pendingMessage: null });
+    }
+  }, [pendingMessage, chatId, sendMessage]);
 
   const handleScroll = () => {
     if (!containerRef.current) return;
@@ -89,123 +61,120 @@ const Chat: React.FC<ChatProps> = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const { dispatchToast } = useToastController("chat-toaster");
-
   return (
     <div className="container" style={{ position: "relative" }}>
-      <div
-        className="message-container"
-        ref={containerRef}
-        onScroll={handleScroll}>
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`${message.role === "user" ? "user-message" : "ai-message"}`}
-            style={{
-              backgroundColor:
-                message.role === "user" ? tokens.colorBrandBackground : "",
-            }}>
-            {message.parts?.map((part, i) => {
-              if (part.type === "text") {
-                return (
-                  <Markdown
-                    key={`${message.id}-text-${i}`}
-                    remarkPlugins={[remarkGfm]}>
-                    {part.text}
-                  </Markdown>
-                );
-              }
-              if (part.type.startsWith("tool-")) {
-                return (
-                  <div
-                    key={`${message.id}-${part.type}-${i}`}
-                    style={{ padding: "2px 0", fontSize: 12 }}>
-                    {part.type === "tool-read_widget_schema"
-                      ? "Gathering widget schema and examples"
-                      : null}
-                    {part.type === "tool-write_json_widget" ||
-                    part.type === "tool-write_html_widget"
-                      ? "Creating widget"
-                      : null}
-                    {part.type === "tool-update_json_widget" ||
-                    part.type === "tool-update_html_widget"
-                      ? "Updating widget"
-                      : null}
-                    {part.type === "tool-query_media_history" && (
-                      <MediaToolOutput part={part} />
-                    )}
-                  </div>
-                );
-              }
-            })}
-            {status === "ready" &&
-            message.role === "assistant" &&
-            (message.parts || []).filter((i) => i.type === "text").length ===
-              0 ? (
-              <div key={`error-${messages.length}`} className="error-message">
-                An error occurred while streaming the response. Please try
-                again.
-              </div>
-            ) : null}
-            <div ref={bottomRef} />
-          </div>
-        ))}
-        {status === "submitted" || status === "streaming" ? (
-          <Skeleton>
-            <SkeletonItem size={32} />
-          </Skeleton>
-        ) : null}
+      {chatId ? (
+        <div
+          className="message-container"
+          ref={containerRef}
+          onScroll={handleScroll}>
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`${message.role === "user" ? "user-message" : "ai-message"}`}
+              style={{
+                backgroundColor:
+                  message.role === "user" ? tokens.colorBrandBackground : "",
+              }}>
+              {message.parts?.map((part, i) => {
+                if (part.type === "text") {
+                  return (
+                    <Markdown
+                      key={`${message.id}-text-${i}`}
+                      remarkPlugins={[remarkGfm]}>
+                      {part.text}
+                    </Markdown>
+                  );
+                }
+                if (part.type.startsWith("tool-")) {
+                  return (
+                    <div
+                      key={`${message.id}-${part.type}-${i}`}
+                      style={{ padding: "2px 0", fontSize: 12 }}>
+                      {part.type === "tool-read_widget_schema"
+                        ? "Gathering widget schema and examples"
+                        : null}
+                      {part.type === "tool-write_json_widget" ||
+                      part.type === "tool-write_html_widget"
+                        ? "Creating widget"
+                        : null}
+                      {part.type === "tool-update_json_widget" ||
+                      part.type === "tool-update_html_widget"
+                        ? "Updating widget"
+                        : null}
+                      {part.type === "tool-query_media_history" && (
+                        <MediaToolOutput part={part} />
+                      )}
+                    </div>
+                  );
+                }
+              })}
+              {status === "ready" &&
+              message.role === "assistant" &&
+              (message.parts || []).filter((i) => i.type === "text").length ===
+                0 ? (
+                <div key={`error-${messages.length}`} className="error-message">
+                  An error occurred while streaming the response. Please try
+                  again.
+                </div>
+              ) : null}
+            </div>
+          ))}
+          {status === "submitted" || status === "streaming" ? (
+            <Skeleton>
+              <SkeletonItem size={32} />
+            </Skeleton>
+          ) : null}
 
-        {status === "error" ? (
-          <div className="error-message">
-            An error occurred while sending the message. Please try again.
-          </div>
-        ) : null}
-      </div>
+          {status === "error" ? (
+            <div className="error-message">
+              An error occurred while sending the message. Please try again.
+            </div>
+          ) : null}
+          <div ref={bottomRef} />
+        </div>
+      ) : (
+        <div
+          className="message-container"
+          style={{ alignItems: "center", justifyContent: "center" }}>
+          <h3 style={{ textAlign: "center" }}>
+            Hey! How can I help you today?
+          </h3>
+          <span
+            style={{
+              textAlign: "center",
+              color: tokens.colorNeutralForeground3,
+            }}>
+            Not sure where to start? Ask what I can help with.
+          </span>
+        </div>
+      )}
       {showButton && (
         <Button
           onClick={scrollToBottom}
           icon={<ArrowDownRegular />}
           appearance="primary"
           shape="circular"
-          // size="large"
-          style={{ position: "absolute", bottom: "80px", left: "20px" }}>
-          New messages
-        </Button>
-      )}
-      <form
-        className="input-container"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          if (!input.trim()) return;
-          const oldInput = input;
-          try {
-            setInput("");
-            await sendMessage({ text: input });
-          } catch (error) {
-            setInput(oldInput);
-            dispatchToast("Something went wrong. Please try again.");
-            console.error("Failed to send message:", error);
-          }
-        }}>
-        <Textarea
-          value={input}
-          rows={1}
-          placeholder="Say something..."
-          onChange={(e) => setInput(e.target.value)}
-          style={{ width: "100%" }}
+          size="large"
+          style={{
+            position: "absolute",
+            bottom: "70px",
+            left: "10px",
+          }}
         />
-        <Button
-          style={{ height: "fit-content" }}
-          icon={<SendRegular />}
-          type="submit"
-          appearance="primary"
-          disabled={
-            !input.trim() || status === "submitted" || status === "streaming"
-          }>
-          Send
-        </Button>
-      </form>
+      )}
+      <ChatInput
+        buttonDisabled={status === "submitted" || status === "streaming"}
+        sendMessage={async (text) => {
+          if (!chatId) {
+            await loadChat();
+            useChatStore.setState({ pendingMessage: text });
+            return;
+          }
+          await sendMessage({ text });
+        }}
+        scrollToBottom={scrollToBottom}
+      />
       <Toaster toasterId={"chat-toaster"} />
     </div>
   );

@@ -31,7 +31,7 @@ const Navbar: React.FC<NavbarProps> = () => {
           <AppItem
             icon={<Add20Regular />}
             onClick={async () => {
-              await loadChat();
+              useChatStore.setState({ chatId: null, initialMessages: [] });
               setOpenDrawer(false);
             }}>
             New Chat

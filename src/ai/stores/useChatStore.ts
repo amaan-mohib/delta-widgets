@@ -13,7 +13,7 @@ export interface IMedia {
 interface IChatStore {
   chatId: string | null;
   initialMessages: any[];
-  isNewChat: boolean;
+  pendingMessage: string | null;
   chats: IChat[];
   openDrawer: boolean;
   setOpenDrawer: (value: boolean) => void;
@@ -27,7 +27,7 @@ interface IChatStore {
 export const useChatStore = create<IChatStore>((set, get) => ({
   chatId: null,
   initialMessages: [],
-  isNewChat: false,
+  pendingMessage: null,
   chats: [],
   openDrawer: false,
   setOpenDrawer(value) {
@@ -60,7 +60,6 @@ export const useChatStore = create<IChatStore>((set, get) => ({
       set({
         initialMessages: messages,
         chatId,
-        isNewChat: !id,
       });
     } catch (error) {
       console.error("Error creating new chat:", error);

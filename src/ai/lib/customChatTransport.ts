@@ -18,7 +18,7 @@ import {
   writeHtmlWidgetTool,
   writeJsonWidgetTool,
 } from "../tools/widget_tools";
-import { commands } from "../../common/commands";
+import { commands, IChat } from "../../common/commands";
 
 const systemPrompt = `You are AI assistant for an application called Delta Widgets.
 
@@ -96,16 +96,14 @@ If a request is outside these capabilities, explain the limitation.`;
 
 export class CustomChatTransport implements ChatTransport<UIMessage> {
   private model: LanguageModel;
-  private isNewChat: boolean;
   private updateChatName: (id: string, name: string) => void;
+  private chatMap: Record<string, IChat | undefined> = {};
 
   constructor(
     model: LanguageModel,
-    isNewChat: boolean,
     updateChatName: (id: string, name: string) => void,
   ) {
     this.model = model;
-    this.isNewChat = isNewChat;
     this.updateChatName = updateChatName;
   }
 
@@ -131,19 +129,29 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
       });
     }
 
-    if (this.isNewChat && message.role === "user") {
-      const { text: chatName } = await generateText({
-        model: this.model,
-        prompt: `The user has started a new chat with the following message: "${message.parts
-          .filter((part) => part.type === "text")
-          .map((part) => part.text)
-          .join(
-            " ",
-          )}". Generate a concise, descriptive title (3-5 words) for this chat based on the user's first message. Focus on the main topic or question being asked. Keep it plain text`,
-      });
-      await commands.updateChatName({ name: chatName, chatId: options.chatId });
-      this.updateChatName(options.chatId, chatName);
-      this.isNewChat = false;
+    if (message.role === "user") {
+      let chat = this.chatMap[options.chatId];
+      if (!chat) {
+        chat = await commands.getChatById({ id: options.chatId });
+      }
+      if (chat && chat.name === chat.id) {
+        const { text: chatName } = await generateText({
+          model: this.model,
+          prompt: `The user has started a new chat with the following message: "${message.parts
+            .filter((part) => part.type === "text")
+            .map((part) => part.text)
+            .join(
+              " ",
+            )}". Generate a concise, descriptive title (3-5 words) for this chat based on the user's first message. Focus on the main topic or question being asked. Keep it plain text`,
+        });
+        await commands.updateChatName({
+          name: chatName,
+          chatId: options.chatId,
+        });
+        this.updateChatName(options.chatId, chatName);
+        chat.name = chatName;
+        this.chatMap[options.chatId] = chat;
+      }
     }
 
     // // load the previous messages from the server:
