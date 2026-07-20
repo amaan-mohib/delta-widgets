@@ -1,4 +1,4 @@
-import { Button, useToastController } from "@fluentui/react-components";
+import { Button, tokens, useToastController } from "@fluentui/react-components";
 import { SendRegular } from "@fluentui/react-icons";
 import React, {
   useState,
@@ -52,8 +52,9 @@ const ChatInput: React.FC<IChatInputProps> = ({
   };
 
   const handleSend = async () => {
+    if (!chatId || buttonDisabled || !text.trim()) return;
+
     scrollToBottom();
-    if (!text.trim()) return;
     const oldInput = text;
     try {
       setText("");
@@ -66,7 +67,9 @@ const ChatInput: React.FC<IChatInputProps> = ({
   };
 
   return (
-    <div style={{ background: "field" }} className="input-container">
+    <div
+      style={{ background: tokens.colorNeutralCardBackgroundSelected }}
+      className="input-container">
       <textarea
         ref={textareaRef}
         value={text}
@@ -75,6 +78,7 @@ const ChatInput: React.FC<IChatInputProps> = ({
         placeholder="Ask something..."
         rows={1}
         style={{
+          background: tokens.colorNeutralCardBackgroundSelected,
           width: "100%",
           resize: "none",
           overflowY: "auto",

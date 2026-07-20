@@ -12,7 +12,7 @@ import {
   Toaster,
   tokens,
 } from "@fluentui/react-components";
-import { ArrowDownRegular } from "@fluentui/react-icons";
+import { ArrowDownRegular, BotSparkleColor } from "@fluentui/react-icons";
 import { useChatStore } from "../stores/useChatStore";
 import remarkGfm from "remark-gfm";
 import MediaToolOutput from "./MediaToolOutput";
@@ -59,6 +59,18 @@ const Chat: React.FC<ChatProps> = () => {
 
   const scrollToBottom = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleSend = async (text: string) => {
+    if (status === "submitted" || status === "streaming") return;
+
+    if (!chatId) {
+      await loadChat();
+      useChatStore.setState({ pendingMessage: text });
+      return;
+    }
+
+    await sendMessage({ text });
   };
 
   return (
@@ -137,16 +149,19 @@ const Chat: React.FC<ChatProps> = () => {
         <div
           className="message-container"
           style={{ alignItems: "center", justifyContent: "center" }}>
+          <BotSparkleColor fontSize={32} />
           <h3 style={{ textAlign: "center" }}>
             Hey! How can I help you today?
           </h3>
-          <span
+          <Button
+            appearance="subtle"
             style={{
               textAlign: "center",
               color: tokens.colorNeutralForeground3,
-            }}>
+            }}
+            onClick={() => handleSend("Hey, how can you help me?")}>
             Not sure where to start? Ask what I can help with.
-          </span>
+          </Button>
         </div>
       )}
       {showButton && (
@@ -165,14 +180,7 @@ const Chat: React.FC<ChatProps> = () => {
       )}
       <ChatInput
         buttonDisabled={status === "submitted" || status === "streaming"}
-        sendMessage={async (text) => {
-          if (!chatId) {
-            await loadChat();
-            useChatStore.setState({ pendingMessage: text });
-            return;
-          }
-          await sendMessage({ text });
-        }}
+        sendMessage={handleSend}
         scrollToBottom={scrollToBottom}
       />
       <Toaster toasterId={"chat-toaster"} />
