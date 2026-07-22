@@ -1,24 +1,77 @@
 import {
   AppItem,
-  Button,
   Hamburger,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItemRadio,
+  MenuList,
+  MenuPopover,
+  MenuTrigger,
   NavDrawer,
   NavDrawerBody,
   NavDrawerHeader,
   NavItem,
 } from "@fluentui/react-components";
-import { Add20Regular, SettingsRegular } from "@fluentui/react-icons";
+import { Add20Regular, AddRegular, ListRegular } from "@fluentui/react-icons";
 import { useChatStore } from "../stores/useChatStore";
 
 interface NavbarProps {}
 
 const Navbar: React.FC<NavbarProps> = () => {
-  const { chatId, chats, openDrawer, setOpenDrawer, loadChat } = useChatStore();
+  const {
+    chatId,
+    chats,
+    openDrawer,
+    setOpenDrawer,
+    models,
+    selectedModel,
+    changeSelectedModel,
+  } = useChatStore();
 
   return (
     <nav className="navbar">
       <Hamburger appearance="subtle" onClick={() => setOpenDrawer(true)} />
-      <Button appearance="subtle" icon={<SettingsRegular />} />
+
+      {selectedModel && (
+        <Menu checkedValues={{ model: [selectedModel.id] }}>
+          <MenuTrigger disableButtonEnhancement>
+            <MenuButton size="small" appearance="subtle">
+              {selectedModel.displayName || selectedModel.model}
+            </MenuButton>
+          </MenuTrigger>
+
+          <MenuPopover>
+            <MenuList>
+              {models.map((model) => (
+                <MenuItemRadio
+                  key={model.id}
+                  value={model.id}
+                  name="model"
+                  onClick={() => {
+                    changeSelectedModel(model.id);
+                  }}>
+                  {model.displayName || model.model}
+                </MenuItemRadio>
+              ))}
+              <MenuItem
+                icon={<ListRegular />}
+                onClick={() =>
+                  useChatStore.setState({ settingsScreen: "list" })
+                }>
+                Show All
+              </MenuItem>
+              <MenuItem
+                icon={<AddRegular />}
+                onClick={() =>
+                  useChatStore.setState({ settingsScreen: "model" })
+                }>
+                Add new
+              </MenuItem>
+            </MenuList>
+          </MenuPopover>
+        </Menu>
+      )}
       <NavDrawer
         selectedValue={chatId ? chatId : ""}
         open={openDrawer}
@@ -41,7 +94,7 @@ const Navbar: React.FC<NavbarProps> = () => {
               key={chat.id}
               value={chat.id}
               onClick={async () => {
-                await loadChat(chat.id);
+                useChatStore.setState({ chatId: chat.id });
                 setOpenDrawer(false);
               }}>
               {chat.name}

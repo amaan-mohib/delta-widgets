@@ -56,6 +56,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_keyring::init())
         .plugin(tauri_plugin_prevent_default::debug())
         .plugin(localhost::Builder::new(port).build())
         .manage(std::sync::Mutex::new(audio::AudioState::new()))

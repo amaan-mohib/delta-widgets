@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { CustomChatTransport } from "../lib/customChatTransport";
-import { ollama } from "ai-sdk-ollama";
-import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import Markdown from "react-markdown";
 import {
   Button,
@@ -17,19 +14,21 @@ import { useChatStore } from "../stores/useChatStore";
 import remarkGfm from "remark-gfm";
 import MediaToolOutput from "./MediaToolOutput";
 import ChatInput from "./ChatInput";
+import { getModelProvider } from "../utils";
 
 interface ChatProps {}
 
 const Chat: React.FC<ChatProps> = () => {
-  // const model = ollama("phi4-mini:3.8b-q4_K_M");
-  // const model = createGoogleGenerativeAI({
-  //   apiKey: import.meta.env.VITE_GEMINI_KEY,
-  // })("gemini-2.5-flash");
-  const model = createOpenRouter({
-    apiKey: import.meta.env.VITE_OPEN_ROUTER_KEY,
-  })("openrouter/free");
-  const { chatId, initialMessages, updateChatName, loadChat, pendingMessage } =
-    useChatStore();
+  const {
+    chatId,
+    initialMessages,
+    updateChatName,
+    loadChat,
+    pendingMessage,
+    selectedModel,
+  } = useChatStore();
+
+  const model = getModelProvider(selectedModel!);
   const { messages, sendMessage, status } = useChat({
     id: chatId!,
     messages: initialMessages,
@@ -71,6 +70,7 @@ const Chat: React.FC<ChatProps> = () => {
     }
 
     await sendMessage({ text });
+    scrollToBottom();
   };
 
   return (

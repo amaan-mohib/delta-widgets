@@ -13,6 +13,7 @@ import { emitTo } from "@tauri-apps/api/event";
 import getTemplateCategories from "../../creator/components/TemplateEditor/categories";
 import { mkdir, writeTextFile } from "@tauri-apps/plugin-fs";
 import { closeWidgetWindow } from "../../common";
+import { sendMixpanelEvent } from "../../main/utils/analytics";
 
 const GridSizeSchema = z.object({
   rows: z.union([z.literal("auto"), z.number()]).optional(),
@@ -463,6 +464,7 @@ export const writeJsonWidgetTool = tool({
     // do not put in drafts, will be directly published.
     await createCreatorWindow(addedWidget.path);
     await emitTo("main", "creator-close", {});
+    await sendMixpanelEvent("write-json-tool-called", {});
 
     return { success: true };
   },
@@ -526,6 +528,7 @@ export const updateJsonWidgetTool = tool({
     await commands.closeWidgetWindow({ label: "creator" });
     await createCreatorWindow(updatedWidget.path);
     await emitTo("main", "creator-close", {});
+    await sendMixpanelEvent("update-json-tool-called", {});
 
     return { success: true };
   },
@@ -585,6 +588,7 @@ Note: window.__TAURI__ is available but fragile — avoid page reloads or redire
     await commands.updateChatWidgetKeys({ chatId: context.chatId, key });
     await createWidgetWindow(manifestPath, false, false);
     await emitTo("main", "creator-close", {});
+    await sendMixpanelEvent("write-html-tool-called", {});
 
     return { success: true, widgetKey: key };
   },
@@ -632,6 +636,7 @@ Note: window.__TAURI__ is available but fragile — avoid page reloads or redire
     await closeWidgetWindow(`widget-${key}`, true, manifestPath);
     await createWidgetWindow(manifestPath, false, true);
     await emitTo("main", "creator-close", {});
+    await sendMixpanelEvent("write-html-tool-called", {});
 
     return { success: true };
   },
@@ -657,6 +662,7 @@ ${new Date().toISOString()}
     limit: z.number().optional(),
   }),
   execute: async (input) => {
+    await sendMixpanelEvent("query-media-tool-called", {});
     return commands.queryMediaHistory({
       input: {
         intent: input.intent,

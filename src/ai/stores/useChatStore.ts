@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { commands, IChat } from "../../common/commands";
 import { nanoid } from "nanoid";
+import { getModels } from "../utils";
 
 export interface IMedia {
   id: number;
@@ -11,6 +12,7 @@ export interface IMedia {
 }
 
 interface IChatStore {
+  loading: boolean;
   chatId: string | null;
   initialMessages: any[];
   pendingMessage: string | null;
@@ -22,9 +24,17 @@ interface IChatStore {
   getAllChats: () => Promise<void>;
   getMediaMetadata: (id: number) => Promise<IMedia | null>;
   mediaCache: Record<number, IMedia>;
+  settingsScreen: "list" | "model" | null;
+  getAllModels: () => Promise<void>;
+  models: AIProviderConfig[];
+  selectedModelId: string | null;
+  selectedModel: AIProviderConfig | null;
+  changeSelectedModel: (id: string) => Promise<void>;
+  editModel: AIProviderConfig | null;
 }
 
 export const useChatStore = create<IChatStore>((set, get) => ({
+  loading: true,
   chatId: null,
   initialMessages: [],
   pendingMessage: null,
@@ -94,4 +104,38 @@ export const useChatStore = create<IChatStore>((set, get) => ({
     }
   },
   mediaCache: {},
+  settingsScreen: null,
+  async getAllModels() {
+    const newModels = await getModels();
+    set({
+      models: newModels.models,
+      selectedModelId: newModels.selectedModelId,
+      selectedModel: newModels.models.find(
+        (m) => m.id === newModels.selectedModelId,
+      ),
+    });
+  },
+  models: [],
+  selectedModelId: null,
+  selectedModel: null,
+  editModel: null,
+  async changeSelectedModel(id) {
+    const selectedId = get().selectedModelId;
+    if (id === selectedId) return;
+    const selectedModel = get().models.find((m) => m.id === id);
+    if (!selectedModel) return;
+
+    await commands.writeToStoreCmd({
+      pairs: [
+        {
+          key: "selectedModelId",
+          value: id,
+        },
+      ],
+    });
+    set({
+      selectedModel,
+      selectedModelId: id,
+    });
+  },
 }));
