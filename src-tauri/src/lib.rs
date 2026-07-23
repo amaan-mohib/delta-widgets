@@ -88,6 +88,7 @@ pub fn run() {
             audio::restart_audio_capture,
             audio::get_current_device_cmd,
             chat::create_chat,
+            chat::delete_chat,
             chat::get_all_chats,
             chat::load_chat,
             chat::upsert_message,

@@ -173,6 +173,25 @@ pub async fn get_chat_by_id(
 }
 
 #[tauri::command]
+pub async fn delete_chat(state: tauri::State<'_, DatabaseState>, id: String) -> Result<(), String> {
+    let stmt = r#"
+        DELETE
+        FROM chats
+        WHERE id = ?
+    "#;
+
+    let query = sqlx::query(stmt);
+    let pool = &state.0;
+    query
+        .bind(&id)
+        .execute(pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn get_all_chats(state: tauri::State<'_, DatabaseState>) -> Result<Vec<Chat>, String> {
     let stmt = r#"
         SELECT

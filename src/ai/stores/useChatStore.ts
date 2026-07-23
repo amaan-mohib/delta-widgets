@@ -16,6 +16,7 @@ interface IChatStore {
   chatId: string | null;
   initialMessages: any[];
   pendingMessage: string | null;
+  chatKey: string;
   chats: IChat[];
   openDrawer: boolean;
   setOpenDrawer: (value: boolean) => void;
@@ -38,6 +39,7 @@ export const useChatStore = create<IChatStore>((set, get) => ({
   chatId: null,
   initialMessages: [],
   pendingMessage: null,
+  chatKey: "",
   chats: [],
   openDrawer: false,
   setOpenDrawer(value) {
@@ -70,6 +72,8 @@ export const useChatStore = create<IChatStore>((set, get) => ({
       set({
         initialMessages: messages,
         chatId,
+        chatKey: nanoid(),
+        settingsScreen: null,
       });
     } catch (error) {
       console.error("Error creating new chat:", error);
@@ -106,13 +110,12 @@ export const useChatStore = create<IChatStore>((set, get) => ({
   mediaCache: {},
   settingsScreen: null,
   async getAllModels() {
-    const newModels = await getModels();
+    const { models, selectedModelId } = await getModels();
     set({
-      models: newModels.models,
-      selectedModelId: newModels.selectedModelId,
-      selectedModel: newModels.models.find(
-        (m) => m.id === newModels.selectedModelId,
-      ),
+      models,
+      selectedModelId,
+      selectedModel: models.find((m) => m.id === selectedModelId),
+      settingsScreen: models.length === 0 ? "model" : null,
     });
   },
   models: [],
@@ -133,9 +136,15 @@ export const useChatStore = create<IChatStore>((set, get) => ({
         },
       ],
     });
+
     set({
       selectedModel,
       selectedModelId: id,
     });
+
+    const { chatId, loadChat } = get();
+    if (chatId) {
+      await loadChat(chatId);
+    }
   },
 }));

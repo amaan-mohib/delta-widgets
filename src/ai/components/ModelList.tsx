@@ -45,6 +45,7 @@ const ModelList: React.FC<ModelListProps> = () => {
         }}>
         {models.map((model) => (
           <Card
+            key={model.id}
             appearance="filled-alternative"
             selected={selectedModelId === model.id}>
             <CardHeader

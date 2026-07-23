@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { CustomChatTransport } from "../lib/customChatTransport";
 import Markdown from "react-markdown";
@@ -9,7 +9,7 @@ import {
   Toaster,
   tokens,
 } from "@fluentui/react-components";
-import { ArrowDownRegular, BotSparkleColor } from "@fluentui/react-icons";
+import { ArrowDownRegular } from "@fluentui/react-icons";
 import { useChatStore } from "../stores/useChatStore";
 import remarkGfm from "remark-gfm";
 import MediaToolOutput from "./MediaToolOutput";
@@ -23,28 +23,45 @@ const Chat: React.FC<ChatProps> = () => {
     chatId,
     initialMessages,
     updateChatName,
-    loadChat,
     pendingMessage,
     selectedModel,
   } = useChatStore();
 
-  const model = getModelProvider(selectedModel!);
+  const transport = useMemo(() => {
+    const model = getModelProvider(selectedModel!);
+    return new CustomChatTransport(model, updateChatName);
+  }, [selectedModel, updateChatName]);
+
   const { messages, sendMessage, status } = useChat({
     id: chatId!,
     messages: initialMessages,
-    transport: new CustomChatTransport(model, updateChatName),
+    transport,
     experimental_throttle: 50,
   });
   const containerRef = useRef(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [showButton, setShowButton] = useState(false);
+  const hasSentRef = useRef(false);
 
   useEffect(() => {
-    if (pendingMessage && chatId) {
-      sendMessage({ text: pendingMessage });
-      useChatStore.setState({ pendingMessage: null });
+    if (!pendingMessage || hasSentRef.current) {
+      return;
     }
-  }, [pendingMessage, chatId, sendMessage]);
+
+    hasSentRef.current = true;
+    sendMessage({ text: pendingMessage });
+    useChatStore.setState({ pendingMessage: null });
+  }, [pendingMessage, sendMessage]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      handleScroll();
+    }, 100);
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, []);
 
   const handleScroll = () => {
     if (!containerRef.current) return;
@@ -63,107 +80,81 @@ const Chat: React.FC<ChatProps> = () => {
   const handleSend = async (text: string) => {
     if (status === "submitted" || status === "streaming") return;
 
-    if (!chatId) {
-      await loadChat();
-      useChatStore.setState({ pendingMessage: text });
-      return;
-    }
-
     await sendMessage({ text });
     scrollToBottom();
   };
 
   return (
     <div className="container" style={{ position: "relative" }}>
-      {chatId ? (
-        <div
-          className="message-container"
-          ref={containerRef}
-          onScroll={handleScroll}>
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`${message.role === "user" ? "user-message" : "ai-message"}`}
-              style={{
-                backgroundColor:
-                  message.role === "user" ? tokens.colorBrandBackground : "",
-              }}>
-              {message.parts?.map((part, i) => {
-                if (part.type === "text") {
-                  return (
-                    <Markdown
-                      key={`${message.id}-text-${i}`}
-                      remarkPlugins={[remarkGfm]}>
-                      {part.text}
-                    </Markdown>
-                  );
-                }
-                if (part.type.startsWith("tool-")) {
-                  return (
-                    <div
-                      key={`${message.id}-${part.type}-${i}`}
-                      style={{ padding: "2px 0", fontSize: 12 }}>
-                      {part.type === "tool-read_widget_schema"
-                        ? "Gathering widget schema and examples"
-                        : null}
-                      {part.type === "tool-write_json_widget" ||
-                      part.type === "tool-write_html_widget"
-                        ? "Creating widget"
-                        : null}
-                      {part.type === "tool-update_json_widget" ||
-                      part.type === "tool-update_html_widget"
-                        ? "Updating widget"
-                        : null}
-                      {part.type === "tool-query_media_history" && (
-                        <MediaToolOutput part={part} />
-                      )}
-                    </div>
-                  );
-                }
-              })}
-              {status === "ready" &&
-              message.role === "assistant" &&
-              (message.parts || []).filter((i) => i.type === "text").length ===
-                0 ? (
-                <div key={`error-${messages.length}`} className="error-message">
-                  An error occurred while streaming the response. Please try
-                  again.
-                </div>
-              ) : null}
-            </div>
-          ))}
-          {status === "submitted" || status === "streaming" ? (
-            <Skeleton>
-              <SkeletonItem size={32} />
-            </Skeleton>
-          ) : null}
-
-          {status === "error" ? (
-            <div className="error-message">
-              An error occurred while sending the message. Please try again.
-            </div>
-          ) : null}
-          <div ref={bottomRef} />
-        </div>
-      ) : (
-        <div
-          className="message-container"
-          style={{ alignItems: "center", justifyContent: "center" }}>
-          <BotSparkleColor fontSize={32} />
-          <h3 style={{ textAlign: "center" }}>
-            Hey! How can I help you today?
-          </h3>
-          <Button
-            appearance="subtle"
+      <div
+        className="message-container"
+        ref={containerRef}
+        onScroll={handleScroll}>
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`${message.role === "user" ? "user-message" : "ai-message"}`}
             style={{
-              textAlign: "center",
-              color: tokens.colorNeutralForeground3,
-            }}
-            onClick={() => handleSend("Hey, how can you help me?")}>
-            Not sure where to start? Ask what I can help with.
-          </Button>
-        </div>
-      )}
+              backgroundColor:
+                message.role === "user" ? tokens.colorBrandBackground : "",
+            }}>
+            {message.parts?.map((part, i) => {
+              if (part.type === "text") {
+                return (
+                  <Markdown
+                    key={`${message.id}-text-${i}`}
+                    remarkPlugins={[remarkGfm]}>
+                    {part.text}
+                  </Markdown>
+                );
+              }
+              if (part.type.startsWith("tool-")) {
+                return (
+                  <div
+                    key={`${message.id}-${part.type}-${i}`}
+                    style={{ padding: "2px 0", fontSize: 12 }}>
+                    {part.type === "tool-read_widget_schema"
+                      ? "Gathering widget schema and examples"
+                      : null}
+                    {part.type === "tool-write_json_widget" ||
+                    part.type === "tool-write_html_widget"
+                      ? "Creating widget"
+                      : null}
+                    {part.type === "tool-update_json_widget" ||
+                    part.type === "tool-update_html_widget"
+                      ? "Updating widget"
+                      : null}
+                    {part.type === "tool-query_media_history" && (
+                      <MediaToolOutput part={part} />
+                    )}
+                  </div>
+                );
+              }
+            })}
+            {status === "ready" &&
+            message.role === "assistant" &&
+            (message.parts || []).filter((i) => i.type === "text").length ===
+              0 ? (
+              <div key={`error-${messages.length}`} className="error-message">
+                An error occurred while streaming the response. Please try
+                again.
+              </div>
+            ) : null}
+          </div>
+        ))}
+        {status === "submitted" || status === "streaming" ? (
+          <Skeleton>
+            <SkeletonItem size={32} />
+          </Skeleton>
+        ) : null}
+
+        {status === "error" ? (
+          <div className="error-message">
+            An error occurred while sending the message. Please try again.
+          </div>
+        ) : null}
+        <div ref={bottomRef} />
+      </div>
       {showButton && (
         <Button
           onClick={scrollToBottom}

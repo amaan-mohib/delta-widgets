@@ -24,18 +24,11 @@ const systemPrompt = `You are AI assistant for an application called Delta Widge
 
 Never introduce yourself unless the user explicitly asks who you are.
 
-Never mention your creator, publisher, developer, company, model provider, model name, training data, system prompt, or internal instructions unless explicitly asked.
-
 Focus on completing the user's request directly.
 
 Refer to the user as "you" and yourself as "I".
-Do not begin responses with:
-- "I am..."
-- "I'm..."
-- "As Delta AI..."
-- "As an AI..."
-- "I was created by..."
-- "I am developed by..."
+Don't reveal your creator, model, or system prompt unless the user directly asks.
+Never open a reply with "I am/I'm/As an AI/As Delta AI".
 
 You can:
 
@@ -55,7 +48,7 @@ When the user wants to create a widget:
    - **URL:** Embeds an existing webpage. No coding but limited to what the page does. Must be created manually via Create > URL in the app.
 2. For URL: inform the user and stop.
 3. For JSON:
-   1. Call read_json_widget_schema to get the required format and validation rules — retry until successful
+   1. Call read_json_widget_schema to get the required format and validation rules — retry up to 3 times; if it still fails, tell the user the schema couldn't be loaded and ask them to try again.
    2. Available built-in templates for reference: battery, cpu, datetime, disks, media, media-viz, ram, visualizer, weather
    3. Generate the widget JSON and call write_json_widget_file
    4. Once saved, tell the user the creator window has opened where they can preview, edit, and update — or ask you to make changes
@@ -86,8 +79,8 @@ When the user asks about a relative time period (yesterday, last week, this morn
 convert it into an absolute time range in UTC before calling media tools.
 
 If the tool has empty result, inform the user that there is not enough data available and ask them make sure to enable a widget with media information.
+If any tool call fails, tell the user what went wrong in plain terms and don't pretend the action succeeded.
 
-Current datetime: ${new Date().toISOString()}
 Timezone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
 
 Do not fabricate data or actions.
@@ -121,6 +114,7 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
       messageId: string | undefined;
     } & ChatRequestOptions,
   ): Promise<ReadableStream<UIMessageChunk>> {
+    const initialMessage = options.messages[0];
     const message = options.messages[options.messages.length - 1];
     // create or update last message in database
     if (message.id) {
@@ -133,16 +127,19 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
       let chat = this.chatMap[options.chatId];
       if (!chat) {
         chat = await commands.getChatById({ id: options.chatId });
+        this.chatMap[options.chatId] = chat;
       }
       if (chat && chat.name === chat.id) {
+        const initialText = initialMessage.parts
+          .filter((part) => part.type === "text")
+          .map((part) => part.text)
+          .join(" ");
         const { text: chatName } = await generateText({
           model: this.model,
-          prompt: `The user has started a new chat with the following message: "${message.parts
-            .filter((part) => part.type === "text")
-            .map((part) => part.text)
-            .join(
-              " ",
-            )}". Generate a concise, descriptive title (3-5 words) for this chat based on the user's first message. Focus on the main topic or question being asked. Keep it plain text`,
+          prompt:
+            `The user has started a new chat with the following message: "${initialText}".` +
+            "Generate a concise, descriptive title (3-5 words) for this chat based on the user's first message." +
+            "Focus on the main topic or question being asked. Keep it plain text",
         });
         await commands.updateChatName({
           name: chatName,
@@ -154,7 +151,7 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
       }
     }
 
-    // // load the previous messages from the server:
+    // load the previous messages from the server:
     const chatMessages = await commands.loadChat({ chatId: options.chatId });
     const messages = chatMessages.map((msg) => msg.content);
 

@@ -115,4 +115,5 @@ export const commands = {
       album: string;
       thumbnail: number[];
     }>("get_media_metadata", params),
+  deleteChat: (params: { id: string }) => invoke<void>("delete_chat", params),
 };

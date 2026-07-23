@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Chat from "./components/Chat";
 import { useChatStore } from "./stores/useChatStore";
 import Navbar from "./components/Navbar";
 import Settings from "./components/Settings";
-import { nanoid } from "nanoid";
 import { Spinner } from "@fluentui/react-components";
+import EmptyChat from "./components/EmptyChat";
 
 import "./App.css";
 
@@ -14,24 +14,14 @@ const App: React.FC<AppProps> = () => {
   const {
     loading,
     chatId,
-    loadChat,
     getAllChats,
     getAllModels,
     selectedModel,
-    selectedModelId,
     settingsScreen,
-    models,
+    chatKey,
   } = useChatStore();
-  const [chatKey, setChatKey] = useState("");
 
-  useEffect(() => {
-    (async () => {
-      if (chatId) {
-        await loadChat(chatId);
-      }
-      setChatKey(nanoid());
-    })();
-  }, [chatId, selectedModelId]);
+  const shouldShowChat = settingsScreen === null && selectedModel;
 
   const init = async () => {
     useChatStore.setState({ loading: true });
@@ -43,17 +33,7 @@ const App: React.FC<AppProps> = () => {
     init();
   }, []);
 
-  useEffect(() => {
-    if (loading) return;
-
-    if (models.length === 0 || !selectedModelId) {
-      useChatStore.setState({
-        settingsScreen: "model",
-      });
-    }
-  }, [models, selectedModelId, loading]);
-
-  if (loading)
+  if (loading) {
     return (
       <main
         style={{
@@ -65,12 +45,13 @@ const App: React.FC<AppProps> = () => {
         <Spinner />
       </main>
     );
+  }
 
   return (
     <main>
       <Navbar />
       <Settings />
-      {settingsScreen === null && selectedModel && <Chat key={chatKey} />}
+      {shouldShowChat && (chatId ? <Chat key={chatKey} /> : <EmptyChat />)}
     </main>
   );
 };

@@ -1,5 +1,6 @@
 import {
   AppItem,
+  Button,
   Hamburger,
   Menu,
   MenuButton,
@@ -12,9 +13,16 @@ import {
   NavDrawerBody,
   NavDrawerHeader,
   NavItem,
+  Tooltip,
 } from "@fluentui/react-components";
-import { Add20Regular, AddRegular, ListRegular } from "@fluentui/react-icons";
+import {
+  Add20Regular,
+  AddRegular,
+  DeleteRegular,
+  ListRegular,
+} from "@fluentui/react-icons";
 import { useChatStore } from "../stores/useChatStore";
+import { commands } from "../../common/commands";
 
 interface NavbarProps {}
 
@@ -27,51 +35,69 @@ const Navbar: React.FC<NavbarProps> = () => {
     models,
     selectedModel,
     changeSelectedModel,
+    getAllChats,
+    loadChat,
+    settingsScreen,
   } = useChatStore();
 
   return (
     <nav className="navbar">
       <Hamburger appearance="subtle" onClick={() => setOpenDrawer(true)} />
+      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+        {selectedModel && (
+          <Menu checkedValues={{ model: [selectedModel.id] }}>
+            <MenuTrigger disableButtonEnhancement>
+              <MenuButton size="small" appearance="subtle">
+                {selectedModel.displayName || selectedModel.model}
+              </MenuButton>
+            </MenuTrigger>
 
-      {selectedModel && (
-        <Menu checkedValues={{ model: [selectedModel.id] }}>
-          <MenuTrigger disableButtonEnhancement>
-            <MenuButton size="small" appearance="subtle">
-              {selectedModel.displayName || selectedModel.model}
-            </MenuButton>
-          </MenuTrigger>
-
-          <MenuPopover>
-            <MenuList>
-              {models.map((model) => (
-                <MenuItemRadio
-                  key={model.id}
-                  value={model.id}
-                  name="model"
-                  onClick={() => {
-                    changeSelectedModel(model.id);
-                  }}>
-                  {model.displayName || model.model}
-                </MenuItemRadio>
-              ))}
-              <MenuItem
-                icon={<ListRegular />}
-                onClick={() =>
-                  useChatStore.setState({ settingsScreen: "list" })
-                }>
-                Show All
-              </MenuItem>
-              <MenuItem
-                icon={<AddRegular />}
-                onClick={() =>
-                  useChatStore.setState({ settingsScreen: "model" })
-                }>
-                Add new
-              </MenuItem>
-            </MenuList>
-          </MenuPopover>
-        </Menu>
-      )}
+            <MenuPopover>
+              <MenuList>
+                {models.map((model) => (
+                  <MenuItemRadio
+                    key={model.id}
+                    value={model.id}
+                    name="model"
+                    onClick={() => {
+                      changeSelectedModel(model.id);
+                    }}>
+                    {model.displayName || model.model}
+                  </MenuItemRadio>
+                ))}
+                <MenuItem
+                  icon={<ListRegular />}
+                  onClick={() =>
+                    useChatStore.setState({ settingsScreen: "list" })
+                  }>
+                  Show All
+                </MenuItem>
+                <MenuItem
+                  icon={<AddRegular />}
+                  onClick={() =>
+                    useChatStore.setState({ settingsScreen: "model" })
+                  }>
+                  Add new
+                </MenuItem>
+              </MenuList>
+            </MenuPopover>
+          </Menu>
+        )}
+        {chatId && settingsScreen === null && (
+          <Tooltip relationship="label" content={"Delete chat"}>
+            <Button
+              icon={<DeleteRegular />}
+              appearance="subtle"
+              size="small"
+              onClick={async () => {
+                await commands.deleteChat({ id: chatId });
+                await getAllChats();
+                useChatStore.setState({ chatId: null, initialMessages: [] });
+              }}
+            />
+          </Tooltip>
+        )}
+      </div>
       <NavDrawer
         selectedValue={chatId ? chatId : ""}
         open={openDrawer}
@@ -84,7 +110,11 @@ const Navbar: React.FC<NavbarProps> = () => {
           <AppItem
             icon={<Add20Regular />}
             onClick={async () => {
-              useChatStore.setState({ chatId: null, initialMessages: [] });
+              useChatStore.setState({
+                chatId: null,
+                initialMessages: [],
+                settingsScreen: null,
+              });
               setOpenDrawer(false);
             }}>
             New Chat
@@ -94,7 +124,7 @@ const Navbar: React.FC<NavbarProps> = () => {
               key={chat.id}
               value={chat.id}
               onClick={async () => {
-                useChatStore.setState({ chatId: chat.id });
+                await loadChat(chat.id);
                 setOpenDrawer(false);
               }}>
               {chat.name}

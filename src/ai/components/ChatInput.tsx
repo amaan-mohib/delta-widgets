@@ -20,7 +20,7 @@ const ChatInput: React.FC<IChatInputProps> = ({
   buttonDisabled,
   scrollToBottom,
 }) => {
-  const { chatId } = useChatStore();
+  const { chatKey, selectedModelId } = useChatStore();
   const [text, setText] = useState<string>("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -38,7 +38,7 @@ const ChatInput: React.FC<IChatInputProps> = ({
     if (textareaRef.current) {
       textareaRef.current.focus();
     }
-  }, [chatId]);
+  }, [chatKey, selectedModelId]);
 
   const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
@@ -52,7 +52,7 @@ const ChatInput: React.FC<IChatInputProps> = ({
   };
 
   const handleSend = async () => {
-    if (!chatId || buttonDisabled || !text.trim()) return;
+    if (buttonDisabled || !text.trim()) return;
 
     scrollToBottom();
     const oldInput = text;

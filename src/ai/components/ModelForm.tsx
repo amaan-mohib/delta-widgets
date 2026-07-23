@@ -76,10 +76,44 @@ const ModelForm: React.FC<ModelFormProps> = ({ initModel }) => {
       setLoading(true);
       setConnectionError("");
 
+      const providerOptions: Record<string, any> = {};
+
+      switch (config.provider) {
+        case "openai":
+          // o-series/gpt-5 models default to reasoning; minimize it
+          providerOptions.openai = {
+            reasoningEffort: "low", // or 'low' if 'minimal' unsupported for the model
+          };
+          break;
+        case "anthropic":
+          // thinking is opt-in, so omitting providerOptions.anthropic is enough,
+          // but being explicit avoids surprises if config sets a default elsewhere
+          providerOptions.anthropic = {
+            thinking: { type: "disabled" },
+          };
+          break;
+        case "gemini":
+          providerOptions.google = {
+            thinkingConfig: { thinkingBudget: 0 },
+          };
+          break;
+        case "openrouter":
+          // OpenRouter passes through to whatever underlying model you pick;
+          // reasoning param mirrors OpenAI-style effort control
+          providerOptions.openrouter = {
+            reasoning: { effort: "low", exclude: true },
+          };
+          break;
+        case "ollama":
+          // Local models only reason if the model itself is a reasoning model
+          break;
+      }
+
       await generateText({
         model: getModelProvider(config),
-        prompt: "ping",
+        prompt: "Ping. Respond with pong",
         maxRetries: 0,
+        providerOptions,
       });
       await saveModel(config, models);
       await getAllModels();
@@ -276,7 +310,11 @@ const ModelForm: React.FC<ModelFormProps> = ({ initModel }) => {
           </>
         )}
         {connectionError && (
-          <Text style={{ color: tokens.colorPaletteRedForeground1 }}>
+          <Text
+            style={{
+              color: tokens.colorPaletteRedForeground1,
+              overflowWrap: "break-word",
+            }}>
             {connectionError || "asd"}
           </Text>
         )}

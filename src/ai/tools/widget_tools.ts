@@ -643,22 +643,19 @@ Note: window.__TAURI__ is available but fragile — avoid page reloads or redire
 });
 
 export const queryMediaHistory = tool({
-  description: `
-Query the user's media playback history.
+  description: `Query the user's media playback history.
 
 Media history includes ALL system media:
-music, videos, podcasts, streams, browser tabs,
-advertisements, audiobooks, etc.
+music, videos, podcasts, streams, browser tabs, advertisements, audiobooks, etc.
 
 Do not assume every result is a song.
 
 Current datetime:
-${new Date().toISOString()}
-`,
+${new Date().toISOString()}`,
   inputSchema: z.object({
     intent: z.enum(["history", "top_media", "top_artists", "stats"]),
-    startTime: z.string().optional(),
-    endTime: z.string().optional(),
+    startTime: z.iso.datetime().optional(),
+    endTime: z.iso.datetime().optional(),
     limit: z.number().optional(),
   }),
   execute: async (input) => {
