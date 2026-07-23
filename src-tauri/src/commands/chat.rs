@@ -308,8 +308,9 @@ pub async fn create_assistant_window(app: tauri::AppHandle) -> Result<(), String
         tauri::WebviewUrl::App("ai-index.html".into()),
     )
     .title("Assistant")
-    .inner_size(400.0, 500.0)
-    .min_inner_size(400.0, 500.0)
+    .inner_size(400.0, 550.0)
+    .min_inner_size(400.0, 550.0)
+    .transparent(true)
     .build()
     .unwrap();
     new_window.show().unwrap();

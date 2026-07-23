@@ -7,10 +7,10 @@ import { useTheme } from "../main/theme/useTheme";
 interface MainProps {}
 
 const Main: React.FC<MainProps> = () => {
-  const { theme } = useTheme();
+  const { theme } = useTheme("assistant");
 
   return (
-    <FluentProvider theme={theme}>
+    <FluentProvider theme={theme} className="main-window">
       <App />
     </FluentProvider>
   );
@@ -19,5 +19,5 @@ const Main: React.FC<MainProps> = () => {
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <Main />
-  </React.StrictMode>
+  </React.StrictMode>,
 );

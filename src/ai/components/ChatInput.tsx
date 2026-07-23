@@ -71,6 +71,7 @@ const ChatInput: React.FC<IChatInputProps> = ({
       style={{ background: tokens.colorNeutralCardBackgroundSelected }}
       className="input-container">
       <textarea
+        id="chat-input"
         ref={textareaRef}
         value={text}
         onChange={handleChange}

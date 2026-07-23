@@ -94,10 +94,14 @@ const Chat: React.FC<ChatProps> = () => {
           <div
             key={message.id}
             className={`${message.role === "user" ? "user-message" : "ai-message"}`}
-            style={{
-              backgroundColor:
-                message.role === "user" ? tokens.colorBrandBackground : "",
-            }}>
+            style={
+              message.role === "user"
+                ? {
+                    backgroundColor: tokens.colorBrandBackground,
+                    color: tokens.colorNeutralForegroundOnBrand,
+                  }
+                : {}
+            }>
             {message.parts?.map((part, i) => {
               if (part.type === "text") {
                 return (
