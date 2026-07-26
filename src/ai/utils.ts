@@ -14,6 +14,14 @@ import { getStore } from "../common";
 
 const KEYRING_SERVICE_NAME = "delta-widgets";
 
+export const providers = [
+  { name: "OpenAI", value: "openai" },
+  { name: "Anthropic", value: "anthropic" },
+  { name: "Google Gemini", value: "gemini" },
+  { name: "Ollama", value: "ollama" },
+  { name: "OpenRouter", value: "openrouter" },
+];
+
 export const getModelProvider = (config: AIProviderConfig): LanguageModel => {
   switch (config.provider) {
     case "openai":
@@ -58,10 +66,10 @@ export const getModels = async () => {
       KEYRING_SERVICE_NAME,
       `model-key-${model.id}`,
     );
-    models.push({
-      ...model,
-      apiKey: apiKey || undefined,
-    });
+    if (apiKey) {
+      model.apiKey = apiKey;
+    }
+    models.push(model);
   }
   return {
     models,

@@ -111,11 +111,16 @@ export const useChatStore = create<IChatStore>((set, get) => ({
   settingsScreen: null,
   async getAllModels() {
     const { models, selectedModelId } = await getModels();
+    const selectedModel =
+      selectedModelId && models.length !== 0
+        ? models.find((m) => m.id === selectedModelId) || null
+        : null;
     set({
       models,
       selectedModelId,
-      selectedModel: models.find((m) => m.id === selectedModelId),
-      settingsScreen: models.length === 0 ? "model" : null,
+      selectedModel,
+      settingsScreen:
+        models.length === 0 ? "model" : selectedModel === null ? "list" : null,
     });
   },
   models: [],

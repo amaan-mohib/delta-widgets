@@ -14,8 +14,7 @@ import {
   DeleteRegular,
   EditRegular,
 } from "@fluentui/react-icons";
-import { providers } from "./ModelForm";
-import { deleteModel } from "../utils";
+import { deleteModel, providers } from "../utils";
 
 interface ModelListProps {}
 
@@ -26,7 +25,7 @@ const ModelList: React.FC<ModelListProps> = () => {
   return (
     <div className="settings-container">
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        {models.length !== 0 && (
+        {models.length !== 0 && selectedModelId && (
           <Button
             icon={<ArrowLeftRegular />}
             appearance="subtle"

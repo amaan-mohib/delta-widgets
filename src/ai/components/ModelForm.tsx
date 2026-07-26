@@ -11,18 +11,10 @@ import {
   tokens,
 } from "@fluentui/react-components";
 import { generateText } from "ai";
-import { getModelProvider, saveModel } from "../utils";
+import { getModelProvider, providers, saveModel } from "../utils";
 import { nanoid } from "nanoid";
 import { useChatStore } from "../stores/useChatStore";
 import { ArrowLeftRegular } from "@fluentui/react-icons";
-
-export const providers = [
-  { name: "OpenAI", value: "openai" },
-  { name: "Anthropic", value: "anthropic" },
-  { name: "Google Gemini", value: "gemini" },
-  { name: "Ollama", value: "ollama" },
-  { name: "OpenRouter", value: "openrouter" },
-];
 
 const getPlaceholderForProvider = (provider: string) => {
   switch (provider) {
