@@ -1,0 +1,127 @@
+:root {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  --navbar-height: 40px;
+  --color-canvas-default: #ffffff;
+  --color-canvas-subtle: #f6f8fa;
+  --color-border-default: #d0d7de;
+  --color-border-muted: hsla(210, 18%, 87%, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-canvas-default: #0d1117;
+    --color-canvas-subtle: #161b22;
+    --color-border-default: #30363d;
+    --color-border-muted: #21262d;
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+.light {
+  color-scheme: light;
+}
+
+.navbar {
+  height: var(--navbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+}
+
+.container {
+  height: calc(100vh - var(--navbar-height));
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  max-width: 48rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.settings-container {
+  min-height: calc(100vh - var(--navbar-height));
+  padding: 10px 16px;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.message-container {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 10px 16px;
+}
+
+.input-container {
+  display: flex;
+  padding: 10px 16px;
+  gap: 10px;
+  align-items: end;
+}
+
+.user-message {
+  align-self: flex-end;
+  padding: 10px;
+  border-radius: 10px;
+  max-width: 80%;
+}
+
+.ai-message {
+  ol,
+  ul {
+    padding-left: 15px;
+  }
+  pre {
+    overflow-x: auto;
+  }
+  table {
+    border-spacing: 0;
+    border-collapse: collapse;
+    display: block;
+    margin-top: 0;
+    margin-bottom: 16px;
+    width: max-content;
+    max-width: 100%;
+    overflow: auto;
+  }
+
+  tr {
+    border-top: 1px solid var(--color-border-muted);
+  }
+
+  td,
+  th {
+    padding: 6px 13px;
+    border: 1px solid var(--color-border-default);
+  }
+
+  th {
+    font-weight: 600;
+  }
+
+  table img {
+    background-color: transparent;
+  }
+}

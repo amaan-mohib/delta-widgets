@@ -17,6 +17,10 @@
     "generate:commands": "node scripts/generate-commands.cjs"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.0",
+    "@ai-sdk/google": "^3.0.83",
+    "@ai-sdk/openai": "^3.0.0",
+    "@ai-sdk/react": "^3.0.210",
     "@ctrl/tinycolor": "^4.1.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/modifiers": "^9.0.0",
@@ -24,6 +28,7 @@
     "@fluentui/react-color-picker-preview": "^0.3.0",
     "@fluentui/react-components": "^9.72.0",
     "@fluentui/react-icons": "^2.0.316",
+    "@openrouter/ai-sdk-provider": "^2.9.1",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-autostart": "^2.5.0",
     "@tauri-apps/plugin-dialog": "^2.2.0",
@@ -33,6 +38,8 @@
     "@tauri-apps/plugin-opener": "^2.2.7",
     "@tauri-apps/plugin-process": "^2.3.0",
     "@tauri-apps/plugin-updater": "^2.9.0",
+    "ai": "^6.0.208",
+    "ai-sdk-ollama": "^3.8.8",
     "buffer": "^6.0.3",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
@@ -46,10 +53,14 @@
     "react-best-gradient-color-picker": "^3.0.14",
     "react-dom": "^18.3.1",
     "react-fontpicker-ts": "^1.2.0",
+    "react-markdown": "^10.1.0",
     "react-quill": "^2.0.0",
     "react-resizable": "github:amaan-mohib/react-resizable",
     "react-zoom-pan-pinch": "^3.7.0",
+    "remark-gfm": "^4.0.1",
+    "tauri-plugin-keyring-api": "^0.1.1",
     "tauri-plugin-system-info-api": "^2.0.10",
+    "zod": "^4.4.3",
     "zustand": "^5.0.3"
   },
   "devDependencies": {

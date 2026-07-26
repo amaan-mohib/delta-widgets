@@ -5,7 +5,7 @@ import { getResolvedTheme } from "../../common/themes";
 import { tokens } from "@fluentui/react-components";
 import { commands } from "../../common/commands";
 
-export const useTheme = () => {
+export const useTheme = (windowLabel = "main") => {
   const { mode, color } = useThemeStore();
   const [initializing, setInitializing] = useState(true);
 
@@ -30,7 +30,7 @@ export const useTheme = () => {
       }
       const themeApplied = await commands.applyBlurTheme({
         mode: modeValue,
-        label: "main",
+        label: windowLabel,
       });
       const mainWindow = document.querySelector<HTMLDivElement>(".main-window");
       if (!mainWindow) return;

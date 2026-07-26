@@ -12,6 +12,7 @@ The `media_updated` event acts as a notification trigger. To retrieve the latest
 
 ```ts
 import { invoke, listen } from "@tauri-apps/api/core";
+// or const {event: { listen }, core: { invoke }} = window.__TAURI__;
 
 async function setup() {
   // Start media listener
@@ -41,6 +42,7 @@ Each `audio-samples` event returns an array of approximately 256 numeric sample 
 
 ```ts
 import { invoke, listen } from "@tauri-apps/api/core";
+// or const {event: { listen }, core: { invoke }} = window.__TAURI__;
 
 async function setup() {
   // Start capturing system audio

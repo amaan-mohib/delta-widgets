@@ -14,6 +14,7 @@ import {
 import {
   Apps20Color,
   Apps20Regular,
+  BotSparkle20Regular,
   BuildingShop20Regular,
   BuildingStore20Color,
   bundleIcon,
@@ -29,6 +30,7 @@ import AddMenu from "./AddMenu";
 import { check } from "@tauri-apps/plugin-updater";
 import { useDataStore } from "../../stores/useDataStore";
 import DiscordIcon from "../icons/Discord";
+import { commands } from "../../../common/commands";
 
 export const sidebarWidth = 250;
 
@@ -143,7 +145,17 @@ const Sidebar: React.FC<SidebarProps> = () => {
             icon={<MarketplaceIcon />}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               Marketplace
-              <Badge appearance="tint">New</Badge>
+            </div>
+          </NavItem>
+          <NavItem
+            className={styles.navItem}
+            onClick={async () => {
+              await commands.createAssistantWindow();
+            }}
+            value={"assistant"}
+            icon={<BotSparkle20Regular />}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              Assistant<Badge appearance="tint">New</Badge>
             </div>
           </NavItem>
           <NavDivider style={{ marginTop: "auto" }} />

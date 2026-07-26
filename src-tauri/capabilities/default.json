@@ -2,9 +2,17 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": ["main", "creator", "widget-*"],
+  "windows": [
+    "main",
+    "creator",
+    "widget-*",
+    "assistant"
+  ],
   "remote": {
-    "urls": ["http://*.localhost*", "http://localhost*"]
+    "urls": [
+      "http://*.localhost:*",
+      "http://localhost:*"
+    ]
   },
   "permissions": [
     "core:default",
@@ -17,11 +25,16 @@
     "dialog:default",
     "core:webview:allow-create-webview-window",
     "core:window:default",
+    "core:window:allow-create",
     "core:window:allow-show",
+    "core:window:allow-close",
+    "core:webview:allow-webview-close",
+    "core:window:allow-set-focus",
     "core:window:allow-set-always-on-bottom",
     "core:window:allow-set-always-on-top",
     "core:window:allow-set-resizable",
     "system-info:allow-all",
-    "log:default"
+    "log:default",
+    "keyring:default"
   ]
 }

@@ -12,6 +12,7 @@ use crate::commands::store::{self, KVPair};
 use crate::migrations::all_migrations;
 use crate::{commands::widget::create_widget_window, setup::utils::ensure_paths};
 use crate::{
+    db,
     migration::{run_migrations, Direction},
     setup::utils::copy_embedded_dir,
 };
@@ -199,12 +200,27 @@ fn init_widgets(app: &tauri::App) -> anyhow::Result<()> {
     Ok(())
 }
 
+fn init_db(app: &tauri::App) -> anyhow::Result<()> {
+    // Initialize database
+    tauri::async_runtime::block_on(async move {
+        let database = db::Database::new(&app.handle())
+            .await
+            .expect("failed to initialize database");
+
+        // Store database pool in app state
+        app.manage(db::DatabaseState(database.pool));
+    });
+
+    Ok(())
+}
+
 pub fn init_app(app: &&mut tauri::App) -> anyhow::Result<()> {
     ensure_paths(&app);
     init_updater(&app)?;
     init_tray(&app)?;
     init_autostart(&app)?;
     init_widgets(&app)?;
+    init_db(&app)?;
 
     Ok(())
 }

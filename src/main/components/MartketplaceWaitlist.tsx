@@ -16,7 +16,7 @@ const MartketplaceWaitlist: React.FC<MartketplaceWaitlistProps> = () => {
         prioritize development.
       </Text>
       <Text size={200}>
-        Join the waitlist to be among the first to create and monetize your
+        Join the waitlist to be among the first to create and share your
         widgets.
       </Text>
       <Button
