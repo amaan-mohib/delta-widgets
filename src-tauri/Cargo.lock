@@ -1220,7 +1220,7 @@ dependencies = [
 
 [[package]]
 name = "delta_widgets"
-version = "1.0.3"
+version = "1.0.4"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
