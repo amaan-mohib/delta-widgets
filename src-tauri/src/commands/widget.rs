@@ -1,5 +1,5 @@
 use serde_json::{json, Value};
-use std::fs;
+use std::{collections::HashMap, fs};
 use tauri::{Emitter, Manager, PhysicalPosition, PhysicalSize, State};
 
 use crate::{
@@ -65,7 +65,9 @@ pub async fn create_creator_window(
     new_window.set_position(position).unwrap();
     new_window.maximize().unwrap();
 
-    webview.hide().unwrap();
+    if webview.label() == "main" {
+        webview.hide().unwrap();
+    }
     new_window.show().unwrap();
 
     new_window.on_window_event(move |event| {
@@ -393,4 +395,12 @@ pub async fn open_devtools(app: tauri::AppHandle, label: String) {
         #[cfg(debug_assertions)]
         window.open_devtools();
     }
+}
+
+#[tauri::command]
+pub fn get_existing_keys_cmd(
+    app: tauri::AppHandle,
+    current_folder: String,
+) -> HashMap<String, Option<()>> {
+    get_existing_keys(&app, current_folder)
 }

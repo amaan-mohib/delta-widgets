@@ -1,6 +1,6 @@
 [package]
 name = "delta_widgets"
-version = "1.0.3"
+version = "1.0.4"
 description = "Widget maker for Windows (for now)"
 authors = ["amaan-mohib"]
 edition = "2021"
@@ -48,6 +48,9 @@ cpal = "0.17.3"
 image = { version = "0.25.10", default-features = false, features = ["png", "jpeg", "ico", "webp"] }
 webp = "0.3.1"
 base64 = "0.22.1"
+sqlx = { version = "0.8.1", features = ["runtime-tokio", "sqlite", "chrono"] }
+chrono = { version = "0.4.39", features = ["serde"] }
+tauri-plugin-keyring = "0.1.0"
 
 [profile.release]
 opt-level = 'z'     # Optimize for size
