@@ -14,6 +14,7 @@ import {
 import {
   Apps20Color,
   Apps20Regular,
+  BotSparkle20Regular,
   BuildingShop20Regular,
   BuildingStore20Color,
   bundleIcon,
@@ -24,7 +25,6 @@ import {
   Megaphone20Regular,
   QuestionCircle20Regular,
   Settings20Regular,
-  Sparkle20Regular,
 } from "@fluentui/react-icons";
 import AddMenu from "./AddMenu";
 import { check } from "@tauri-apps/plugin-updater";
@@ -145,7 +145,6 @@ const Sidebar: React.FC<SidebarProps> = () => {
             icon={<MarketplaceIcon />}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               Marketplace
-              <Badge appearance="tint">New</Badge>
             </div>
           </NavItem>
           <NavItem
@@ -154,9 +153,9 @@ const Sidebar: React.FC<SidebarProps> = () => {
               await commands.createAssistantWindow();
             }}
             value={"assistant"}
-            icon={<Sparkle20Regular />}>
+            icon={<BotSparkle20Regular />}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              Assistant
+              Assistant<Badge appearance="tint">New</Badge>
             </div>
           </NavItem>
           <NavDivider style={{ marginTop: "auto" }} />

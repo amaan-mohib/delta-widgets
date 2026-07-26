@@ -32,6 +32,18 @@ Templates
 
 ![templates](/ss-templates.png)
 
+## AI Assistant (Optional)
+
+Delta Widgets includes an optional AI assistant that can help create and modify widgets, answer questions about media history, and assist with application workflows.
+
+The AI assistant follows a Bring Your Own Key (BYOK) model:
+
+- Users may connect their own API keys from supported providers.
+- AI features are completely optional and can be ignored.
+- Core widget creation and application functionality remain available without AI.
+
+Supported providers include OpenAI, Anthropic, Google Gemini, Ollama, and OpenRouter. API keys are stored and encrypted on the user's device and are used only for requests initiated by the user.
+
 # Documentation
 
 Visit the full documentation [here](https://amaan-mohib.github.io/delta-widgets)
@@ -40,13 +52,14 @@ Visit the full documentation [here](https://amaan-mohib.github.io/delta-widgets)
 
 ## Tauri + React + Typescript
 
-This project was developed with Tauri, React and Typescript in Vite.
+This project was developed with Tauri, React and Typescript in Vite. More info [here](/CONTRIBUTING.md)
 
 ### Recommended IDE Setup
 
 - [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
 
 # Community
+
 https://discord.gg/wDE8KNx8fB
 
 # Support

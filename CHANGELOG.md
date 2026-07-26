@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.4] - 2026-07-26
+
+### Added
+
+- Added AI Assistant to create widgets, completely optional with BYOK architecture.
+- Added SQLite database to locally persist AI chat messages and media history.
+
+### Fixed
+
+- Fixed documentation for internal global Tauri commands.
+
 ## [1.0.3] - 2026-05-02
 
 ### Fixed

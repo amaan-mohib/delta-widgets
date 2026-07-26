@@ -483,6 +483,10 @@ pub fn get_win32_icon(app: &tauri::AppHandle, app_id: &String) -> anyhow::Result
 }
 
 pub async fn upsert_media_history(app: &AppHandle, media: &MediaInfo) -> Result<(), String> {
+    if media.artist.is_empty() {
+        return Ok(());
+    }
+
     let should_upsert = {
         let media_state = app.state::<tokio::sync::Mutex<MediaState>>();
         let mut state = media_state.lock().await;

@@ -33,4 +33,12 @@ export const CHANGELOG: Record<string, IChangelogItem[]> = {
       title: "Smoother Overall Experience",
     },
   ],
+  "1.0.4": [
+    {
+      image: "/assets/whats-new/v1.0.4/v1.0.4-1.png",
+      description:
+        "Introducing an optional AI assistant for widget generation and media history queries. Supports Bring Your Own Key (BYOK) with multiple AI providers.",
+      title: "Optional AI Assistant",
+    },
+  ],
 };

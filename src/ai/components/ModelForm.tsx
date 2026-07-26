@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import {
   Button,
+  Caption1,
   Field,
   Input,
+  Link,
   Select,
   Spinner,
   Subtitle2,
@@ -15,6 +17,7 @@ import { getModelProvider, providers, saveModel } from "../utils";
 import { nanoid } from "nanoid";
 import { useChatStore } from "../stores/useChatStore";
 import { ArrowLeftRegular } from "@fluentui/react-icons";
+import { sendMixpanelEvent } from "../../main/utils/analytics";
 
 const getPlaceholderForProvider = (provider: string) => {
   switch (provider) {
@@ -108,6 +111,7 @@ const ModelForm: React.FC<ModelFormProps> = ({ initModel }) => {
         providerOptions,
       });
       await saveModel(config, models);
+      await sendMixpanelEvent("ai-model-added", {});
       await getAllModels();
       useChatStore.setState({
         editModel: null,
@@ -318,6 +322,15 @@ const ModelForm: React.FC<ModelFormProps> = ({ initModel }) => {
           {initModel ? "Update" : "Add"}
         </Button>
       </form>
+      <div style={{ color: tokens.colorNeutralForeground3, paddingTop: 10 }}>
+        <Caption1>
+          Tip: You can try free{" "}
+          <Link href="https://openrouter.ai/openrouter/free" target="_blank">
+            OpenRouter
+          </Link>{" "}
+          models to get started!
+        </Caption1>
+      </div>
     </div>
   );
 };
