@@ -36,6 +36,7 @@ export default defineConfig(async () => ({
         main: "index.html",
         creator: "creator-index.html",
         widget: "widget-index.html",
+        ai: "ai-index.html",
       },
     },
     minify: !process.env.TAURI_ENV_DEBUG ? true : false,

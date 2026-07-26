@@ -49,6 +49,13 @@ const useStyles = makeStyles({
   },
 });
 
+const getLatestItems = () => {
+  const latestKey = Object.keys(CHANGELOG).sort((a, b) =>
+    b.localeCompare(a, undefined, { numeric: true }),
+  )[0];
+  return CHANGELOG[latestKey];
+};
+
 interface WhatsNewProps {}
 
 const WhatsNew: React.FC<WhatsNewProps> = () => {
@@ -67,21 +74,19 @@ const WhatsNew: React.FC<WhatsNewProps> = () => {
     const version = await getVersion();
     const { lastSeenVersion = "0" } = await getStore();
     setVersion(version);
+    let items: IChangelogItem[] = [];
     if (version !== lastSeenVersion) {
-      const items = Object.entries(CHANGELOG)
+      items = Object.entries(CHANGELOG)
         .filter(([version]) => version > lastSeenVersion)
         .sort(([a], [b]) => b.localeCompare(a, undefined, { numeric: true }))
         .flatMap(([_, items]) => items);
-      if (items.length > 0) {
-        setOpenedAuto(true);
-        setChangelogItems(items);
-        setOpen(true);
-      }
+    }
+    if (items.length > 0) {
+      setOpenedAuto(true);
+      setChangelogItems(items);
+      setOpen(true);
     } else {
-      const items = Object.entries(CHANGELOG).sort(([a], [b]) =>
-        b.localeCompare(a, undefined, { numeric: true }),
-      )[0][0];
-      setChangelogItems(CHANGELOG[items]);
+      setChangelogItems(getLatestItems());
     }
   }, []);
 

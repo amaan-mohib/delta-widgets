@@ -16,8 +16,9 @@ Here's a list of available commands, their purpose, and usage examples.
     If you're running in a raw browser (before build), use:
 
     ```js
-    window.__TAURI__.invoke("command_name", args)
+    window.__TAURI__.core.invoke("command_name", args)
     ```
+    `window.__TAURI__` takes some time to get populated, it can be accessed after it is available.
 
 ## Command Reference
 
@@ -129,11 +130,11 @@ See the list of all available events [here](events.md).
 
 ### MediaAction
 
-| Parameter   | Type                                                            | Description                                                                             |
-| ----------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| `player_id` | String                                                          | Unique identifier for the player                                                        |
-| `action`    | "play" \| "pause" \| "toggle" \| "next" \| "prev" \| "position" | The media action to perform                                                             |
-| `position`  | Option<Number\>                                                 | Optional position parameter for seeking, but required if using `"position"` as `action` |
+| Parameter  | Type                                                            | Description                                                                             |
+| ---------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `playerId` | String                                                          | Unique identifier for the player                                                        |
+| `action`   | "play" \| "pause" \| "toggle" \| "next" \| "prev" \| "position" | The media action to perform                                                             |
+| `position` | Option<Number\>                                                 | Optional position parameter for seeking, but required if using `"position"` as `action` |
 
 ## Best Practices
 
@@ -221,7 +222,7 @@ And again, `npm run build` → drop `dist/` into Delta Widgets.
 
 If you just want quick prototypes or static displays:
 
-- Use `window.__TAURI__.invoke("command_name")` directly.
+- Use `window.__TAURI__.core.invoke("command_name")` directly.
 - No build step required.
 - Limited to globals exposed by Tauri.
 
@@ -234,7 +235,7 @@ Example:
     <button onclick="getInfo()">Get Info</button>
     <script>
       async function getInfo() {
-        const info = await window.__TAURI__.invoke("get_system_info");
+        const info = await window.__TAURI__.core.invoke("get_system_info");
         console.log(info);
       }
     </script>

@@ -121,6 +121,10 @@ const About: React.FC<AboutProps> = () => {
           This app collects anonymous usage statistics (install and widget
           enable events) via Mixpanel. No personal data is tracked. Data is only
           used to measure installs and improve the app.
+          <br />
+          <br />
+          This app stores and encrypts the AI model API keys on the user's
+          device and are used only for requests initiated by the user.
         </Caption2>
         {updateData && (
           <Button

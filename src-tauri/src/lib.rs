@@ -1,10 +1,11 @@
 mod commands;
+mod db;
 pub mod migration;
 pub mod migrations;
 mod plugins;
 mod setup;
 
-use commands::{analytics, audio, media, migrate, services, store, system, widget};
+use commands::{analytics, audio, chat, media, migrate, services, store, system, widget};
 use log::LevelFilter;
 use plugins::localhost;
 use setup::init::init_app;
@@ -55,6 +56,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_keyring::init())
         .plugin(tauri_plugin_prevent_default::debug())
         .plugin(localhost::Builder::new(port).build())
         .manage(std::sync::Mutex::new(audio::AudioState::new()))
@@ -64,6 +66,7 @@ pub fn run() {
             media::start_media_listener_cmd,
             media::stop_media_listener_cmd,
             media::media_action,
+            media::get_media_metadata,
             services::get_all_widgets,
             services::copy_custom_assets,
             services::copy_custom_assets_dir,
@@ -75,6 +78,7 @@ pub fn run() {
             widget::close_widget_window,
             widget::publish_widget,
             widget::open_devtools,
+            widget::get_existing_keys_cmd,
             system::get_system_info,
             analytics::track_analytics_event,
             store::write_to_store_cmd,
@@ -83,8 +87,21 @@ pub fn run() {
             audio::stop_audio_capture,
             audio::restart_audio_capture,
             audio::get_current_device_cmd,
+            chat::create_chat,
+            chat::delete_chat,
+            chat::get_all_chats,
+            chat::load_chat,
+            chat::upsert_message,
+            chat::update_chat_name,
+            chat::update_chat_widget_keys,
+            chat::get_chat_by_id,
+            chat::query_media_history,
+            chat::create_assistant_window,
         ])
-        .setup(|app| {
+        .setup(move |app| {
+            CUSTOM_SERVER_PORT
+                .set(port)
+                .expect("Failed to set global port");
             init_app(&app)?;
             Ok(())
         })
@@ -103,9 +120,6 @@ pub fn run() {
         .run(move |_, event| match event {
             tauri::RunEvent::Ready => {
                 println!("Tauri application is ready");
-                CUSTOM_SERVER_PORT
-                    .set(port)
-                    .expect("Failed to set global port");
             }
             _ => {}
         });

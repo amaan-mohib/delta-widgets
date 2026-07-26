@@ -90,7 +90,7 @@ You can call native [Tauri commands](commands.md) to fetch live data:
   <h2 id="track"></h2>
   <script>
     async function updateTrack() {
-      const info = await window.__TAURI__.invoke("get_media");
+      const info = await window.__TAURI__.core.invoke("get_media");
       document.getElementById("track").textContent = info[0].title;
     }
     setInterval(updateTrack, 1000);

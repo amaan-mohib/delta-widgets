@@ -8,8 +8,6 @@ import {
   readTextFile,
   remove,
   stat,
-  UnwatchFn,
-  watch,
   writeTextFile,
 } from "@tauri-apps/plugin-fs";
 import { nanoid } from "nanoid";
@@ -31,21 +29,6 @@ export const getWidgetsDirPath = async (saves?: boolean) => {
   );
   const widgetsDirExists = await exists(widgetsDir);
   return { widgetsDir, widgetsDirExists };
-};
-
-export const watchWidgetFolder = async (cb: () => void, saves?: boolean) => {
-  const { widgetsDir, widgetsDirExists } = await getWidgetsDirPath(saves);
-  let unwatch: UnwatchFn | null = null;
-  if (widgetsDirExists) {
-    unwatch = await watch(
-      widgetsDir,
-      () => {
-        cb();
-      },
-      { delayMs: 500, recursive: true },
-    );
-  }
-  return unwatch;
 };
 
 export const fileOrFolderPicker = async (params: {
