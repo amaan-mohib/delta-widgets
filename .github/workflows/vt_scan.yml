@@ -6,6 +6,13 @@ permissions:
 on:
   release:
     types: published
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Check to safely simulate execution (Dry Run)"
+        required: true
+        type: boolean
+        default: true
 
 jobs:
   virustotal:
@@ -15,6 +22,7 @@ jobs:
       contents: write
     steps:
       - name: VirusTotal Scan
+        if: ${{ inputs.dry_run == false }}
         uses: crazy-max/ghaction-virustotal@v5
         with:
           vt_api_key: ${{ secrets.VT_API_KEY }}
@@ -23,3 +31,23 @@ jobs:
           files: |
             .exe$
             .msi$
+
+  update_release_cache:
+    needs: virustotal
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: read
+      artifact-metadata: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+      - name: update release cache
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGEKIT_API_KEY: ${{ secrets.IMAGEKIT_API_KEY }}
+          IMAGEKIT_ENDPOINT: ${{ secrets.IMAGEKIT_ENDPOINT }}
+        run: node ./scripts/list-releases.cjs
