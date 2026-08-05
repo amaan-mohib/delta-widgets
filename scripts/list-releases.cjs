@@ -64,7 +64,7 @@ async function purgeCache() {
       Authorization: "Basic " + imageKitToken,
     },
     body: JSON.stringify({
-      url: IMAGEKIT_ENDPOINT + "/delta-widgets-releases.json",
+      url: imageKitEndpoint + "/delta-widgets-releases.json",
     }),
   });
 }
