@@ -1,7 +1,7 @@
 # https://github.com/squidfunk/mkdocs-material/blob/master/mkdocs.yml
 
 site_name: Delta Widgets Wiki
-site_url: https://delta-widgets.vercel.app/
+site_url: https://docs.deltawidgets.com/
 repo_name: amaan-mohib/delta-widgets
 repo_url: https://github.com/amaan-mohib/delta-widgets
 edit_uri: edit/main/docs/
