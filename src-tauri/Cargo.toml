@@ -51,6 +51,7 @@ base64 = "0.22.1"
 sqlx = { version = "0.8.1", features = ["runtime-tokio", "sqlite", "chrono"] }
 chrono = { version = "0.4.39", features = ["serde"] }
 tauri-plugin-keyring = "0.1.0"
+tauri-plugin-deep-link = "2"
 
 [profile.release]
 opt-level = 'z'     # Optimize for size
@@ -61,5 +62,5 @@ strip = true        # Strip symbols from binary*
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2"
-tauri-plugin-single-instance = "2"
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
 tauri-plugin-updater = "2"

@@ -259,7 +259,7 @@ fn emit_samples(app: &AppHandle, samples: &[f32], last_emit: &Arc<Mutex<tokio::t
         return;
     }
 
-    if let Err(e) = app.emit("audio-samples", downsample(&samples, CHUNK_SIZE)) {
+    if let Err(e) = app.emit("audio-samples", downsample(samples, CHUNK_SIZE)) {
         eprintln!("Failed to emit audio samples: {}", e);
     }
 }

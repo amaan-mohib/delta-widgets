@@ -56,7 +56,7 @@ impl Migration for FixLabelKey {
             .unwrap_or("")
             .to_string();
         json["key"] = Value::String(sanitize_string(&key));
-        if vec!["battery", "disk", "media", "system", "weather"].contains(&label.as_str()) {
+        if ["battery", "disk", "media", "system", "weather"].contains(&label.as_str()) {
             json["label"] = Value::String(capitalize_first_letter(&label));
         }
         if label == "GPT" {

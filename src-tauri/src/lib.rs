@@ -8,7 +8,7 @@ mod setup;
 use commands::{analytics, audio, chat, media, migrate, services, store, system, widget};
 use log::LevelFilter;
 use plugins::localhost;
-use setup::init::init_app;
+use setup::init::{init_app, init_widgets};
 use std::{env, sync::OnceLock};
 use tauri::Manager;
 use tauri_plugin_log::{Target, TargetKind};
@@ -25,7 +25,23 @@ pub fn get_custom_server_port() -> u16 {
 pub fn run() {
     let port = portpicker::pick_unused_port().expect("failed to find unused port");
 
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            if let Some(webview_window) = app.get_webview_window("main") {
+                let _ = webview_window.show();
+                let _ = webview_window.set_focus();
+            }
+            // let url = &args[0];
+            println!("deep link url: {:?}", args);
+        }));
+    }
+
+    builder
+        // .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(
             tauri_plugin_log::Builder::default()
                 .targets([
@@ -40,12 +56,6 @@ pub fn run() {
         )
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_process::init())
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-            if let Some(webview_window) = app.get_webview_window("main") {
-                let _ = webview_window.show();
-                let _ = webview_window.set_focus();
-            }
-        }))
         .plugin(
             tauri_plugin_autostart::Builder::new()
                 .arg("--autostart")
@@ -105,22 +115,23 @@ pub fn run() {
             init_app(&app)?;
             Ok(())
         })
-        .on_window_event(|window, event| match event {
-            tauri::WindowEvent::CloseRequested { api, .. } => {
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 // hide the main window instead of closing it
                 if window.label() == "main" {
                     window.hide().unwrap();
                     api.prevent_close();
                 }
             }
-            _ => {}
         })
         .build(tauri::generate_context!())
         .expect("error while running tauri application")
-        .run(move |_, event| match event {
-            tauri::RunEvent::Ready => {
+        .run(move |app_handle, event| {
+            if let tauri::RunEvent::Ready = event {
                 println!("Tauri application is ready");
+                if let Err(e) = init_widgets(app_handle) {
+                    eprintln!("Error initializing widgets: {}", e);
+                }
             }
-            _ => {}
         });
 }

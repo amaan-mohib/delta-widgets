@@ -35,6 +35,7 @@
     "core:window:allow-set-resizable",
     "system-info:allow-all",
     "log:default",
-    "keyring:default"
+    "keyring:default",
+    "deep-link:default"
   ]
 }

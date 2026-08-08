@@ -1,8 +1,8 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::fs;
 use std::path::Path;
-use std::{fs, path::PathBuf};
 use tauri::{AppHandle, Manager};
 
 use crate::setup::init::TEMPLATES;
@@ -37,7 +37,7 @@ pub trait Migration {
         None
     }
 
-    fn add_new_widget(&self, new_widget_name: &str, widgets_root_path: &PathBuf) -> Result<()> {
+    fn add_new_widget(&self, new_widget_name: &str, widgets_root_path: &Path) -> Result<()> {
         let new_widget_path = widgets_root_path.join(format!("{new_widget_name}-delta-default"));
         if new_widget_path.exists() {
             return Ok(());
@@ -52,7 +52,7 @@ pub trait Migration {
         Ok(())
     }
 
-    fn remove_widget(&self, widget_name: &str, widgets_root_path: &PathBuf) -> Result<()> {
+    fn remove_widget(&self, widget_name: &str, widgets_root_path: &Path) -> Result<()> {
         let widget_path = widgets_root_path.join(format!("{widget_name}-delta-default"));
         if !widget_path.exists() {
             return Ok(());
@@ -116,7 +116,7 @@ pub fn run_migrations(
         }
         Direction::Down => {
             if let Some(last) = state.applied.pop() {
-                println!("⬇️ Rolling back migration: {}", &last);
+                println!("⬇️ Rolling back migration: {}", last);
                 if let Some(migration) = migrations.into_iter().find(|m| m.name() == last) {
                     if let Some(widget_name) = migration.seed_new_widget() {
                         migration.remove_widget(widget_name, &widgets_root)?;
