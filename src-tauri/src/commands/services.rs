@@ -148,80 +148,76 @@ pub struct WidgetWithMeta {
 pub async fn get_all_widgets(app: tauri::AppHandle) -> Result<Vec<WidgetWithMeta>, String> {
     let mut result = Vec::new();
 
-    for sub_dir in vec!["saves", "widgets"] {
+    for sub_dir in ["saves", "widgets"] {
         let saves = sub_dir == "saves";
-        match app
+        if let Ok(path) = app
             .path()
             .resolve(sub_dir, tauri::path::BaseDirectory::AppData)
         {
-            Ok(path) => {
-                if !path.exists() {
-                    if let Err(err) = fs::create_dir_all(&path) {
-                        eprintln!("Error creating widgets directory: {}", err);
-                        return Err(err.to_string());
-                    }
-                }
-                let entries = fs::read_dir(path).unwrap();
-                for entry in entries {
-                    let entry = match entry {
-                        Ok(e) => e,
-                        Err(_) => continue,
-                    };
-
-                    let path = entry.path();
-                    if !path.is_dir() {
-                        continue;
-                    }
-
-                    let manifest_path = path.join("manifest.json");
-
-                    if !manifest_path.exists() {
-                        continue;
-                    }
-
-                    let content = match fs::read_to_string(&manifest_path) {
-                        Ok(c) => c,
-                        Err(_) => continue,
-                    };
-                    let mut manifest_json: serde_json::Value = match serde_json::from_str(&content)
-                    {
-                        Ok(m) => m,
-                        Err(_) => continue,
-                    };
-                    if let Some(obj) = manifest_json.as_object_mut() {
-                        obj.remove("elements");
-                        obj.remove("dimensions");
-                        obj.remove("position");
-                        obj.remove("customFields");
-                        obj.remove("customAssets");
-                        obj.remove("theme");
-                    }
-
-                    let metadata = match fs::metadata(&manifest_path) {
-                        Ok(m) => m,
-                        Err(_) => continue,
-                    };
-
-                    let modified_at = metadata
-                        .modified()
-                        .ok()
-                        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-                        .map(|d| d.as_millis() as u64)
-                        .unwrap_or(0);
-
-                    result.push(WidgetWithMeta {
-                        manifest: manifest_json,
-                        path: if saves {
-                            manifest_path.to_string_lossy().to_string()
-                        } else {
-                            path.to_string_lossy().to_string()
-                        },
-                        modified_at,
-                        is_draft: saves,
-                    });
+            if !path.exists() {
+                if let Err(err) = fs::create_dir_all(&path) {
+                    eprintln!("Error creating widgets directory: {}", err);
+                    return Err(err.to_string());
                 }
             }
-            _ => {}
+            let entries = fs::read_dir(path).unwrap();
+            for entry in entries {
+                let entry = match entry {
+                    Ok(e) => e,
+                    Err(_) => continue,
+                };
+
+                let path = entry.path();
+                if !path.is_dir() {
+                    continue;
+                }
+
+                let manifest_path = path.join("manifest.json");
+
+                if !manifest_path.exists() {
+                    continue;
+                }
+
+                let content = match fs::read_to_string(&manifest_path) {
+                    Ok(c) => c,
+                    Err(_) => continue,
+                };
+                let mut manifest_json: serde_json::Value = match serde_json::from_str(&content) {
+                    Ok(m) => m,
+                    Err(_) => continue,
+                };
+                if let Some(obj) = manifest_json.as_object_mut() {
+                    obj.remove("elements");
+                    obj.remove("dimensions");
+                    obj.remove("position");
+                    obj.remove("customFields");
+                    obj.remove("customAssets");
+                    obj.remove("theme");
+                }
+
+                let metadata = match fs::metadata(&manifest_path) {
+                    Ok(m) => m,
+                    Err(_) => continue,
+                };
+
+                let modified_at = metadata
+                    .modified()
+                    .ok()
+                    .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                    .map(|d| d.as_millis() as u64)
+                    .unwrap_or(0);
+
+                result.push(WidgetWithMeta {
+                    manifest: manifest_json,
+                    path: if saves {
+                        manifest_path.to_string_lossy().to_string()
+                    } else {
+                        path.to_string_lossy().to_string()
+                    },
+                    modified_at,
+                    is_draft: saves,
+                });
+            }
         };
     }
     Ok(result)

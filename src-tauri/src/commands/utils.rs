@@ -32,7 +32,7 @@ use crate::commands::chat::MediaQueryRequest;
 use crate::commands::media::{MediaInfo, MediaState};
 use crate::db::DatabaseState;
 
-static NO_THUMB_BYTES: &'static [u8] = include_bytes!("no-thumb.png");
+static NO_THUMB_BYTES: &[u8] = include_bytes!("no-thumb.png");
 
 #[derive(serde::Deserialize)]
 struct ManifestKey {
@@ -44,7 +44,7 @@ pub fn get_existing_keys(
 ) -> HashMap<String, Option<()>> {
     let mut existing_keys: HashMap<String, Option<()>> = HashMap::new();
 
-    for sub_dir in vec!["saves", "widgets"] {
+    for sub_dir in ["saves", "widgets"] {
         let Ok(base_path) = app
             .path()
             .resolve(sub_dir, tauri::path::BaseDirectory::AppData)
@@ -116,8 +116,8 @@ pub fn ensure_window_position_bounds(
     if let Some(primary) = webview.primary_monitor().unwrap_or_default() {
         let mon_pos = primary.position();
 
-        let new_x = mon_pos.x + 30 as i32;
-        let new_y = mon_pos.y + 30 as i32;
+        let new_x = mon_pos.x + 30_i32;
+        let new_y = mon_pos.y + 30_i32;
 
         PhysicalPosition { x: new_x, y: new_y }
     } else {
@@ -244,7 +244,7 @@ pub fn attach_window_events(new_window: tauri::WebviewWindow, clean_path: String
 }
 
 pub fn compare_if_no_thumb(bytes: &[u8]) -> bool {
-    let url_img = image::load_from_memory(&bytes).unwrap();
+    let url_img = image::load_from_memory(bytes).unwrap();
     let (w, h) = url_img.dimensions();
     if w != 16 && h != 16 {
         return false;
@@ -260,7 +260,7 @@ pub fn compare_if_no_thumb(bytes: &[u8]) -> bool {
             diff += (p1[0] as f64 - p2[0] as f64).abs();
         }
     }
-    diff = diff / (w * h) as f64;
+    diff /= (w * h) as f64;
     diff < 5.0
 }
 
@@ -439,7 +439,7 @@ pub fn get_win32_icon(app: &tauri::AppHandle, app_id: &String) -> anyhow::Result
 
     let mut ps: Option<_> = None;
     let mut app_name = String::new();
-    for (_, p) in processes {
+    for p in processes.values() {
         if let Some(exe) = p.exe() {
             let n = exe
                 .file_stem()
@@ -534,7 +534,7 @@ pub async fn upsert_media_history(app: &AppHandle, media: &MediaInfo) -> Result<
         None => (media.artist.as_str(), ""),
     };
 
-    let db_state = app.state::<DatabaseState>();
+    let db_state: &DatabaseState = app.state::<DatabaseState>().inner();
     let pool = &db_state.0;
     let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
 
@@ -550,7 +550,7 @@ pub async fn upsert_media_history(app: &AppHandle, media: &MediaInfo) -> Result<
     .bind(title)
     .bind(artist)
     .bind(album)
-    .bind(&duration)
+    .bind(duration)
     .bind(thumbnail)
     .execute(&mut *tx)
     .await
@@ -585,16 +585,16 @@ pub async fn upsert_media_history(app: &AppHandle, media: &MediaInfo) -> Result<
         LIMIT 1;
         "#,
     )
-    .bind(&media_id)
-    .bind(&duration)
+    .bind(media_id)
+    .bind(duration)
     .fetch_optional(&mut *tx)
     .await
     .map_err(|e| e.to_string())?;
 
     sqlx::query("UPDATE media_plays SET duration_ms = ? WHERE media_id = ? AND duration_ms != ?;")
-        .bind(&duration)
-        .bind(&media_id)
-        .bind(&duration)
+        .bind(duration)
+        .bind(media_id)
+        .bind(duration)
         .execute(&mut *tx)
         .await
         .map_err(|e| e.to_string())?;
@@ -606,14 +606,14 @@ pub async fn upsert_media_history(app: &AppHandle, media: &MediaInfo) -> Result<
             VALUES (?, ?);
         "#,
         )
-        .bind(&media_id)
-        .bind(&duration)
+        .bind(media_id)
+        .bind(duration)
         .execute(&mut *tx)
         .await
         .map_err(|e| e.to_string())?;
 
         sqlx::query("UPDATE media_history SET play_count = play_count + 1 WHERE id = ?;")
-            .bind(&media_id)
+            .bind(media_id)
             .execute(&mut *tx)
             .await
             .map_err(|e| e.to_string())?;

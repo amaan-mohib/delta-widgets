@@ -33,7 +33,7 @@ pub async fn create_creator_window(
     let position = match current_monitor {
         Some(monitor) => {
             let x = monitor.clone();
-            x.position().clone()
+            *x.position()
         }
         None => tauri::PhysicalPosition::new(0, 0),
     };
@@ -71,12 +71,9 @@ pub async fn create_creator_window(
     new_window.show().unwrap();
 
     new_window.on_window_event(move |event| {
-        match event {
-            tauri::WindowEvent::CloseRequested { .. } => {
-                let _ = app.emit_to("main", "creator-close", 1);
-                webview.show().unwrap();
-            }
-            _ => {}
+        if let tauri::WindowEvent::CloseRequested { .. } = event {
+            let _ = app.emit_to("main", "creator-close", 1);
+            webview.show().unwrap();
         };
     });
 }
@@ -164,7 +161,7 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
         });
 
     let url = match manifest.widget_type {
-        WidgetType::Url => manifest.url.unwrap_or_else(|| "".to_string()),
+        WidgetType::Url => manifest.url.unwrap_or_default(),
         WidgetType::Html => {
             let html_folder = manifest.file.unwrap_or_else(|| "index.html".to_string());
             let _ = copy_custom_assets_dir(app.clone(), manifest_key.clone(), html_folder.clone())
@@ -229,8 +226,8 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
             ensure_window_position_bounds(
                 &new_window,
                 PhysicalPosition {
-                    x: p.x.unwrap_or(30 as f64) as i32,
-                    y: p.y.unwrap_or(30 as f64) as i32,
+                    x: p.x.unwrap_or(30_f64) as i32,
+                    y: p.y.unwrap_or(30_f64) as i32,
                 },
                 physical_size,
             )
@@ -352,7 +349,7 @@ pub async fn publish_widget(app: tauri::AppHandle, path: String) -> Result<Strin
     } else {
         if let Value::Object(ref mut map) = config {
             let old_config_content =
-                fs::read_to_string(&manifest_path.join("manifest.json")).unwrap();
+                fs::read_to_string(manifest_path.join("manifest.json")).unwrap();
             let old_config: Value = match serde_json::from_str(&old_config_content) {
                 Ok(json) => json,
                 Err(_) => json!({}),
@@ -379,7 +376,7 @@ pub async fn publish_widget(app: tauri::AppHandle, path: String) -> Result<Strin
     }
     // Copy the widget to the published directory
     if let Ok(json_string) = serde_json::to_string_pretty(&config) {
-        let _ = fs::write(&manifest_path.join("manifest.json"), json_string);
+        let _ = fs::write(manifest_path.join("manifest.json"), json_string);
     }
 
     manifest_path

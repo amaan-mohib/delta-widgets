@@ -52,6 +52,13 @@
       "endpoints": [
         "https://github.com/amaan-mohib/delta-widgets/releases/latest/download/latest.json"
       ]
+    },
+    "deep-link": {
+      "desktop": {
+        "schemes": [
+          "deltawidgets"
+        ]
+      }
     }
   }
 }

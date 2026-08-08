@@ -45,6 +45,4 @@ impl Database {
     }
 }
 
-// State management for Tauri
-#[allow(dead_code)]
 pub struct DatabaseState(pub Pool<Sqlite>);
