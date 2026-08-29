@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from "react";
-import { IWidgetElement } from "../../../../types/manifest";
+import { IWidgetElement } from "../../../../common/types/manifest";
 import {
   drawFilledWaveform,
   drawSoundBar,

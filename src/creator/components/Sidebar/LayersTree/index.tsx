@@ -4,7 +4,7 @@ import { useShallow } from "zustand/shallow";
 import DnDWrapper from "./DnDWrapper";
 import Item from "./Item";
 import { useDataTrackStore } from "../../../stores/useDataTrackStore";
-import { IWidgetElement } from "../../../../types/manifest";
+import { IWidgetElement } from "../../../../common/types/manifest";
 
 interface LayersTreeProps {}
 
@@ -23,7 +23,7 @@ const LayersTree: React.FC<LayersTreeProps> = () => {
   const { elements = [] } = useManifestStore(
     useShallow((state) => {
       return { elements: state.manifest?.elements };
-    })
+    }),
   );
 
   useEffect(() => {

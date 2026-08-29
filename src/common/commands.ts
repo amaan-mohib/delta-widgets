@@ -1,6 +1,6 @@
 import { invoke, InvokeArgs } from "@tauri-apps/api/core";
-import { IMedia, ISystemInformation } from "../widget/types/variables";
-import { ILiteWidget, IWidget } from "../types/manifest";
+import { IMedia, ISystemInformation } from "./types/variables";
+import { ILiteWidget, IWidget } from "./types/manifest";
 
 export interface IMediaActionCmd {
   playerId: string;
@@ -36,13 +36,37 @@ export interface IMessage {
   updated_at: number;
 }
 
+export type IGetMediaMetadataParams = { mediaId: number };
+export type IGetMediaMetadata = {
+  id: number;
+  title: string;
+  artist: string;
+  album: string;
+  thumbnail: number[];
+};
+
+export type IQueryMediaHistoryParams = {
+  input: {
+    intent: "history" | "top_media" | "top_artists" | "stats" | "search";
+    start_time?: string;
+    end_time?: string;
+    search_query?: string;
+    limit?: number;
+  };
+};
+export type IQueryMediaHistory = any;
+
+export type IUploadHtmlWidgetParams = { manifestPath: string };
+export type IUploadHtmlWidget = void;
+
 export const commands = {
   getMedia: () => invoke<IMedia[]>("get_media"),
   startMediaListenerCmd: () => invoke<void>("start_media_listener_cmd"),
   stopMediaListenerCmd: () => invoke<void>("stop_media_listener_cmd"),
   mediaAction: (params: IMediaActionCmd) =>
     invoke<void>("media_action", params as unknown as InvokeArgs),
-  getAllWidgets: () => invoke<IGetAllWidget[]>("get_all_widgets"),
+  getAllWidgets: (params?: { dir?: string }) =>
+    invoke<IGetAllWidget[]>("get_all_widgets", params),
   copyCustomAssets: (params: ICopyAssets) =>
     invoke<string>("copy_custom_assets", params as unknown as InvokeArgs),
   copyCustomAssetsDir: (params: ICopyAssets) =>
@@ -98,22 +122,12 @@ export const commands = {
   getChatById: (params: { id: string }) =>
     invoke<IChat | undefined>("get_chat_by_id", params),
   createAssistantWindow: () => invoke<void>("create_assistant_window"),
-  queryMediaHistory: (params: {
-    input: {
-      intent: "history" | "top_media" | "top_artists" | "stats" | "search";
-      start_time?: string;
-      end_time?: string;
-      search_query?: string;
-      limit?: number;
-    };
-  }) => invoke<any>("query_media_history", params),
-  getMediaMetadata: (params: { mediaId: number }) =>
-    invoke<{
-      id: number;
-      title: string;
-      artist: string;
-      album: string;
-      thumbnail: number[];
-    }>("get_media_metadata", params),
+  queryMediaHistory: (params: IQueryMediaHistoryParams) =>
+    invoke<IQueryMediaHistory>("query_media_history", params),
+  getMediaMetadata: (params: IGetMediaMetadataParams) =>
+    invoke<IGetMediaMetadata>("get_media_metadata", params),
   deleteChat: (params: { id: string }) => invoke<void>("delete_chat", params),
+  createGalleryWindow: () => invoke<void>("create_gallery_window"),
+  uploadHtmlWidget: (params?: IUploadHtmlWidgetParams) =>
+    invoke<IUploadHtmlWidget>("upload_html_widget", params),
 };

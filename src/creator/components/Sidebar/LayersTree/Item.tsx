@@ -1,5 +1,5 @@
 import React from "react";
-import { IWidgetElement } from "../../../../types/manifest";
+import { IWidgetElement } from "../../../../common/types/manifest";
 import { Button, Card, Text } from "@fluentui/react-components";
 import {
   ChevronDown12Regular,

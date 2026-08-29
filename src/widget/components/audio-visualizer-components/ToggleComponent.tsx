@@ -1,4 +1,4 @@
-import { IWidgetElement } from "../../../types/manifest";
+import { IWidgetElement } from "../../../common/types/manifest";
 import ButtonComponent from "../ButtonComponent";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 

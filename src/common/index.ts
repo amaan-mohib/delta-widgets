@@ -2,7 +2,7 @@ import { path } from "@tauri-apps/api";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { commands } from "./commands";
 import { message } from "@tauri-apps/plugin-dialog";
-import { IWidget } from "../types/manifest";
+import { IWidget } from "./types/manifest";
 
 export const getStore = async () => {
   try {

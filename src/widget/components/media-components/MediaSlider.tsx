@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { IWidgetElement } from "../../../types/manifest";
+import { IWidgetElement } from "../../../common/types/manifest";
 import { useVariableStore } from "../../stores/useVariableStore";
 import SliderComponent from "../SliderComponent";
 import { commands } from "../../../common/commands";

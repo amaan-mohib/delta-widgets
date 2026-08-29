@@ -1,5 +1,5 @@
 import React from "react";
-import { IWidgetElement } from "../../../../types/manifest";
+import { IWidgetElement } from "../../../../common/types/manifest";
 import { ResizableBox } from "react-resizable";
 import { useManifestStore } from "../../../stores/useManifestStore";
 import { useDataTrackStore } from "../../../stores/useDataTrackStore";
@@ -13,7 +13,7 @@ interface ImageComponentProps {
 const ImageComponent: React.FC<ImageComponentProps> = ({ component }) => {
   const scale = useDataTrackStore((state) => state.scale);
   const widgetDimension = useManifestStore(
-    (state) => state.manifest?.dimensions
+    (state) => state.manifest?.dimensions,
   );
   return (
     <ResizableBox

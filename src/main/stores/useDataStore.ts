@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { ILiteWidget } from "../../types/manifest";
+import { ILiteWidget } from "../../common/types/manifest";
 import { createCreatorWindow, isWidgetInDraft } from "../utils/widgets";
 import { sendMixpanelEvent } from "../utils/analytics";
 import { commands } from "../../common/commands";

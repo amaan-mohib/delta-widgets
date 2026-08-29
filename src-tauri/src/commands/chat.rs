@@ -7,7 +7,7 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use sqlx::prelude::*;
+use sqlx::{prelude::*, Pool, Sqlite};
 use tauri::Manager;
 
 #[derive(Debug, FromRow, Serialize)]
@@ -47,7 +47,8 @@ pub async fn create_chat(
     state: tauri::State<'_, DatabaseState>,
     input: ChatInput,
 ) -> Result<(), String> {
-    let pool = &state.0;
+    let db_state: &DatabaseState = state.inner();
+    let pool: &Pool<Sqlite> = &db_state.0;
 
     let stmt = r#"
         INSERT INTO chats (id, name, data)
@@ -71,7 +72,8 @@ pub async fn update_chat_name(
     name: String,
     chat_id: String,
 ) -> Result<(), String> {
-    let pool = &state.0;
+    let db_state: &DatabaseState = state.inner();
+    let pool: &Pool<Sqlite> = &db_state.0;
 
     let stmt = r#"
         UPDATE chats
@@ -95,7 +97,8 @@ pub async fn update_chat_widget_keys(
     chat_id: String,
     key: String,
 ) -> Result<(), String> {
-    let pool = &state.0;
+    let db_state: &DatabaseState = state.inner();
+    let pool: &Pool<Sqlite> = &db_state.0;
 
     let stmt = r#"
         SELECT
@@ -162,7 +165,8 @@ pub async fn get_chat_by_id(
     "#;
 
     let query = sqlx::query_as::<_, Chat>(stmt);
-    let pool = &state.0;
+    let db_state: &DatabaseState = state.inner();
+    let pool: &Pool<Sqlite> = &db_state.0;
     let chat = query
         .bind(&id)
         .fetch_one(pool)
@@ -181,7 +185,8 @@ pub async fn delete_chat(state: tauri::State<'_, DatabaseState>, id: String) -> 
     "#;
 
     let query = sqlx::query(stmt);
-    let pool = &state.0;
+    let db_state: &DatabaseState = state.inner();
+    let pool: &Pool<Sqlite> = &db_state.0;
     query
         .bind(&id)
         .execute(pool)
@@ -205,7 +210,8 @@ pub async fn get_all_chats(state: tauri::State<'_, DatabaseState>) -> Result<Vec
     "#;
 
     let query = sqlx::query_as::<_, Chat>(stmt);
-    let pool = &state.0;
+    let db_state: &DatabaseState = state.inner();
+    let pool: &Pool<Sqlite> = &db_state.0;
     let chats = query.fetch_all(pool).await.map_err(|e| e.to_string())?;
 
     Ok(chats)
@@ -229,7 +235,8 @@ pub async fn load_chat(
     "#;
 
     let query = sqlx::query_as::<_, Message>(stmt).bind(chat_id);
-    let pool = &state.0;
+    let db_state: &DatabaseState = state.inner();
+    let pool: &Pool<Sqlite> = &db_state.0;
     let messages = query.fetch_all(pool).await.map_err(|e| e.to_string())?;
 
     Ok(messages)
@@ -240,7 +247,8 @@ pub async fn upsert_message(
     state: tauri::State<'_, DatabaseState>,
     input: MessageInput,
 ) -> Result<(), String> {
-    let pool = &state.0;
+    let db_state: &DatabaseState = state.inner();
+    let pool: &Pool<Sqlite> = &db_state.0;
 
     let stmt = r#"
         INSERT INTO messages (id, chat_id, content)
@@ -285,7 +293,8 @@ pub async fn query_media_history(
     state: tauri::State<'_, DatabaseState>,
     input: MediaQueryRequest,
 ) -> Result<serde_json::Value, String> {
-    let pool = &state.0;
+    let db_state: &DatabaseState = state.inner();
+    let pool: &Pool<Sqlite> = &db_state.0;
 
     match input.intent {
         MediaQueryIntent::History => query_media_history_util(pool, input).await,

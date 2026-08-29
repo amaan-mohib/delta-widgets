@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { ProgressBar } from "@fluentui/react-components";
-import { IWidgetElement } from "../../types/manifest";
+import { IWidgetElement } from "../../common/types/manifest";
 import { useDynamicTextStore } from "../stores/useVariableStore";
 import { parseDynamicText } from "../utils/utils";
 
@@ -15,14 +15,14 @@ const ProgressComponent: React.FC<ProgressComponentProps> = ({ component }) => {
       maxValue: Number(
         parseDynamicText(
           String(component.data?.maxValue || "100"),
-          textVariables
-        )
+          textVariables,
+        ),
       ),
       value: Number(
-        parseDynamicText(String(component.data?.value || "100"), textVariables)
+        parseDynamicText(String(component.data?.value || "100"), textVariables),
       ),
     }),
-    [textVariables]
+    [textVariables],
   );
 
   return (

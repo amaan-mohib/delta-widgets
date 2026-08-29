@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ILiteWidget } from "../../types/manifest";
+import { ILiteWidget } from "../../common/types/manifest";
 import {
   AppsColor,
   DocumentColor,

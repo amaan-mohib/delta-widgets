@@ -7,7 +7,7 @@ import {
   createWidgetWindow,
   getWidgetsDirPath,
 } from "../../main/utils/widgets";
-import { IWidget } from "../../types/manifest";
+import { IWidget } from "../../common/types/manifest";
 import { path } from "@tauri-apps/api";
 import { emitTo } from "@tauri-apps/api/event";
 import getTemplateCategories from "../../creator/components/TemplateEditor/categories";

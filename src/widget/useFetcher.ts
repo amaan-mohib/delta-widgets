@@ -1,6 +1,6 @@
 import { listen } from "@tauri-apps/api/event";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { IWidgetElement, TCustomFields } from "../types/manifest";
+import { IWidgetElement, TCustomFields } from "../common/types/manifest";
 import debounce from "lodash.debounce";
 import { useVariableStore } from "./stores/useVariableStore";
 import { getCityFromIp, getWeather } from "./utils/weather";

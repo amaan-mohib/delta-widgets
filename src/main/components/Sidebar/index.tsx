@@ -140,11 +140,13 @@ const Sidebar: React.FC<SidebarProps> = () => {
           </NavItem>
           <NavItem
             className={styles.navItem}
-            onClick={() => setActiveTab("marketplace")}
+            onClick={async () => {
+              await commands.createGalleryWindow();
+            }}
             value={"marketplace"}
             icon={<MarketplaceIcon />}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              Marketplace
+              Community Gallery
             </div>
           </NavItem>
           <NavItem
