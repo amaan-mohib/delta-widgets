@@ -2,7 +2,7 @@ import { path } from "@tauri-apps/api";
 import { exists, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { format, intervalToDuration } from "date-fns";
 import { toBlob } from "html-to-image";
-import { ILiteWidget, IWidget } from "../../types/manifest";
+import { ILiteWidget, IWidget } from "../../common/types/manifest";
 import { formatInTimeZone } from "date-fns-tz";
 import { emitTo } from "@tauri-apps/api/event";
 import { getManifestPath } from "../../common";

@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { path } from "@tauri-apps/api";
 import { appCacheDir } from "@tauri-apps/api/path";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { IWidget } from "../../types/manifest";
+import { IWidget } from "../../common/types/manifest";
 import { commands } from "../../common/commands";
 
 const addStyleSheet = async (

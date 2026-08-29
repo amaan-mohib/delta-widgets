@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Image } from "@fluentui/react-components";
-import { IWidgetElement } from "../../types/manifest";
+import { IWidgetElement } from "../../common/types/manifest";
 import { useDynamicTextStore } from "../stores/useVariableStore";
 import { parseDynamicText } from "../utils/utils";
 

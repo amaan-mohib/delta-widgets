@@ -1,6 +1,6 @@
 import { Button } from "@fluentui/react-components";
 import * as icons from "@fluentui/react-icons";
-import { IWidgetElement } from "../../types/manifest";
+import { IWidgetElement } from "../../common/types/manifest";
 
 interface ButtonComponentProps {
   component: IWidgetElement;

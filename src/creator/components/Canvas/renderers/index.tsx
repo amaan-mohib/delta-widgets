@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { IWidgetElement } from "../../../../types/manifest";
+import { IWidgetElement } from "../../../../common/types/manifest";
 import Dropable from "../../DnD/Dropable";
 import ImageComponent from "./ImageComponent";
 import ButtonComponent from "./ButtonComponent";

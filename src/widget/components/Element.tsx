@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ImageComponent from "./ImageComponent";
 import SliderComponent from "./SliderComponent";
-import { IWidgetElement } from "../../types/manifest";
+import { IWidgetElement } from "../../common/types/manifest";
 import ButtonComponent from "./ButtonComponent";
 import TextComponent from "./TextComponent";
 import PlayButton from "./media-components/PlayButton";

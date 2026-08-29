@@ -1,5 +1,5 @@
 import React from "react";
-import { IWidgetElement } from "../../../types/manifest";
+import { IWidgetElement } from "../../../common/types/manifest";
 import {
   Button,
   Menu,
@@ -10,7 +10,7 @@ import {
   MenuTrigger,
 } from "@fluentui/react-components";
 import { useVariableStore } from "../../stores/useVariableStore";
-import { IMedia } from "../../types/variables";
+import { IMedia } from "../../../common/types/variables";
 import { PlayCircle20Regular } from "@fluentui/react-icons";
 import { convertFileSrc } from "@tauri-apps/api/core";
 

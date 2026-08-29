@@ -1,4 +1,4 @@
-import { Location, WeatherResponse } from "../types/variables";
+import { Location, WeatherResponse } from "../../common/types/variables";
 
 export const getWeather = async (city: string) => {
   if (!city.trim()) {
@@ -7,7 +7,7 @@ export const getWeather = async (city: string) => {
   const res = await fetch(
     `https://api.weatherapi.com/v1/current.json?q=${city}&key=${
       import.meta.env.VITE_WEATHER_API_KEY
-    }`
+    }`,
   );
   const data: WeatherResponse = await res.json();
   return data;

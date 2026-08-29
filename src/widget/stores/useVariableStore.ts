@@ -3,7 +3,7 @@ import {
   IMedia,
   ISystemInformation,
   WeatherResponse,
-} from "../types/variables";
+} from "../../common/types/variables";
 
 export interface IVariableStore {
   currentDate: Date;

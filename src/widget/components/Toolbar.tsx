@@ -6,7 +6,7 @@ import {
   WindowDevToolsRegular,
 } from "@fluentui/react-icons";
 import React from "react";
-import { IWidget } from "../../types/manifest";
+import { IWidget } from "../../common/types/manifest";
 import { togglePinned } from "../../main/utils/widgets";
 import { useDataTrackStore } from "../stores/useDataTrackStore";
 import { emitTo } from "@tauri-apps/api/event";

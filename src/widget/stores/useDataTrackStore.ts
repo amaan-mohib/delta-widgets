@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { IWidget } from "../../types/manifest";
+import { IWidget } from "../../common/types/manifest";
 
 export interface IUseDataTrackStore {
   initialStateLoading: boolean;

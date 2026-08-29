@@ -28,6 +28,7 @@ import {
   removeWidget,
   toggleAlwaysOnTop,
   togglePinned,
+  uploadHTMLWidget,
 } from "../utils/widgets";
 import {
   ArrowClockwiseRegular,
@@ -41,7 +42,7 @@ import {
   PinOffRegular,
   PinRegular,
 } from "@fluentui/react-icons";
-import { ILiteWidget } from "../../types/manifest";
+import { ILiteWidget } from "../../common/types/manifest";
 import { sendMixpanelEvent } from "../utils/analytics";
 import WidgetPreview from "./WidgetPreview";
 import { emitTo } from "@tauri-apps/api/event";
@@ -145,6 +146,16 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       },
       children: "Edit",
       condition: !saves && widget.widgetType === "url",
+    },
+    {
+      key: "upload-html",
+      icon: <EditRegular />,
+      onClick: async (e) => {
+        e.stopPropagation();
+        await uploadHTMLWidget(widget.path);
+      },
+      children: "Upload",
+      condition: !saves && widget.widgetType === "html",
     },
     {
       key: "edit-html",

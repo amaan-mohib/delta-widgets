@@ -11,7 +11,7 @@ import {
   writeTextFile,
 } from "@tauri-apps/plugin-fs";
 import { nanoid } from "nanoid";
-import { ILiteWidget, IWidget } from "../../types/manifest";
+import { ILiteWidget, IWidget } from "../../common/types/manifest";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { Buffer } from "buffer";
 import { commands } from "../../common/commands";
@@ -468,4 +468,10 @@ export const isWidgetInDraft = async (key: string) => {
     console.error("Error checking if widget is in draft:", error);
     return null;
   }
+};
+
+export const uploadHTMLWidget = async (manifestPath: string) => {
+  await commands.uploadHtmlWidget({
+    manifestPath: await getManifestPath(manifestPath),
+  });
 };

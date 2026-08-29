@@ -5,7 +5,7 @@ import {
   Play20Regular,
   WeatherSunny20Regular,
 } from "@fluentui/react-icons";
-import { TCustomFields } from "../../../types/manifest";
+import { TCustomFields } from "../../../common/types/manifest";
 
 export interface ITemplate {
   id: string;
@@ -23,7 +23,7 @@ export interface ITemplateCategory {
 }
 
 export function getCustomFieldsTemplate(
-  customFields: TCustomFields
+  customFields: TCustomFields,
 ): ITemplate[] {
   return Object.values(customFields).map((field) => ({
     id: field.key,
@@ -34,7 +34,7 @@ export function getCustomFieldsTemplate(
 }
 
 const getTemplateCategories = (
-  customFields: TCustomFields
+  customFields: TCustomFields,
 ): ITemplateCategory[] => [
   {
     id: "date",

@@ -1,5 +1,5 @@
 import { fileOrFolderPicker } from "../utils/widgets";
-import { ILiteWidget } from "../../types/manifest";
+import { ILiteWidget } from "../../common/types/manifest";
 import { create } from "zustand";
 
 export interface IDialogState {
