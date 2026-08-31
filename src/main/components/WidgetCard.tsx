@@ -50,6 +50,7 @@ import { closeWidgetWindow, templateWidgets } from "../../common";
 import { useDataStore } from "../stores/useDataStore";
 import { useAddDialogStore } from "../stores/useAddDialogStore";
 import { message } from "@tauri-apps/plugin-dialog";
+import { commands } from "../../common/commands";
 
 interface WidgetCardProps {
   widget: ILiteWidget;
@@ -76,6 +77,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   const [alwaysOnTop, setAlwaysOnTop] = useState(widget.alwaysOnTop ?? false);
   const [pinned, setPinned] = useState(widget.pinned ?? false);
   const loading = useDataStore((state) => state.openingCreator);
+  const [widgetLoading, setWidgetLoading] = useState(false);
 
   const { updateAllWidgets, editWidget } = useDataStore();
   const { setDialogState, importHTML } = useAddDialogStore();
@@ -193,14 +195,28 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       icon: <ImageArrowCounterclockwiseRegular />,
       onClick: async (e) => {
         e.stopPropagation();
-        await emitTo(`widget-${widget.key}`, "update-thumb", {
-          key: widget.key,
-        });
+        const label = `widget-${widget.key}`;
+        if (widget.widgetType === "json") {
+          await emitTo(label, "update-thumb", {
+            key: widget.key,
+          });
+        }
+        if (widget.widgetType === "html") {
+          setWidgetLoading(true);
+          await commands
+            .captureWidgetScreenshot({
+              label,
+              manifestPath: widget.path,
+              refresh: true,
+            })
+            .catch(console.error);
+          setWidgetLoading(false);
+        }
       },
       children: "Refresh thumbnail",
       condition:
         !saves &&
-        widget.widgetType === "json" &&
+        widget.widgetType !== "url" &&
         visible &&
         !(widget.key in templateWidgets),
     },
@@ -253,6 +269,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   ];
 
   const toggleWidget = async (checked: boolean) => {
+    setWidgetLoading(true);
     if (checked) {
       await createWidgetWindow(widget.path, false, true);
 
@@ -268,6 +285,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       await closeWidgetWindow(`widget-${widget.key}`, true, widget.path);
       dismissToast(widget.key);
     }
+    setWidgetLoading(false);
     setVisible(checked);
   };
 
@@ -366,6 +384,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
           </>
         ) : (
           <Switch
+            disabled={widgetLoading}
             className={styles.switch}
             label={visible ? "Enabled" : "Disabled"}
             style={{ margin: 0 }}

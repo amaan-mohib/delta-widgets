@@ -5,7 +5,7 @@ pub mod migrations;
 mod plugins;
 mod setup;
 
-use commands::{analytics, audio, chat, media, migrate, services, store, system, widget};
+use commands::{analytics, audio, chat, gallery, media, migrate, services, store, system, widget};
 use log::LevelFilter;
 use plugins::localhost;
 use setup::init::{init_app, init_widgets};
@@ -83,6 +83,8 @@ pub fn run() {
             services::apply_blur_theme,
             services::create_url_thumbnail,
             services::update_manifest_value,
+            services::create_gallery_window,
+            services::capture_widget_screenshot,
             widget::create_creator_window,
             widget::create_widget_window,
             widget::close_widget_window,
@@ -107,6 +109,7 @@ pub fn run() {
             chat::get_chat_by_id,
             chat::query_media_history,
             chat::create_assistant_window,
+            gallery::upload_html_widget,
         ])
         .setup(move |app| {
             CUSTOM_SERVER_PORT

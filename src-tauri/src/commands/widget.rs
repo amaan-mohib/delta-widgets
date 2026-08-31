@@ -6,7 +6,7 @@ use crate::{
     commands::{
         audio::{stop_capture as stop_audio_capture, AudioState},
         media::{stop_media_listener, MediaState},
-        services::copy_custom_assets_dir,
+        services::{capture_widget_screenshot, copy_custom_assets_dir},
         utils::{
             attach_window_events, ensure_window_position_bounds, get_existing_keys,
             get_wallpaper_preview,
@@ -262,7 +262,13 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
         } else {
             new_window.set_always_on_bottom(true).unwrap();
         }
-        attach_window_events(new_window.clone(), clean_path);
+        attach_window_events(new_window.clone(), clean_path.clone());
+        if manifest.widget_type == WidgetType::Html {
+            let _ = capture_widget_screenshot(app.clone(), label, clean_path.clone(), Some(false))
+                .await
+                .unwrap_or_default();
+            let _ = app.emit_to("main", "creator-close", json!({}));
+        }
     } else {
         let label = label.clone();
         let app = app.clone();
