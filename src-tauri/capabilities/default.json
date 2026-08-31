@@ -6,12 +6,14 @@
     "main",
     "creator",
     "widget-*",
-    "assistant"
+    "assistant",
+    "gallery"
   ],
   "remote": {
     "urls": [
       "http://*.localhost:*",
-      "http://localhost:*"
+      "http://localhost:*",
+      "https://*.deltawidgets.com"
     ]
   },
   "permissions": [

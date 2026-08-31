@@ -1,7 +1,9 @@
+use image::{DynamicImage, RgbaImage};
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::fs;
+use std::{fs, path::Path, time::Duration};
 use tauri::{Emitter, Manager};
+use win_screenshot::prelude::*;
 
 #[cfg(target_os = "windows")]
 use window_vibrancy::apply_mica;
@@ -140,15 +142,29 @@ pub async fn create_url_thumbnail(
 pub struct WidgetWithMeta {
     pub manifest: serde_json::Value,
     pub path: String,
+    pub manifest_path: String,
+    pub thumb_path: String,
     pub modified_at: u64,
     pub is_draft: bool,
 }
 
 #[tauri::command]
-pub async fn get_all_widgets(app: tauri::AppHandle) -> Result<Vec<WidgetWithMeta>, String> {
+pub async fn get_all_widgets(
+    app: tauri::AppHandle,
+    dir: Option<&str>,
+) -> Result<Vec<WidgetWithMeta>, String> {
     let mut result = Vec::new();
 
-    for sub_dir in ["saves", "widgets"] {
+    let mut dir_list: Vec<&str> = vec!["saves", "widgets"];
+
+    if let Some(d) = dir {
+        if d != "saves" && d != "widgets" {
+            return Err("Invalid directory".to_string());
+        }
+        dir_list = vec![d];
+    };
+
+    for sub_dir in dir_list {
         let saves = sub_dir == "saves";
         if let Ok(path) = app
             .path()
@@ -173,6 +189,7 @@ pub async fn get_all_widgets(app: tauri::AppHandle) -> Result<Vec<WidgetWithMeta
                 }
 
                 let manifest_path = path.join("manifest.json");
+                let thumb_path = path.join("thumb.png");
 
                 if !manifest_path.exists() {
                     continue;
@@ -214,6 +231,8 @@ pub async fn get_all_widgets(app: tauri::AppHandle) -> Result<Vec<WidgetWithMeta
                     } else {
                         path.to_string_lossy().to_string()
                     },
+                    manifest_path: manifest_path.to_string_lossy().to_string(),
+                    thumb_path: thumb_path.to_string_lossy().to_string(),
                     modified_at,
                     is_draft: saves,
                 });
@@ -281,4 +300,59 @@ pub async fn update_manifest_value(
     }
 
     Ok("".to_string())
+}
+
+#[tauri::command]
+pub async fn create_gallery_window(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(existing_window) = app.get_webview_window("gallery") {
+        existing_window.set_focus().unwrap();
+        return Ok(());
+    };
+    #[cfg(debug_assertions)]
+    const URL: &str = "http://localhost:3000";
+
+    #[cfg(not(debug_assertions))]
+    const URL: &str = "https://gallery.deltawidgets.com";
+
+    let new_window =
+        tauri::WebviewWindowBuilder::new(&app, "gallery", tauri::WebviewUrl::App(URL.into()))
+            .title("Gallery")
+            .inner_size(1024.0, 600.0)
+            .min_inner_size(500.0, 400.0)
+            .transparent(true)
+            .build()
+            .unwrap();
+    new_window.show().unwrap();
+    new_window.set_focus().unwrap();
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn capture_widget_screenshot(
+    app: tauri::AppHandle,
+    label: String,
+    manifest_path: String,
+    refresh: Option<bool>,
+) -> Result<String, String> {
+    let img_path = Path::new(&manifest_path).join("..").join("thumb.png");
+    let refresh = refresh.unwrap_or(false);
+    if !refresh && img_path.try_exists().unwrap_or(false) {
+        return Ok(img_path.to_string_lossy().to_string());
+    }
+
+    let existing_window = app
+        .get_webview_window(&label)
+        .ok_or(format!("No window found with label: {}", label))?;
+    let id = existing_window.hwnd().map_err(|e| e.to_string())?;
+
+    std::thread::sleep(Duration::from_secs(2));
+    let buf = capture_window(id.0 as isize).map_err(|e| e.to_string())?;
+    let img = DynamicImage::ImageRgba8(
+        RgbaImage::from_raw(buf.width, buf.height, buf.pixels)
+            .ok_or("Failed to create image".to_string())?,
+    );
+    img.to_rgba8().save(&img_path).map_err(|e| e.to_string())?;
+
+    Ok(img_path.to_string_lossy().to_string())
 }

@@ -38,7 +38,6 @@
     "@tauri-apps/plugin-notification": "^2.3.1",
     "@tauri-apps/plugin-opener": "^2.2.7",
     "@tauri-apps/plugin-process": "^2.3.0",
-    "@tauri-apps/plugin-shell": "^2.3.5",
     "@tauri-apps/plugin-updater": "^2.9.0",
     "ai": "^6.0.208",
     "ai-sdk-ollama": "^3.8.8",
