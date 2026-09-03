@@ -109,7 +109,8 @@ pub fn run() {
             chat::get_chat_by_id,
             chat::query_media_history,
             chat::create_assistant_window,
-            gallery::upload_html_widget,
+            gallery::upload_widget,
+            gallery::validate_widget_asset,
         ])
         .setup(move |app| {
             CUSTOM_SERVER_PORT
