@@ -9,8 +9,10 @@ export interface IMediaActionCmd {
 }
 
 export interface IGetAllWidget {
-  manifest: ILiteWidget;
+  manifest: Omit<ILiteWidget, "path">;
   path: string;
+  manifestPath: string;
+  thumbPath: string;
   modifiedAt: number;
   isDraft: boolean;
 }
@@ -65,6 +67,21 @@ export type ICaptureWidgetScreenshotParams = {
   refresh?: boolean;
 };
 export type ICaptureWidgetScreenshot = void;
+
+export type IUploadWidgetParams = {
+  uploadJobs: { url: string; name: string; path?: string }[];
+  manifestPath: string;
+  uploadValues: {
+    key: string;
+    label: string;
+    version: string;
+    description?: string;
+  };
+};
+export type IUploadWidget = void;
+
+export type IValidateWidgetAssetParams = { assetPath: string };
+export type IValidateWidgetAsset = void;
 
 export const commands = {
   getMedia: () => invoke<IMedia[]>("get_media"),
@@ -135,8 +152,10 @@ export const commands = {
     invoke<IGetMediaMetadata>("get_media_metadata", params),
   deleteChat: (params: { id: string }) => invoke<void>("delete_chat", params),
   createGalleryWindow: () => invoke<void>("create_gallery_window"),
-  uploadHtmlWidget: (params?: IUploadHtmlWidgetParams) =>
-    invoke<IUploadHtmlWidget>("upload_html_widget", params),
   captureWidgetScreenshot: (params?: ICaptureWidgetScreenshotParams) =>
     invoke<ICaptureWidgetScreenshot>("capture_widget_screenshot", params),
+  uploadWidget: (params: IUploadWidgetParams) =>
+    invoke<IUploadWidget>("upload_widget", params),
+  validateWidgetAsset: (params: IValidateWidgetAssetParams) =>
+    invoke<IValidateWidgetAsset>("validate_widget_asset", params),
 };
