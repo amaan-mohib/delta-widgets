@@ -264,9 +264,15 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
         }
         attach_window_events(new_window.clone(), clean_path.clone());
         if manifest.widget_type == WidgetType::Html {
-            let _ = capture_widget_screenshot(app.clone(), label, clean_path.clone(), Some(false))
-                .await
-                .unwrap_or_default();
+            let _ = capture_widget_screenshot(
+                app.clone(),
+                label,
+                clean_path.clone(),
+                Some(false),
+                None,
+            )
+            .await
+            .unwrap_or_default();
             let _ = app.emit_to("main", "creator-close", json!({}));
         }
     } else {

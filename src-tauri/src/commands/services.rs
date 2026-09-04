@@ -317,7 +317,7 @@ pub async fn create_gallery_window(app: tauri::AppHandle) -> Result<(), String> 
     let new_window =
         tauri::WebviewWindowBuilder::new(&app, "gallery", tauri::WebviewUrl::App(URL.into()))
             .title("Gallery")
-            .inner_size(1024.0, 600.0)
+            .inner_size(1024.0, 640.0)
             .min_inner_size(500.0, 400.0)
             .transparent(true)
             .build()
@@ -334,8 +334,11 @@ pub async fn capture_widget_screenshot(
     label: String,
     manifest_path: String,
     refresh: Option<bool>,
+    custom_name: Option<String>,
 ) -> Result<String, String> {
-    let img_path = Path::new(&manifest_path).join("..").join("thumb.png");
+    let img_path = Path::new(&manifest_path)
+        .join("..")
+        .join(custom_name.unwrap_or("thumb.png".to_string()));
     let refresh = refresh.unwrap_or(false);
     if !refresh && img_path.try_exists().unwrap_or(false) {
         return Ok(img_path.to_string_lossy().to_string());

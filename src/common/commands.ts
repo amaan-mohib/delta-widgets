@@ -65,6 +65,7 @@ export type ICaptureWidgetScreenshotParams = {
   label: string;
   manifestPath: string;
   refresh?: boolean;
+  customName?: string;
 };
 export type ICaptureWidgetScreenshot = void;
 

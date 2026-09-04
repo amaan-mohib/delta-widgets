@@ -28,7 +28,6 @@ import {
   removeWidget,
   toggleAlwaysOnTop,
   togglePinned,
-  uploadHTMLWidget,
 } from "../utils/widgets";
 import {
   ArrowClockwiseRegular,
@@ -148,16 +147,6 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       },
       children: "Edit",
       condition: !saves && widget.widgetType === "url",
-    },
-    {
-      key: "upload-html",
-      icon: <EditRegular />,
-      onClick: async (e) => {
-        e.stopPropagation();
-        await uploadHTMLWidget(widget.path);
-      },
-      children: "Upload",
-      condition: !saves && widget.widgetType === "html",
     },
     {
       key: "edit-html",

@@ -243,18 +243,19 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
         <Tooltip
           content={
             isPublished && manifest?.publishedAt
-              ? `Last published: ${new Date(
+              ? `Last installed: ${new Date(
                   manifest.publishedAt,
                 ).toLocaleString()}`
               : "Add the widget to the Installed list"
           }
-          relationship="label">
+          relationship="label"
+          positioning={"below-end"}>
           <Button
             size="small"
             appearance="primary"
             onClick={publish}
             disabled={isSaving}>
-            {isPublished ? "Update" : "Publish"}
+            {isPublished ? "Update" : "Install"}
           </Button>
         </Tooltip>
       </ToolbarGroup>

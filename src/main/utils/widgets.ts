@@ -338,8 +338,8 @@ export const createWidgetWindow = async (
   } catch (error) {
     console.error("Error creating widget window:", error);
     await message(
-      `Widget maybe already being ${
-        isPreview ? "previewed" : "enabled"
+      `Widget maybe already ${
+        isPreview ? "being previewed" : "enabled"
       } or something went wrong.`,
       {
         title: "Error",
@@ -468,10 +468,4 @@ export const isWidgetInDraft = async (key: string) => {
     console.error("Error checking if widget is in draft:", error);
     return null;
   }
-};
-
-export const uploadHTMLWidget = async (manifestPath: string) => {
-  await commands.uploadHtmlWidget({
-    manifestPath: await getManifestPath(manifestPath),
-  });
 };
