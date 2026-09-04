@@ -243,6 +243,7 @@ pub async fn upload_manifest(
         map.insert("pinned".to_string(), json!(false));
         map.insert("alwaysOnTop".to_string(), json!(false));
         map.insert("version".to_string(), json!(&upload_values.version));
+        map.insert("position".to_string(), json!({"x": 30, "y": 30}));
         if let Some(description) = &upload_values.description {
             map.insert("description".to_string(), json!(description));
         }
