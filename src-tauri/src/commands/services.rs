@@ -2,7 +2,7 @@ use image::{DynamicImage, RgbaImage};
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::{fs, path::Path, time::Duration};
-use tauri::{Emitter, Manager};
+use tauri::{Emitter, Manager, Url};
 use win_screenshot::prelude::*;
 
 #[cfg(target_os = "windows")]
@@ -166,78 +166,78 @@ pub async fn get_all_widgets(
 
     for sub_dir in dir_list {
         let saves = sub_dir == "saves";
-        if let Ok(path) = app
+        let path = app
             .path()
             .resolve(sub_dir, tauri::path::BaseDirectory::AppData)
-        {
-            if !path.exists() {
-                if let Err(err) = fs::create_dir_all(&path) {
-                    eprintln!("Error creating widgets directory: {}", err);
-                    return Err(err.to_string());
-                }
+            .map_err(|_| "Failed to get widget path".to_string())?;
+        if !path.exists() {
+            fs::create_dir_all(&path).map_err(|e| e.to_string())?;
+        }
+        let entries = fs::read_dir(path).unwrap();
+        for entry in entries {
+            let entry = match entry {
+                Ok(e) => e,
+                Err(_) => continue,
+            };
+
+            let path = entry.path();
+            if !path.is_dir() {
+                continue;
             }
-            let entries = fs::read_dir(path).unwrap();
-            for entry in entries {
-                let entry = match entry {
-                    Ok(e) => e,
-                    Err(_) => continue,
-                };
-
-                let path = entry.path();
-                if !path.is_dir() {
-                    continue;
-                }
-
-                let manifest_path = path.join("manifest.json");
-                let thumb_path = path.join("thumb.png");
-
-                if !manifest_path.exists() {
-                    continue;
-                }
-
-                let content = match fs::read_to_string(&manifest_path) {
-                    Ok(c) => c,
-                    Err(_) => continue,
-                };
-                let mut manifest_json: serde_json::Value = match serde_json::from_str(&content) {
-                    Ok(m) => m,
-                    Err(_) => continue,
-                };
-                if let Some(obj) = manifest_json.as_object_mut() {
-                    obj.remove("elements");
-                    obj.remove("dimensions");
-                    obj.remove("position");
-                    obj.remove("customFields");
-                    obj.remove("customAssets");
-                    obj.remove("theme");
-                }
-
-                let metadata = match fs::metadata(&manifest_path) {
-                    Ok(m) => m,
-                    Err(_) => continue,
-                };
-
-                let modified_at = metadata
-                    .modified()
-                    .ok()
-                    .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-                    .map(|d| d.as_millis() as u64)
-                    .unwrap_or(0);
-
-                result.push(WidgetWithMeta {
-                    manifest: manifest_json,
-                    path: if saves {
-                        manifest_path.to_string_lossy().to_string()
-                    } else {
-                        path.to_string_lossy().to_string()
-                    },
-                    manifest_path: manifest_path.to_string_lossy().to_string(),
-                    thumb_path: thumb_path.to_string_lossy().to_string(),
-                    modified_at,
-                    is_draft: saves,
-                });
+            let ext = path.extension().unwrap_or_default();
+            if ext == "backup" || ext == "installing" {
+                continue;
             }
-        };
+
+            let manifest_path = path.join("manifest.json");
+            let thumb_path = path.join("thumb.png");
+
+            if !manifest_path.exists() {
+                continue;
+            }
+
+            let content = match fs::read_to_string(&manifest_path) {
+                Ok(c) => c,
+                Err(_) => continue,
+            };
+            let mut manifest_json: serde_json::Value = match serde_json::from_str(&content) {
+                Ok(m) => m,
+                Err(_) => continue,
+            };
+            if let Some(obj) = manifest_json.as_object_mut() {
+                obj.remove("elements");
+                obj.remove("dimensions");
+                obj.remove("position");
+                obj.remove("customFields");
+                obj.remove("customAssets");
+                obj.remove("theme");
+            }
+
+            let metadata = match fs::metadata(&manifest_path) {
+                Ok(m) => m,
+                Err(_) => continue,
+            };
+
+            let modified_at = metadata
+                .modified()
+                .ok()
+                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                .map(|d| d.as_millis() as u64)
+                .unwrap_or(0);
+
+            result.push(WidgetWithMeta {
+                manifest: manifest_json,
+                path: if saves {
+                    manifest_path.to_string_lossy().to_string()
+                } else {
+                    path.to_string_lossy().to_string()
+                },
+                manifest_path: manifest_path.to_string_lossy().to_string(),
+                thumb_path: thumb_path.to_string_lossy().to_string(),
+                modified_at,
+                is_draft: saves,
+            });
+        }
     }
     Ok(result)
 }
@@ -303,19 +303,32 @@ pub async fn update_manifest_value(
 }
 
 #[tauri::command]
-pub async fn create_gallery_window(app: tauri::AppHandle) -> Result<(), String> {
-    if let Some(existing_window) = app.get_webview_window("gallery") {
-        existing_window.set_focus().unwrap();
-        return Ok(());
-    };
+pub async fn create_gallery_window(
+    app: tauri::AppHandle,
+    url: Option<String>,
+) -> Result<(), String> {
     #[cfg(debug_assertions)]
     const URL: &str = "http://localhost:3000";
 
     #[cfg(not(debug_assertions))]
     const URL: &str = "https://gallery.deltawidgets.com";
 
+    let url = url.unwrap_or(URL.to_string());
+    if !url.starts_with(URL) {
+        return Err("Invalid URL".to_string());
+    }
+
+    if let Some(mut existing_window) = app.get_webview_window("gallery") {
+        if url != URL {
+            let _ = existing_window.navigate(Url::parse(&url).map_err(|e| e.to_string())?);
+        }
+        existing_window.set_focus().unwrap();
+        existing_window.show().unwrap();
+        return Ok(());
+    };
+
     let new_window =
-        tauri::WebviewWindowBuilder::new(&app, "gallery", tauri::WebviewUrl::App(URL.into()))
+        tauri::WebviewWindowBuilder::new(&app, "gallery", tauri::WebviewUrl::App(url.into()))
             .title("Gallery")
             .inner_size(1024.0, 640.0)
             .min_inner_size(500.0, 400.0)

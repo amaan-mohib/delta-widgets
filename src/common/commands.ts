@@ -84,6 +84,13 @@ export type IUploadWidget = void;
 export type IValidateWidgetAssetParams = { assetPath: string };
 export type IValidateWidgetAsset = void;
 
+export type IDownloadWidgetParams = {
+  key: string;
+  rawKey: string;
+  files: { manifest: string; assets?: string | null; thumb?: string | null };
+};
+export type IDownloadWidget = void;
+
 export const commands = {
   getMedia: () => invoke<IMedia[]>("get_media"),
   startMediaListenerCmd: () => invoke<void>("start_media_listener_cmd"),
@@ -152,11 +159,14 @@ export const commands = {
   getMediaMetadata: (params: IGetMediaMetadataParams) =>
     invoke<IGetMediaMetadata>("get_media_metadata", params),
   deleteChat: (params: { id: string }) => invoke<void>("delete_chat", params),
-  createGalleryWindow: () => invoke<void>("create_gallery_window"),
+  createGalleryWindow: (params?: { url?: string }) =>
+    invoke<void>("create_gallery_window", params),
   captureWidgetScreenshot: (params?: ICaptureWidgetScreenshotParams) =>
     invoke<ICaptureWidgetScreenshot>("capture_widget_screenshot", params),
   uploadWidget: (params: IUploadWidgetParams) =>
     invoke<IUploadWidget>("upload_widget", params),
   validateWidgetAsset: (params: IValidateWidgetAssetParams) =>
     invoke<IValidateWidgetAsset>("validate_widget_asset", params),
+  downloadWidget: (params: IDownloadWidgetParams) =>
+    invoke<IDownloadWidget>("download_widget", params),
 };

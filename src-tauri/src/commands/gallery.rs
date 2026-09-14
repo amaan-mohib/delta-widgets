@@ -2,11 +2,12 @@ use futures::{stream, StreamExt, TryStreamExt};
 use http::header::{CONTENT_LENGTH, CONTENT_TYPE};
 use serde_json::json;
 use std::{
+    collections::HashMap,
     fs::{self, File},
     path::Path,
-    time::SystemTime,
+    time::{SystemTime, UNIX_EPOCH},
 };
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 use walkdir::{DirEntry, WalkDir};
 use zip::{write::SimpleFileOptions, ZipWriter};
 
@@ -178,21 +179,16 @@ pub async fn upload_json_asset(
     let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
 
     for asset in custom_assets {
-        let kind = asset
-            .get("kind")
-            .and_then(serde_json::Value::as_str)
-            .unwrap_or_default();
-        if kind != "file" {
+        if asset.get("kind").and_then(serde_json::Value::as_str) != Some("file") {
             continue;
         }
-        let path = asset
-            .get("path")
-            .and_then(serde_json::Value::as_str)
-            .unwrap_or_default();
-        let key = asset
-            .get("key")
-            .and_then(serde_json::Value::as_str)
-            .unwrap_or_default();
+
+        let Some(path) = asset.get("path").and_then(serde_json::Value::as_str) else {
+            continue;
+        };
+        let Some(key) = asset.get("key").and_then(serde_json::Value::as_str) else {
+            continue;
+        };
 
         zip.start_file(key, options).map_err(|e| e.to_string())?;
 
@@ -244,11 +240,31 @@ pub async fn upload_manifest(
         map.insert("alwaysOnTop".to_string(), json!(false));
         map.insert("version".to_string(), json!(&upload_values.version));
         map.insert("position".to_string(), json!({"x": 30, "y": 30}));
-        if let Some(description) = &upload_values.description {
-            map.insert("description".to_string(), json!(description));
-        }
+        map.insert(
+            "description".to_string(),
+            json!(upload_values.description.clone().unwrap_or_default()),
+        );
+
         if map.get("file").is_some() {
             map["file"] = json!("./assets");
+        }
+        if let Some(custom_assets) = map
+            .get_mut("customAssets")
+            .and_then(serde_json::Value::as_array_mut)
+        {
+            for asset in custom_assets {
+                let Some(asset) = asset.as_object_mut() else {
+                    continue;
+                };
+                if asset.get("kind").and_then(serde_json::Value::as_str) != Some("file") {
+                    continue;
+                }
+                let Some(key) = asset.get("key").and_then(serde_json::Value::as_str) else {
+                    continue;
+                };
+
+                asset.insert("path".to_string(), json!(format!("./{}", key)));
+            }
         }
     }
     if let Ok(json_string) = serde_json::to_string_pretty(&manifest) {
@@ -330,5 +346,167 @@ pub async fn validate_widget_asset(asset_path: String) -> Result<(), String> {
     if file_count > MAX_FILES {
         return Err("Too many files".to_string());
     }
+    Ok(())
+}
+
+async fn download_file(url: &str, dest: &Path) -> anyhow::Result<()> {
+    use tokio::io::AsyncWriteExt;
+
+    let client = reqwest::Client::new();
+
+    let response = client.get(url).send().await?.error_for_status()?;
+    let mut stream = response.bytes_stream();
+
+    let mut file = tokio::fs::File::create(dest).await?;
+
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk?;
+        file.write_all(&chunk).await?;
+    }
+
+    Ok(())
+}
+fn extract_zip(file_path: &Path, output_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    let file = File::open(file_path)?;
+    let mut archive = zip::ZipArchive::new(file)?;
+    archive.extract(output_dir)?;
+
+    Ok(())
+}
+
+#[derive(serde::Deserialize)]
+pub struct Files {
+    manifest: String,
+    assets: Option<String>,
+    thumb: Option<String>,
+}
+
+#[tauri::command]
+pub async fn download_widget(
+    app: tauri::AppHandle,
+    key: String,
+    raw_key: String,
+    files: Files,
+) -> Result<(), String> {
+    if files.manifest.is_empty() {
+        return Err("No Manifest URL found".to_string());
+    }
+
+    let widgets_dir = app
+        .path()
+        .resolve("widgets", tauri::path::BaseDirectory::AppData)
+        .map_err(|_| "Failed to get widget path".to_string())?;
+    let install_dir = widgets_dir.join(&key);
+    let temp_install_dir = widgets_dir.join(format!("{}.installing", key));
+
+    fs::create_dir_all(&temp_install_dir).map_err(|_| "Failed to create temp path".to_string())?;
+
+    let temp_manifest_path = &temp_install_dir.join("manifest.json");
+    download_file(&files.manifest, temp_manifest_path)
+        .await
+        .map_err(|_| "Failed to download manifest")?;
+
+    let temp_manifest =
+        fs::read_to_string(temp_manifest_path).map_err(|_| "Cannot read manifest")?;
+    let mut temp_manifest: HashMap<String, serde_json::Value> =
+        serde_json::from_str(&temp_manifest).map_err(|_| "Malformed json")?;
+
+    if let Some(url) = files.assets {
+        let dest = &temp_install_dir.join("assets.zip");
+        download_file(&url, dest)
+            .await
+            .map_err(|_| "Failed to download assets")?;
+
+        extract_zip(dest, &temp_install_dir.join("assets")).map_err(|e| e.to_string())?;
+        let _ = fs::remove_file(dest);
+
+        let widget_type = temp_manifest
+            .get("widgetType")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or_default();
+        let assets_dir = &install_dir.join("assets");
+        if widget_type == "html" {
+            temp_manifest.insert(
+                "file".to_string(),
+                json!(assets_dir.to_str().unwrap_or_default()),
+            );
+        } else if widget_type == "json" {
+            if let Some(custom_assets) = temp_manifest
+                .get_mut("customAssets")
+                .and_then(serde_json::Value::as_array_mut)
+            {
+                for asset in custom_assets {
+                    let Some(asset) = asset.as_object_mut() else {
+                        continue;
+                    };
+                    if asset.get("kind").and_then(serde_json::Value::as_str) != Some("file") {
+                        continue;
+                    }
+                    let Some(key) = asset.get("key").and_then(serde_json::Value::as_str) else {
+                        continue;
+                    };
+
+                    asset.insert(
+                        "path".to_string(),
+                        json!(assets_dir.join(key).to_string_lossy().to_string()),
+                    );
+                }
+            }
+        }
+    }
+
+    if let Some(url) = files.thumb {
+        let dest = &temp_install_dir.join("thumb.png");
+        download_file(&url, dest)
+            .await
+            .map_err(|_| "Failed to download thumb")?;
+    }
+
+    // preserve existing values
+    let manifest_path = &install_dir.join("manifest.json");
+    if manifest_path.exists() {
+        let manifest = fs::read_to_string(manifest_path).map_err(|_| "Cannot read manifest")?;
+        let manifest: HashMap<String, serde_json::Value> =
+            serde_json::from_str(&manifest).map_err(|_| "Malformed json")?;
+
+        for key in ["visible", "pinned", "alwaysOnTop", "position"] {
+            if let Some(value) = manifest.get(key) {
+                temp_manifest.insert(key.to_string(), value.clone());
+            }
+        }
+    }
+
+    temp_manifest.insert(
+        "installedAt".to_string(),
+        json!(SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_err(|e| e.to_string())?
+            .as_millis()),
+    );
+    temp_manifest.insert("isGalleryWidget".to_string(), json!(true));
+
+    // write updated manifest to temp dir
+    let json_string = serde_json::to_string_pretty(&temp_manifest).map_err(|e| e.to_string())?;
+    fs::write(temp_manifest_path, &json_string).map_err(|e| e.to_string())?;
+
+    // swap existing and temp dir
+    let backup_dir = widgets_dir.join(format!("{}.backup", key));
+    if install_dir.exists() {
+        let _ = fs::rename(&install_dir, &backup_dir);
+    }
+    let _ = fs::rename(&temp_install_dir, &install_dir);
+
+    if backup_dir.exists() {
+        let _ = fs::remove_dir_all(&backup_dir);
+    }
+
+    let _ = app.emit_to("main", "creator-close", 1);
+    let _ = app.emit_to(format!("widget-{}", raw_key), "update-manifest", 1);
+
+    if let Some(window) = app.get_webview_window("main") {
+        window.show().unwrap();
+        window.set_focus().unwrap();
+    }
+
     Ok(())
 }
