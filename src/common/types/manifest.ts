@@ -46,6 +46,9 @@ export interface IWidget {
     color: string;
   } | null;
   pinned?: boolean;
+  version?: string;
+  installedAt?: string | number;
+  isGalleryWidget?: boolean;
 }
 
 export type ILiteWidget = Omit<

@@ -111,6 +111,7 @@ pub fn run() {
             chat::create_assistant_window,
             gallery::upload_widget,
             gallery::validate_widget_asset,
+            gallery::download_widget,
         ])
         .setup(move |app| {
             CUSTOM_SERVER_PORT
