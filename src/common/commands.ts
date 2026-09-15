@@ -86,7 +86,6 @@ export type IValidateWidgetAsset = void;
 
 export type IDownloadWidgetParams = {
   key: string;
-  rawKey: string;
   files: { manifest: string; assets?: string | null; thumb?: string | null };
 };
 export type IDownloadWidget = void;

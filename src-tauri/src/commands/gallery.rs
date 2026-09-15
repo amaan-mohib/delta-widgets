@@ -385,19 +385,19 @@ pub struct Files {
 pub async fn download_widget(
     app: tauri::AppHandle,
     key: String,
-    raw_key: String,
     files: Files,
 ) -> Result<(), String> {
     if files.manifest.is_empty() {
         return Err("No Manifest URL found".to_string());
     }
+    let dir_key = key.replace("/", "-");
 
     let widgets_dir = app
         .path()
         .resolve("widgets", tauri::path::BaseDirectory::AppData)
         .map_err(|_| "Failed to get widget path".to_string())?;
-    let install_dir = widgets_dir.join(&key);
-    let temp_install_dir = widgets_dir.join(format!("{}.installing", key));
+    let install_dir = widgets_dir.join(&dir_key);
+    let temp_install_dir = widgets_dir.join(format!("{}.installing", dir_key));
 
     fs::create_dir_all(&temp_install_dir).map_err(|_| "Failed to create temp path".to_string())?;
 
@@ -490,7 +490,7 @@ pub async fn download_widget(
     fs::write(temp_manifest_path, &json_string).map_err(|e| e.to_string())?;
 
     // swap existing and temp dir
-    let backup_dir = widgets_dir.join(format!("{}.backup", key));
+    let backup_dir = widgets_dir.join(format!("{}.backup", dir_key));
     if install_dir.exists() {
         let _ = fs::rename(&install_dir, &backup_dir);
     }
@@ -501,7 +501,7 @@ pub async fn download_widget(
     }
 
     let _ = app.emit_to("main", "creator-close", 1);
-    let _ = app.emit_to(format!("widget-{}", raw_key), "update-manifest", 1);
+    let _ = app.emit_to(format!("widget-{}", key), "update-manifest", 1);
 
     if let Some(window) = app.get_webview_window("main") {
         window.show().unwrap();
