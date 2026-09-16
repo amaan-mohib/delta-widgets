@@ -213,6 +213,8 @@ export const duplicateWidget = async (
         visible: keepVisible ? widget.visible : false,
         publishedAt: widget.publishedAt ? Date.now() : undefined,
         path: oldWidgetPath,
+        isGalleryWidget: false,
+        installedAt: undefined,
       },
       path: widget.file,
       url: widget.url,

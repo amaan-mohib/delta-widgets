@@ -246,7 +246,7 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
               ? `Last installed: ${new Date(
                   manifest.publishedAt,
                 ).toLocaleString()}`
-              : "Add the widget to the Installed list"
+              : "Add this widget to the Installed list"
           }
           relationship="label"
           positioning={"below-end"}>

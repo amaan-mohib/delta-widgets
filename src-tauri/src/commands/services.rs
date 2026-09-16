@@ -313,9 +313,9 @@ pub async fn create_gallery_window(
     #[cfg(not(debug_assertions))]
     const URL: &str = "https://gallery.deltawidgets.com";
 
-    let url = url.unwrap_or(URL.to_string());
+    let mut url = url.unwrap_or(URL.to_string());
     if !url.starts_with(URL) {
-        return Err("Invalid URL".to_string());
+        url = format!("{}{}", URL, url);
     }
 
     if let Some(mut existing_window) = app.get_webview_window("gallery") {

@@ -15,12 +15,11 @@ import {
   Apps20Color,
   Apps20Regular,
   BotSparkle20Regular,
-  BuildingShop20Regular,
-  BuildingStore20Color,
   bundleIcon,
   Drafts20Color,
   Drafts20Regular,
   ErrorCircle20Color,
+  Grid20Regular,
   Heart20Color,
   Megaphone20Regular,
   QuestionCircle20Regular,
@@ -94,10 +93,6 @@ const Sidebar: React.FC<SidebarProps> = () => {
   const { draftWidgets, activeTab, setActiveTab } = useDataStore();
   const InstalledIcon = bundleIcon(Apps20Color, Apps20Regular);
   const DraftIcon = bundleIcon(Drafts20Color, Drafts20Regular);
-  const MarketplaceIcon = bundleIcon(
-    BuildingStore20Color,
-    BuildingShop20Regular,
-  );
 
   const checkForUpdates = useCallback(async () => {
     const update = await check();
@@ -144,7 +139,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
               await commands.createGalleryWindow();
             }}
             value={"marketplace"}
-            icon={<MarketplaceIcon />}>
+            icon={<Grid20Regular />}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               Community Gallery
             </div>
