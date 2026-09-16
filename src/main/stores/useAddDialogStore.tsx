@@ -16,6 +16,8 @@ interface IAddDialogStore {
   resetDialogState: () => void;
   importHTML: (existingWidget?: ILiteWidget) => Promise<void>;
   importJSON: () => Promise<void>;
+  openCreateMenu: boolean;
+  setOpenCreateMenu: (open: boolean) => void;
 }
 
 const defaultDialogState: IDialogState = {
@@ -27,6 +29,10 @@ const defaultDialogState: IDialogState = {
 };
 
 export const useAddDialogStore = create<IAddDialogStore>((set, get) => ({
+  openCreateMenu: false,
+  setOpenCreateMenu(open) {
+    set({ openCreateMenu: open });
+  },
   dialogState: defaultDialogState,
   setDialogState(state) {
     set({ dialogState: state });

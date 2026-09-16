@@ -1,4 +1,5 @@
 import {
+  Badge,
   Button,
   Card,
   CardFooter,
@@ -19,7 +20,7 @@ import {
   ToastTitle,
   useToastController,
 } from "@fluentui/react-components";
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
 import {
   createCreatorWindow,
   createWidgetWindow,
@@ -38,6 +39,7 @@ import {
   FolderRegular,
   ImageArrowCounterclockwiseRegular,
   MoreHorizontal20Regular,
+  OpenRegular,
   PinOffRegular,
   PinRegular,
 } from "@fluentui/react-icons";
@@ -55,6 +57,7 @@ interface WidgetCardProps {
   widget: ILiteWidget;
   cardStyle: string;
   saves?: boolean;
+  focusWidget?: string | null;
 }
 
 const useStyles = makeStyles({
@@ -70,6 +73,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   widget,
   cardStyle,
   saves,
+  focusWidget,
 }) => {
   const styles = useStyles();
   const [visible, setVisible] = useState(widget.visible ?? false);
@@ -77,9 +81,9 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   const [pinned, setPinned] = useState(widget.pinned ?? false);
   const loading = useDataStore((state) => state.openingCreator);
   const [widgetLoading, setWidgetLoading] = useState(false);
-
   const { updateAllWidgets, editWidget } = useDataStore();
   const { setDialogState, importHTML } = useAddDialogStore();
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const { dispatchToast, dismissToast } = useToastController("toaster");
   const notify = () =>
@@ -98,6 +102,11 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
     setPinned(widget.pinned ?? false);
   }, [widget]);
 
+  useEffect(() => {
+    if (saves || focusWidget !== widget.key || !cardRef.current) return;
+    cardRef.current.scrollIntoView({ behavior: "smooth" });
+  }, [focusWidget]);
+
   const menuItems: {
     key: string;
     icon: MenuItemProps["icon"];
@@ -105,6 +114,16 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
     children: ReactNode;
     condition?: boolean;
   }[] = [
+    {
+      key: "view-gallery",
+      icon: <OpenRegular />,
+      onClick: async (e) => {
+        e.stopPropagation();
+        await commands.createGalleryWindow({ url: `/widget/${widget.key}` });
+      },
+      children: "View Details",
+      condition: !saves && widget.isGalleryWidget,
+    },
     {
       key: "duplicate",
       icon: <CopyRegular />,
@@ -124,7 +143,9 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
         editWidgetAction();
       },
       children: "Edit",
-      condition: !saves && widget.widgetType === "json",
+      condition: widget.isGalleryWidget
+        ? false
+        : !saves && widget.widgetType === "json",
     },
     {
       key: "edit-url",
@@ -146,7 +167,9 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
         });
       },
       children: "Edit",
-      condition: !saves && widget.widgetType === "url",
+      condition: widget.isGalleryWidget
+        ? false
+        : !saves && widget.widgetType === "url",
     },
     {
       key: "edit-html",
@@ -156,7 +179,9 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
         importHTML(widget);
       },
       children: "Edit",
-      condition: !saves && widget.widgetType === "html",
+      condition: widget.isGalleryWidget
+        ? false
+        : !saves && widget.widgetType === "html",
     },
     {
       key: "remove",
@@ -304,7 +329,11 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
 
   return (
     <Card
+      ref={cardRef}
       role="listitem"
+      style={
+        focusWidget === widget.key ? { filter: "brightness(180%)" } : undefined
+      }
       key={widget.key}
       className={cardStyle}
       disabled={loading}
@@ -352,11 +381,19 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
             {widget.label}
           </Text>
         }
+        description={
+          widget.isGalleryWidget ? (
+            <Badge
+              appearance="outline"
+              style={{ marginLeft: -4, marginTop: 4 }}>
+              From Gallery
+            </Badge>
+          ) : null
+        }
       />
       <CardPreview style={{ height: "100%", minHeight: 100 }}>
         <WidgetPreview widget={widget} isDraft={saves} />
       </CardPreview>
-      {widget.description && <p>{widget.description}</p>}
       <CardFooter className={styles.cardFooter}>
         {saves ? (
           <>

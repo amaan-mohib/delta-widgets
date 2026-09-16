@@ -16,10 +16,10 @@ import Sidebar, { sidebarWidth } from "./components/Sidebar";
 import { useDataStore } from "./stores/useDataStore";
 import SettingsSidebar from "./components/Settings/Sidebar";
 import Settings from "./components/Settings";
-import MartketplaceWaitlist from "./components/MartketplaceWaitlist";
 import "./App.css";
 import AddWidgetDialog from "./components/AddWidgetDialog";
 import WhatsNew from "./components/WhatsNew";
+import { useAddDialogStore } from "./stores/useAddDialogStore";
 
 const useStyles = makeStyles({
   container: {
@@ -34,6 +34,8 @@ const useStyles = makeStyles({
     padding: "16px",
     paddingLeft: `${sidebarWidth + 16}px`,
     width: "100%",
+    height: "100vh",
+    overflow: "auto",
   },
   header: {
     display: "flex",
@@ -52,7 +54,6 @@ function App() {
   const {
     installedWidgets,
     draftWidgets,
-    createWidget,
     updateAllWidgets,
     activeTab,
     loading,
@@ -60,6 +61,7 @@ function App() {
   } = useDataStore();
   const [key, setKey] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [focusWidget, setFocusWidget] = useState<string | null>(null);
 
   useEffect(() => {
     updateAllWidgets();
@@ -72,9 +74,27 @@ function App() {
       if (containerRef.current) {
         containerRef.current.style.minHeight = `${containerRef.current.clientHeight}px`;
       }
+      const scrollY = window.scrollY;
       updateAllWidgets().then(() => {
         setKey((prev) => prev + 1);
+        setTimeout(() => {
+          window.scrollTo({ top: scrollY });
+        }, 500);
       });
+    });
+
+    return () => {
+      unsub.then((f) => f());
+    };
+  }, []);
+
+  useEffect(() => {
+    const unsub = listen<string>("focus-widget", ({ payload }) => {
+      useDataStore.setState({ activeTab: "installed" });
+      setFocusWidget(payload);
+      setTimeout(() => {
+        setFocusWidget(null);
+      }, 3000);
     });
 
     return () => {
@@ -86,7 +106,7 @@ function App() {
     <Card
       className={styles.card}
       style={{ justifyContent: "center" }}
-      onClick={createWidget}>
+      onClick={() => useAddDialogStore.setState({ openCreateMenu: true })}>
       <div
         style={{
           display: "flex",
@@ -110,12 +130,10 @@ function App() {
   );
 
   return (
-    <main className="container">
+    <main className="container" style={{ position: "relative" }}>
       {showSettings ? <SettingsSidebar /> : <Sidebar />}
 
-      <div
-        style={{ flex: 1, ...(showSettings ? { minHeight: "100vh" } : {}) }}
-        ref={containerRef}>
+      <div style={{ flex: 1, minHeight: "100vh" }} ref={containerRef}>
         {loading ? (
           <div className={styles.container} role="list">
             {Array(9)
@@ -140,6 +158,7 @@ function App() {
                       key={widget.key}
                       widget={widget}
                       cardStyle={styles.card}
+                      focusWidget={focusWidget}
                     />
                   );
                 })}
@@ -148,7 +167,6 @@ function App() {
             )}
             {activeTab === "drafts" && (
               <div className={styles.container} role="list" key={key}>
-                {draftWidgets.length === 0 && createNew}
                 {draftWidgets.map((widget) => {
                   return (
                     <WidgetCard
@@ -159,11 +177,7 @@ function App() {
                     />
                   );
                 })}
-              </div>
-            )}
-            {activeTab === "marketplace" && (
-              <div className={styles.container2}>
-                <MartketplaceWaitlist />
+                {createNew}
               </div>
             )}
           </>
