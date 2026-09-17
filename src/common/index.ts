@@ -2,7 +2,7 @@ import { path } from "@tauri-apps/api";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { commands } from "./commands";
 import { message } from "@tauri-apps/plugin-dialog";
-import { IWidget } from "./types/manifest";
+import { ILiteWidget, IWidget, TWidgetWithDate } from "./types/manifest";
 
 export const getStore = async () => {
   try {
@@ -63,3 +63,6 @@ export const templateWidgets: Record<string, string> = {
   "visualizer-delta-default": "templates/visualizer/thumb.png",
   "media-viz-delta-default": "templates/media-viz/thumb.png",
 };
+
+export const isBuiltIn = (item: TWidgetWithDate | ILiteWidget) =>
+  item.key in templateWidgets || item.key === "gpt" || item.key === "google";

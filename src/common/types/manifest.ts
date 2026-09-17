@@ -60,3 +60,5 @@ export type ILiteWidget = Omit<
   | "customAssets"
   | "theme"
 >;
+
+export type TWidgetWithDate = ILiteWidget & { modifiedAt: number };

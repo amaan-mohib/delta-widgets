@@ -141,7 +141,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
             value={"marketplace"}
             icon={<Grid20Regular />}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              Community Gallery
+              Community Gallery<Badge appearance="tint">New</Badge>
             </div>
           </NavItem>
           <NavItem

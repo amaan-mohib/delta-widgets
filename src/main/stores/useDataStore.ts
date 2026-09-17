@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { ILiteWidget } from "../../common/types/manifest";
+import { ILiteWidget, TWidgetWithDate } from "../../common/types/manifest";
 import { createCreatorWindow, isWidgetInDraft } from "../utils/widgets";
 import { sendMixpanelEvent } from "../utils/analytics";
 import { commands } from "../../common/commands";
@@ -7,8 +7,8 @@ import { commands } from "../../common/commands";
 export type TActiveTab = "installed" | "drafts" | "marketplace";
 export type TSettingsActiveTab = "general" | "theme" | "about";
 interface IDataStore {
-  installedWidgets: ILiteWidget[];
-  draftWidgets: ILiteWidget[];
+  installedWidgets: TWidgetWithDate[];
+  draftWidgets: TWidgetWithDate[];
   activeTab: TActiveTab;
   settingsActiveTab: TSettingsActiveTab;
   loading: boolean;
@@ -20,9 +20,8 @@ interface IDataStore {
   editWidget: (widget: ILiteWidget) => Promise<void>;
   openWhatsNew: boolean;
   openingCreator: boolean;
+  listRefreshKey: number;
 }
-
-type TWidgetWithDate = ILiteWidget & { modifiedAt: number };
 
 export const useDataStore = create<IDataStore>((set, get) => ({
   installedWidgets: [],
@@ -52,7 +51,7 @@ export const useDataStore = create<IDataStore>((set, get) => ({
 
       set({
         installedWidgets: installedWidgets.sort((a, b) =>
-          a.label > b.label ? 1 : b.label > a.label ? -1 : 0,
+          a.label.localeCompare(b.label),
         ),
         draftWidgets: draftWidgets.sort((a, b) =>
           a.modifiedAt > b.modifiedAt
@@ -85,4 +84,5 @@ export const useDataStore = create<IDataStore>((set, get) => ({
   showSettings: false,
   openWhatsNew: false,
   openingCreator: false,
+  listRefreshKey: 0,
 }));
