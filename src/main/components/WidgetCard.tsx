@@ -31,6 +31,7 @@ import {
   togglePinned,
 } from "../utils/widgets";
 import {
+  ArrowCircleUpRegular,
   ArrowClockwiseRegular,
   ArrowUploadRegular,
   CheckmarkRegular,
@@ -58,6 +59,7 @@ interface WidgetCardProps {
   widget: ILiteWidget;
   saves?: boolean;
   focusWidget?: string | null;
+  hasUpdate?: boolean;
 }
 
 const useStyles = makeStyles({
@@ -73,6 +75,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   widget,
   saves,
   focusWidget,
+  hasUpdate,
 }) => {
   const styles = useStyles();
   const [visible, setVisible] = useState(widget.visible ?? false);
@@ -127,12 +130,12 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
     },
     {
       key: "view-gallery",
-      icon: <OpenRegular />,
+      icon: hasUpdate ? <ArrowCircleUpRegular /> : <OpenRegular />,
       onClick: async (e) => {
         e.stopPropagation();
         await commands.createGalleryWindow({ url: `/widget/${widget.key}` });
       },
-      children: "View Details",
+      children: hasUpdate ? "Update" : "View Details",
       condition: !saves && widget.isGalleryWidget,
     },
     {
@@ -396,9 +399,10 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
         description={
           widget.isGalleryWidget ? (
             <Badge
+              icon={hasUpdate ? <ArrowCircleUpRegular /> : null}
               appearance="outline"
               style={{ marginLeft: -4, marginTop: 4 }}>
-              From Gallery
+              {hasUpdate ? "Update Available" : "From Gallery"}
             </Badge>
           ) : null
         }

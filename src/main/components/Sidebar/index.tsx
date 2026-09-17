@@ -28,7 +28,7 @@ import {
 import AddMenu from "./AddMenu";
 import { check } from "@tauri-apps/plugin-updater";
 import { useDataStore } from "../../stores/useDataStore";
-import DiscordIcon from "../icons/Discord";
+import DiscordIcon from "../../icons/Discord";
 import { commands } from "../../../common/commands";
 
 export const sidebarWidth = 250;
@@ -138,7 +138,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
             onClick={async () => {
               await commands.createGalleryWindow();
             }}
-            value={"marketplace"}
+            value={"gallery"}
             icon={<Grid20Regular />}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               Community Gallery<Badge appearance="tint">New</Badge>
