@@ -32,6 +32,9 @@ const InstalledWidgets: React.FC<InstalledWidgetsProps> = () => {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState({ sortBy: ["label"], sortDir: ["asc"] });
   const [selectedFilter, setSelectedFilter] = useState("all");
+  const [galleryWidgetVersions, setGalleryWidgetVersions] = useState<
+    Record<string, { version: string; revision: number }>
+  >({});
 
   useEffect(() => {
     const unsub = listen<string>("focus-widget", ({ payload }) => {
@@ -46,6 +49,34 @@ const InstalledWidgets: React.FC<InstalledWidgetsProps> = () => {
       unsub.then((f) => f());
     };
   }, []);
+
+  useEffect(() => {
+    const getVersions = async () => {
+      try {
+        const galleryWidgets = installedWidgets.filter(
+          (w) => !!w.isGalleryWidget,
+        );
+
+        const searchParams = new URLSearchParams();
+        galleryWidgets.forEach((w) => {
+          searchParams.append("keys", w.key);
+        });
+
+        const res = await fetch(
+          `${import.meta.env.VITE_GALLERY_LINK}/api/updates?${searchParams.toString()}`,
+          {
+            method: "GET",
+          },
+        );
+        const body = await res.json();
+        setGalleryWidgetVersions(body);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    getVersions();
+  }, [installedWidgets]);
 
   const filteredWidgets = useMemo(() => {
     let res = [...installedWidgets];
@@ -176,6 +207,11 @@ const InstalledWidgets: React.FC<InstalledWidgetsProps> = () => {
               key={widget.key}
               widget={widget}
               focusWidget={focusWidget}
+              hasUpdate={
+                galleryWidgetVersions[widget.key]
+                  ? galleryWidgetVersions[widget.key].version !== widget.version
+                  : false
+              }
             />
           );
         })}

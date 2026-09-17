@@ -4,7 +4,7 @@ import { createCreatorWindow, isWidgetInDraft } from "../utils/widgets";
 import { sendMixpanelEvent } from "../utils/analytics";
 import { commands } from "../../common/commands";
 
-export type TActiveTab = "installed" | "drafts" | "marketplace";
+export type TActiveTab = "installed" | "drafts";
 export type TSettingsActiveTab = "general" | "theme" | "about";
 interface IDataStore {
   installedWidgets: TWidgetWithDate[];
