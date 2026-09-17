@@ -32,6 +32,7 @@ import {
 } from "../utils/widgets";
 import {
   ArrowClockwiseRegular,
+  ArrowUploadRegular,
   CheckmarkRegular,
   CopyRegular,
   DeleteRegular,
@@ -47,7 +48,7 @@ import { ILiteWidget } from "../../common/types/manifest";
 import { sendMixpanelEvent } from "../utils/analytics";
 import WidgetPreview from "./WidgetPreview";
 import { emitTo } from "@tauri-apps/api/event";
-import { closeWidgetWindow, templateWidgets } from "../../common";
+import { closeWidgetWindow, isBuiltIn, templateWidgets } from "../../common";
 import { useDataStore } from "../stores/useDataStore";
 import { useAddDialogStore } from "../stores/useAddDialogStore";
 import { message } from "@tauri-apps/plugin-dialog";
@@ -55,7 +56,6 @@ import { commands } from "../../common/commands";
 
 interface WidgetCardProps {
   widget: ILiteWidget;
-  cardStyle: string;
   saves?: boolean;
   focusWidget?: string | null;
 }
@@ -71,7 +71,6 @@ const useStyles = makeStyles({
 
 const WidgetCard: React.FC<WidgetCardProps> = ({
   widget,
-  cardStyle,
   saves,
   focusWidget,
 }) => {
@@ -114,6 +113,18 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
     children: ReactNode;
     condition?: boolean;
   }[] = [
+    {
+      key: "publish-gallery",
+      icon: <ArrowUploadRegular />,
+      onClick: async (e) => {
+        e.stopPropagation();
+        await commands.createGalleryWindow({
+          url: `/dashboard/upload?key=${widget.key}`,
+        });
+      },
+      children: "Publish to Gallery",
+      condition: !saves && !widget.isGalleryWidget && !isBuiltIn(widget),
+    },
     {
       key: "view-gallery",
       icon: <OpenRegular />,
@@ -331,11 +342,12 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
     <Card
       ref={cardRef}
       role="listitem"
-      style={
-        focusWidget === widget.key ? { filter: "brightness(180%)" } : undefined
-      }
+      style={{
+        minHeight: "180px",
+        height: "100%",
+        filter: focusWidget === widget.key ? "brightness(180%)" : undefined,
+      }}
       key={widget.key}
-      className={cardStyle}
       disabled={loading}
       onClick={
         saves
