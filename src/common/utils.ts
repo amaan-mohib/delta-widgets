@@ -1,6 +1,7 @@
 import { path } from "@tauri-apps/api";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { appCacheDir } from "@tauri-apps/api/path";
+import { ICustomAssets } from "./types/manifest";
 
 export function downsample(data: number[], targetCount: number) {
   const result = [];
@@ -195,6 +196,29 @@ export const getAssetPath = async (assetVar: string) => {
     const key = assetVar.replace(/{{asset:|}}/g, "");
     const img = await path.resolve(await appCacheDir(), "assets", key);
     return convertFileSrc(img);
+  } catch (error) {
+    return "";
+  }
+};
+
+export const getBgAssetPath = async (
+  imageData: ICustomAssets,
+  customAssets: ICustomAssets[] = [],
+) => {
+  if (imageData.kind === "url") {
+    return imageData.path;
+  }
+  try {
+    const existingAsset = customAssets.find(
+      (item) => item.key === imageData.key,
+    );
+
+    const dir = await path.resolve(
+      await appCacheDir(),
+      "assets",
+      existingAsset?.key || imageData?.key || "",
+    );
+    return convertFileSrc(dir);
   } catch (error) {
     return "";
   }
