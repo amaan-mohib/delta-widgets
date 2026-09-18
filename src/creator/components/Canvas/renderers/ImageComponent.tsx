@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { IWidgetElement } from "../../../../common/types/manifest";
 import { ResizableBox } from "react-resizable";
 import { useManifestStore } from "../../../stores/useManifestStore";
 import { useDataTrackStore } from "../../../stores/useDataTrackStore";
 import { Image } from "@fluentui/react-components";
 import { parseDynamicText } from "../../../utils";
+import { getAssetPath } from "../../../../common/utils";
 
 interface ImageComponentProps {
   component: IWidgetElement;
@@ -15,6 +16,24 @@ const ImageComponent: React.FC<ImageComponentProps> = ({ component }) => {
   const widgetDimension = useManifestStore(
     (state) => state.manifest?.dimensions,
   );
+  const [bgImage, setBgImage] = useState("");
+
+  useEffect(() => {
+    const src: string | undefined = component.data?.src;
+    if (!src) {
+      setBgImage("");
+      return;
+    }
+
+    getAssetPath(src)
+      .then((img) => {
+        setBgImage(img);
+      })
+      .catch(() => {
+        setBgImage("");
+      });
+  }, [JSON.stringify(component.data || {})]);
+
   return (
     <ResizableBox
       transformScale={scale}
@@ -44,6 +63,7 @@ const ImageComponent: React.FC<ImageComponentProps> = ({ component }) => {
       <Image
         id={`${component.id}-child`}
         src={
+          bgImage ||
           parseDynamicText(component.data?.src) ||
           "https://placehold.co/400x400?text=No+Image"
         }

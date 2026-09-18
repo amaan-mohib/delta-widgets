@@ -82,6 +82,7 @@ interface TemplateEditorProps {
   isHtml?: boolean;
   placeholder?: string;
   disabled?: boolean;
+  inputWidth?: string | number;
 }
 
 const TemplateEditor: React.FC<TemplateEditorProps> = ({
@@ -90,6 +91,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
   isHtml,
   placeholder,
   disabled,
+  inputWidth,
 }) => {
   const [value, setValue] = useState(initialValue || "");
   const [open, setOpen] = useState(false);
@@ -104,7 +106,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   const templateCategories = useMemo(
     () => getTemplateCategories(manifest?.customFields || {}),
-    [manifest]
+    [manifest],
   );
 
   useEffect(() => {
@@ -119,8 +121,8 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
         (template) =>
           template.label.toLowerCase().includes(search.toLowerCase()) ||
           template.value.toLowerCase().includes(search.toLowerCase()) ||
-          template.description.toLowerCase().includes(search.toLowerCase())
-      )
+          template.description.toLowerCase().includes(search.toLowerCase()),
+      ),
     );
   }, [search, templateCategories]);
 
@@ -200,7 +202,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
           <ReactQuill
             className="minimal-editor"
             modules={{ toolbar: [] }}
-            style={{ width: "140px" }}
+            style={{ width: inputWidth || "140px" }}
             placeholder={placeholder || "Enter text"}
             onChange={onChange}
             value={initialValue}
@@ -211,7 +213,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
             autoCorrect="off"
             autoComplete="off"
             spellCheck="false"
-            style={{ width: "140px" }}
+            style={{ width: inputWidth || "140px" }}
             placeholder={placeholder || "Enter text"}
             onChange={(_, { value }) => {
               onChange(value);
@@ -305,8 +307,8 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
                         search
                           ? "Search results"
                           : selectedCategory
-                          ? selectedCategory.name
-                          : "Template categories"
+                            ? selectedCategory.name
+                            : "Template categories"
                       }
                     />
                     <div style={{ height: 400, overflow: "auto" }}>

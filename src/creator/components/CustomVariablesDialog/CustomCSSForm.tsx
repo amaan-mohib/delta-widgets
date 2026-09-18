@@ -7,7 +7,7 @@ import {
   Text,
 } from "@fluentui/react-components";
 import { DocumentRegular } from "@fluentui/react-icons";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { fileOrFolderPicker } from "../../../main/utils/widgets";
 import {
   getManifestStore,
@@ -48,7 +48,12 @@ const CustomCSSForm: React.FC<CustomCSSFormProps> = () => {
       });
       setCssUrl("");
     },
-    [manifest]
+    [manifest],
+  );
+
+  const cssAssets = useMemo(
+    () => (manifest?.customAssets ?? []).filter((item) => item.type === "css"),
+    [manifest],
   );
 
   if (!manifest) return null;
@@ -89,10 +94,10 @@ const CustomCSSForm: React.FC<CustomCSSFormProps> = () => {
           Select CSS file
         </Button>
       </Card>
-      {(manifest.customAssets?.length ?? 0) > 0 && (
+      {cssAssets.length > 0 && (
         <Card appearance="outline">
           <Text>Added:</Text>
-          {(manifest.customAssets || []).map((item) => (
+          {cssAssets.map((item) => (
             <Card
               key={item.key}
               appearance="subtle"
@@ -101,7 +106,7 @@ const CustomCSSForm: React.FC<CustomCSSFormProps> = () => {
                 useManifestStore.getState().updateManifest({
                   customAssets: [
                     ...(manifest.customAssets || []).filter(
-                      (i) => i.key !== item.key
+                      (i) => i.key !== item.key,
                     ),
                   ],
                 });

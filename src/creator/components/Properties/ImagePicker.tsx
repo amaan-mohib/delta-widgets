@@ -1,40 +1,19 @@
 import { Button, Input, Tooltip } from "@fluentui/react-components";
 import { nanoid } from "nanoid";
 import React from "react";
-import { fileOrFolderPicker } from "../../../main/utils/widgets";
 import { DeleteRegular, DocumentRegular } from "@fluentui/react-icons";
-import { commands } from "../../../common/commands";
-
-interface IImageData {
-  key: string;
-  kind: "file" | "url";
-  path: string;
-  type: "image";
-}
+import { browseImage } from "../../utils";
+import { ICustomAssets } from "../../../common/types/manifest";
 interface ImagePickerProps {
-  setImage: (data: IImageData | null) => void;
-  imageData: IImageData | null;
+  setImage: (data: ICustomAssets | null) => void;
+  imageData: ICustomAssets | null;
 }
 
 const ImagePicker: React.FC<ImagePickerProps> = ({ setImage, imageData }) => {
-  const browseImage = async () => {
-    const { path } = await fileOrFolderPicker({
-      title: "Select Image",
-      extensions: ["png", "jpg", "jpeg", "gif", "svg", "webp"],
-      validate: false,
-    });
-    if (path) {
-      const key = `${nanoid()}.${path.split(".").at(-1)}`;
-      await commands.copyCustomAssets({
-        key,
-        path,
-      });
-      setImage({
-        key,
-        kind: "file",
-        path,
-        type: "image",
-      });
+  const pickImage = async () => {
+    const data = await browseImage();
+    if (data) {
+      setImage(data);
     }
   };
 
@@ -61,6 +40,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ setImage, imageData }) => {
       </div>
     );
   }
+
   return (
     <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
       <Input
@@ -90,7 +70,7 @@ const ImagePicker: React.FC<ImagePickerProps> = ({ setImage, imageData }) => {
         positioning={"above-end"}
         withArrow>
         <Button
-          onClick={browseImage}
+          onClick={pickImage}
           size="small"
           appearance="outline"
           icon={<DocumentRegular style={{ fontSize: "16px" }} />}
