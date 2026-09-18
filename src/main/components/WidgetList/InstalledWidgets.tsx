@@ -90,11 +90,11 @@ const InstalledWidgets: React.FC<InstalledWidgetsProps> = () => {
     res.sort((a, b) => {
       if (sort.sortBy[0] === "date") {
         const aTime = new Date(
-          a.publishedAt || a.installedAt || a.modifiedAt,
+          a.publishedAt || a.installedAt || a.createdAt || a.modifiedAt,
         ).getTime();
 
         const bTime = new Date(
-          b.publishedAt || b.installedAt || b.modifiedAt,
+          b.publishedAt || b.installedAt || b.createdAt || b.modifiedAt,
         ).getTime();
 
         return (aTime - bTime) * multiplier;
