@@ -20,13 +20,9 @@ const ImageComponent: React.FC<ImageComponentProps> = ({ component }) => {
       return;
     }
 
-    getAssetPath(src)
-      .then((img) => {
-        setBgImage(img);
-      })
-      .catch(() => {
-        setBgImage("");
-      });
+    getAssetPath(src).then((img) => {
+      setBgImage(img);
+    });
   }, [JSON.stringify(component.data || {})]);
 
   const src = useMemo(() => {

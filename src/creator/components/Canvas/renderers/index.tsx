@@ -11,10 +11,9 @@ import ProgressComponent from "./ProgressComponent";
 import FontPicker from "react-fontpicker-ts";
 import { tokens } from "@fluentui/react-components";
 import DropZone from "../../DnD/DropZone";
-import { convertFileSrc } from "@tauri-apps/api/core";
-import { appCacheDir } from "@tauri-apps/api/path";
-import { path } from "@tauri-apps/api";
 import VisualizerComponent from "./VisualizerComponent";
+import { getBgAssetPath } from "../../../../common/utils";
+import { useManifestStore } from "../../../stores/useManifestStore";
 
 interface ComponentRenderProps {
   component: IWidgetElement;
@@ -66,18 +65,13 @@ const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
 
   useEffect(() => {
     if (!data?.imageData) return;
-    (async () => {
-      if (data.imageData.kind === "url") {
-        setBgImage(data.imageData.path);
-        return;
-      }
-      const dir = await path.resolve(
-        await appCacheDir(),
-        "assets",
-        data.imageData?.key || "",
-      );
-      setBgImage(convertFileSrc(dir));
-    })();
+
+    getBgAssetPath(
+      data?.imageData,
+      useManifestStore.getState().manifest?.customAssets,
+    ).then((img) => {
+      setBgImage(img);
+    });
   }, [JSON.stringify(data?.imageData || {})]);
 
   if (type === "container" || type === "container-grid") {
