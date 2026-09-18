@@ -21,6 +21,7 @@ interface IDataStore {
   openWhatsNew: boolean;
   openingCreator: boolean;
   listRefreshKey: number;
+  focusWidgetKey: string | null;
 }
 
 export const useDataStore = create<IDataStore>((set, get) => ({
@@ -85,4 +86,5 @@ export const useDataStore = create<IDataStore>((set, get) => ({
   openWhatsNew: false,
   openingCreator: false,
   listRefreshKey: 0,
+  focusWidgetKey: null,
 }));
