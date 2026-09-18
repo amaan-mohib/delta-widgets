@@ -1,3 +1,7 @@
+import { path } from "@tauri-apps/api";
+import { convertFileSrc } from "@tauri-apps/api/core";
+import { appCacheDir } from "@tauri-apps/api/path";
+
 export function downsample(data: number[], targetCount: number) {
   const result = [];
   const bucketSize = data.length / targetCount;
@@ -182,3 +186,16 @@ export function hannWindow(size: number): number[] {
   }
   return out;
 }
+
+export const getAssetPath = async (assetVar: string) => {
+  if (!assetVar.startsWith("{{asset:")) {
+    return "";
+  }
+  try {
+    const key = assetVar.replace(/{{asset:|}}/g, "");
+    const img = await path.resolve(await appCacheDir(), "assets", key);
+    return convertFileSrc(img);
+  } catch (error) {
+    return "";
+  }
+};

@@ -1,8 +1,9 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Image } from "@fluentui/react-components";
 import { IWidgetElement } from "../../common/types/manifest";
 import { useDynamicTextStore } from "../stores/useVariableStore";
 import { parseDynamicText } from "../utils/utils";
+import { getAssetPath } from "../../common/utils";
 
 interface ImageComponentProps {
   component: IWidgetElement;
@@ -10,6 +11,24 @@ interface ImageComponentProps {
 
 const ImageComponent: React.FC<ImageComponentProps> = ({ component }) => {
   const textVariables = useDynamicTextStore();
+  const [bgImage, setBgImage] = useState("");
+
+  useEffect(() => {
+    const src: string | undefined = component.data?.src;
+    if (!src) {
+      setBgImage("");
+      return;
+    }
+
+    getAssetPath(src)
+      .then((img) => {
+        setBgImage(img);
+      })
+      .catch(() => {
+        setBgImage("");
+      });
+  }, [JSON.stringify(component.data || {})]);
+
   const src = useMemo(() => {
     const text = parseDynamicText(component.data?.src, textVariables);
     if (text === "Loading...") {
@@ -26,7 +45,7 @@ const ImageComponent: React.FC<ImageComponentProps> = ({ component }) => {
       }}>
       <Image
         id={`${component.id}-child`}
-        src={src}
+        src={bgImage || src}
         alt={component.data?.alt}
         fit={component.data?.fit || "cover"}
         shape={component.data?.shape || "square"}

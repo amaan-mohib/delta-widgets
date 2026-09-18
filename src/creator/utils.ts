@@ -5,6 +5,12 @@ import {
 import { path } from "@tauri-apps/api";
 import { writeFile } from "@tauri-apps/plugin-fs";
 import { toBlob } from "html-to-image";
+import { fileOrFolderPicker } from "../main/utils/widgets";
+import { nanoid } from "nanoid";
+import { commands } from "../common/commands";
+import { useManifestStore } from "./stores/useManifestStore";
+import { ICustomAssets } from "../common/types/manifest";
+import { sendMixpanelEvent } from "../main/utils/analytics";
 
 export const spinButtonOnChange = (
   event: SpinButtonChangeEvent,
@@ -26,11 +32,11 @@ const formatVariable =
   (key: string) =>
   (format?: string): string => {
     const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
-    return key === "media" && format === "thumbnail"
-      ? "https://placehold.co/400x400?text=Thumbnail"
-      : key === "weather" && format === "icon"
-        ? "https://placehold.co/400x400?text=Weather"
-        : `${capitalizedKey}${format ? ` (${format})` : ""}`;
+    if (key === "media" && format === "thumbnail")
+      return "https://placehold.co/400x400?text=Thumbnail";
+    if (key === "weather" && format === "icon")
+      return "https://placehold.co/400x400?text=Weather";
+    return `${capitalizedKey}${format ? ` (${format})` : ""}`;
   };
 
 const textVariables: Record<string, (format?: string) => string> = [
@@ -83,4 +89,39 @@ export const createThumb = async (manifestPath: string) => {
   } catch (error) {
     console.log(error);
   }
+};
+
+export const browseImage = async () => {
+  const { path } = await fileOrFolderPicker({
+    title: "Select Image",
+    extensions: ["png", "jpg", "jpeg", "gif", "svg", "webp"],
+    validate: false,
+  });
+  if (!path) {
+    return null;
+  }
+
+  const customAssets = useManifestStore.getState().manifest?.customAssets ?? [];
+  const existingAsset = customAssets.find((item) => item.path === path);
+  if (existingAsset) {
+    return existingAsset;
+  }
+  const key = `${nanoid()}.${path.split(".").at(-1)}`;
+  await commands.copyCustomAssets({
+    key,
+    path,
+  });
+  const data = {
+    key,
+    kind: "file",
+    path,
+    type: "image",
+  } as ICustomAssets;
+  useManifestStore.getState().updateManifest({
+    customAssets: customAssets ? [...customAssets, data] : [data],
+  });
+
+  await sendMixpanelEvent("Image picker used", {}).catch(console.error);
+
+  return data;
 };

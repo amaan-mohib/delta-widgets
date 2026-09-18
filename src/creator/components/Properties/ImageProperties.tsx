@@ -1,13 +1,20 @@
-import { Checkbox, Select, SpinButton } from "@fluentui/react-components";
+import {
+  Button,
+  Checkbox,
+  Select,
+  SpinButton,
+  Tooltip,
+} from "@fluentui/react-components";
 import React from "react";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
 import {
   IUpdateElementProperties,
   useManifestStore,
 } from "../../stores/useManifestStore";
-import { spinButtonOnChange } from "../../utils";
+import { browseImage, spinButtonOnChange } from "../../utils";
 import Panel from "./Panel";
 import TemplateEditor from "../TemplateEditor";
+import { DocumentRegular } from "@fluentui/react-icons";
 
 interface ImagePropertiesProps {}
 
@@ -18,6 +25,15 @@ const ImageProperties: React.FC<ImagePropertiesProps> = () => {
   const updateProperties = (value: IUpdateElementProperties) => {
     if (!selectedId) return;
     useManifestStore.getState().updateElementProperties(selectedId, value);
+  };
+
+  const pickImage = async () => {
+    const data = await browseImage();
+    if (data) {
+      updateProperties({
+        data: { src: `{{asset:${data.key}}}` },
+      });
+    }
   };
 
   if (!selectedId || !elementMap[selectedId]) return null;
@@ -35,15 +51,30 @@ const ImageProperties: React.FC<ImagePropertiesProps> = () => {
             {
               label: "Source",
               control: (
-                <TemplateEditor
-                  value={elementMap[selectedId].data?.src}
-                  onChange={(value) => {
-                    updateProperties({
-                      data: { src: value || "" },
-                    });
-                  }}
-                  placeholder="Enter source"
-                />
+                <div style={{ display: "flex", alignItems: "end", gap: 5 }}>
+                  <TemplateEditor
+                    value={elementMap[selectedId].data?.src}
+                    onChange={(value) => {
+                      updateProperties({
+                        data: { src: value || "" },
+                      });
+                    }}
+                    placeholder="Enter source"
+                    inputWidth={120}
+                  />
+                  <Tooltip
+                    content="Browse"
+                    relationship="label"
+                    positioning={"above-end"}
+                    withArrow>
+                    <Button
+                      onClick={pickImage}
+                      size="small"
+                      appearance="outline"
+                      icon={<DocumentRegular style={{ fontSize: "16px" }} />}
+                    />
+                  </Tooltip>
+                </div>
               ),
             },
             {
