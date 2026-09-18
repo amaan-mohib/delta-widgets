@@ -14,6 +14,7 @@ export interface IGetAllWidget {
   manifestPath: string;
   thumbPath: string;
   modifiedAt: number;
+  createdAt: number;
   isDraft: boolean;
 }
 

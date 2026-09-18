@@ -42,6 +42,7 @@ export const useDataStore = create<IDataStore>((set, get) => ({
           ...widget.manifest,
           path: widget.path,
           modifiedAt: widget.modifiedAt,
+          createdAt: widget.createdAt,
         };
         if (widget.isDraft) {
           draftWidgets.push(obj);

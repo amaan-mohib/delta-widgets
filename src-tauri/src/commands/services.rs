@@ -145,7 +145,13 @@ pub struct WidgetWithMeta {
     pub manifest_path: String,
     pub thumb_path: String,
     pub modified_at: u64,
+    pub created_at: u64,
     pub is_draft: bool,
+}
+
+fn timestamp_millis(time: std::time::SystemTime) -> u64 {
+    time.duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |duration| duration.as_millis() as u64)
 }
 
 #[tauri::command]
@@ -218,12 +224,8 @@ pub async fn get_all_widgets(
                 Err(_) => continue,
             };
 
-            let modified_at = metadata
-                .modified()
-                .ok()
-                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-                .map(|d| d.as_millis() as u64)
-                .unwrap_or(0);
+            let modified_at = metadata.modified().map(timestamp_millis).unwrap_or(0);
+            let created_at = metadata.created().map(timestamp_millis).unwrap_or(0);
 
             result.push(WidgetWithMeta {
                 manifest: manifest_json,
@@ -235,6 +237,7 @@ pub async fn get_all_widgets(
                 manifest_path: manifest_path.to_string_lossy().to_string(),
                 thumb_path: thumb_path.to_string_lossy().to_string(),
                 modified_at,
+                created_at,
                 is_draft: saves,
             });
         }

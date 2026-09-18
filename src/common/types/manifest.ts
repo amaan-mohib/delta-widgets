@@ -61,4 +61,7 @@ export type ILiteWidget = Omit<
   | "theme"
 >;
 
-export type TWidgetWithDate = ILiteWidget & { modifiedAt: number };
+export type TWidgetWithDate = ILiteWidget & {
+  modifiedAt: number;
+  createdAt: number;
+};
