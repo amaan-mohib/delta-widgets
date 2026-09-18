@@ -7,9 +7,7 @@ import Theme from "./Theme";
 interface SettingsProps {}
 
 const Settings: React.FC<SettingsProps> = () => {
-  const { settingsActiveTab, showSettings } = useDataStore();
-
-  if (!showSettings) return null;
+  const { settingsActiveTab } = useDataStore();
 
   return (
     <div>

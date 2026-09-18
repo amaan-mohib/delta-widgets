@@ -3,7 +3,6 @@ import { useDataStore } from "../../stores/useDataStore";
 import GridContainer from "./GridContainer";
 import WidgetCard from "../WidgetCard";
 import CreateNewCard from "./CreateNewCard";
-import { listen } from "@tauri-apps/api/event";
 import {
   Button,
   Menu,
@@ -28,27 +27,13 @@ const InstalledWidgets: React.FC<InstalledWidgetsProps> = () => {
   const installedWidgets = useDataStore((s) => s.installedWidgets);
   const key = useDataStore((s) => s.listRefreshKey);
   const activeTab = useDataStore((s) => s.activeTab);
-  const [focusWidget, setFocusWidget] = useState<string | null>(null);
+  const focusWidgetKey = useDataStore((s) => s.focusWidgetKey);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState({ sortBy: ["label"], sortDir: ["asc"] });
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [galleryWidgetVersions, setGalleryWidgetVersions] = useState<
     Record<string, { version: string; revision: number }>
   >({});
-
-  useEffect(() => {
-    const unsub = listen<string>("focus-widget", ({ payload }) => {
-      useDataStore.setState({ activeTab: "installed" });
-      setFocusWidget(payload);
-      setTimeout(() => {
-        setFocusWidget(null);
-      }, 3000);
-    });
-
-    return () => {
-      unsub.then((f) => f());
-    };
-  }, []);
 
   useEffect(() => {
     const getVersions = async () => {
@@ -206,7 +191,7 @@ const InstalledWidgets: React.FC<InstalledWidgetsProps> = () => {
             <WidgetCard
               key={widget.key}
               widget={widget}
-              focusWidget={focusWidget}
+              focusWidget={focusWidgetKey}
               hasUpdate={
                 galleryWidgetVersions[widget.key]
                   ? galleryWidgetVersions[widget.key].version !== widget.version

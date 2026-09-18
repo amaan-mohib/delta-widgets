@@ -307,19 +307,15 @@ pub async fn create_gallery_window(
     app: tauri::AppHandle,
     url: Option<String>,
 ) -> Result<(), String> {
-    #[cfg(debug_assertions)]
-    const URL: &str = "http://localhost:3000";
+    let base_url = option_env!("VITE_GALLERY_LINK").unwrap_or("http://localhost:3000");
 
-    #[cfg(not(debug_assertions))]
-    const URL: &str = "https://gallery.deltawidgets.com";
-
-    let mut url = url.unwrap_or(URL.to_string());
-    if !url.starts_with(URL) {
-        url = format!("{}{}", URL, url);
+    let mut url = url.unwrap_or(base_url.to_string());
+    if !url.starts_with(base_url) {
+        url = format!("{}{}", base_url, url);
     }
 
     if let Some(mut existing_window) = app.get_webview_window("gallery") {
-        if url != URL {
+        if url != base_url {
             let _ = existing_window.navigate(Url::parse(&url).map_err(|e| e.to_string())?);
         }
         existing_window.set_focus().unwrap();

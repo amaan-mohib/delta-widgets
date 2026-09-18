@@ -29,13 +29,11 @@ pub fn run() {
 
     #[cfg(desktop)]
     {
-        builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             if let Some(webview_window) = app.get_webview_window("main") {
                 let _ = webview_window.show();
                 let _ = webview_window.set_focus();
             }
-            // let url = &args[0];
-            println!("deep link url: {:?}", args);
         }));
     }
 

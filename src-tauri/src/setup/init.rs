@@ -1,10 +1,11 @@
 use include_dir::{include_dir, Dir};
+use serde::Serialize;
 use serde_json::Value;
 use std::fs;
 use tauri::{
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
-    Manager,
+    Emitter, Manager, Url,
 };
 use tauri_plugin_autostart::ManagerExt;
 
@@ -212,24 +213,57 @@ fn init_db(app: &tauri::App) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[derive(Serialize, Debug, Clone)]
+#[serde(tag = "type")]
+enum DeepLinkEvent {
+    #[serde(rename = "upload")]
+    Upload,
+
+    #[serde(rename = "install")]
+    Install { key: String },
+}
+
+fn parse_deep_link(url: &Url) -> Option<DeepLinkEvent> {
+    match url.host_str()? {
+        "upload" => Some(DeepLinkEvent::Upload),
+        "install" => {
+            let key = url
+                .query_pairs()
+                .find(|(k, _)| k == "key")
+                .map(|(_, v)| v.into_owned())?;
+
+            Some(DeepLinkEvent::Install { key })
+        }
+        _ => None,
+    }
+}
+
+fn handle_deep_link(app: &tauri::AppHandle, urls: &Vec<Url>) {
+    for url in urls {
+        if url.scheme() != "deltawidgets" {
+            continue;
+        }
+
+        if let Some(event) = parse_deep_link(url) {
+            let _ = app.emit_to("main", "deep-link", event);
+        }
+    }
+}
+
 fn init_deep_link(app: &tauri::App) -> anyhow::Result<()> {
     #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
     {
         app.deep_link().register_all()?;
     }
-    #[cfg(debug_assertions)]
-    {
-        app.deep_link().register("deltawidgets-dev")?;
-    }
 
     let start_urls = app.deep_link().get_current()?;
     if let Some(urls) = start_urls {
-        // app was likely started by a deep link
-        println!("deep link URLs: {:?}", urls);
+        handle_deep_link(app.handle(), &urls);
     }
 
-    app.deep_link().on_open_url(|event| {
-        println!("deep link URLs: {:?}", event.urls());
+    let app_handle = app.handle().clone();
+    app.deep_link().on_open_url(move |event| {
+        handle_deep_link(&app_handle.clone(), &event.urls());
     });
 
     Ok(())
