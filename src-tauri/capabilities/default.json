@@ -13,7 +13,8 @@
     "urls": [
       "http://*.localhost:*",
       "http://localhost:*",
-      "https://*.deltawidgets.com"
+      "https://*.deltawidgets.com",
+      "https://delta-widgets-marketplace.vercel.app"
     ]
   },
   "permissions": [
