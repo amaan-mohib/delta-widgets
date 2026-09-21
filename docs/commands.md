@@ -24,7 +24,7 @@ Here's a list of available commands, their purpose, and usage examples.
 
 | Command                    | Description                                                                   | Parameters                  | Returns                                 |
 | -------------------------- | ----------------------------------------------------------------------------- | --------------------------- | --------------------------------------- |
-| `get_system_info`          | Returns current system information such as CPU usage, memory usage, etc.      | _None_                      | Promise<[SystemInfo](#systeminfo)\>     |
+| `get_system_info`          | Returns current system information such as CPU usage, memory usage, etc.      | `has_network?: boolean`     | Promise<[SystemInfo](#systeminfo)\>     |
 | `start_media_listener_cmd` | Starts the system media session listener required for `media_updated` events. | _None_                      | Promise<void\>                          |
 | `stop_media_listener_cmd`  | Stops the active system media session listener.                               | _None_                      | Promise<void\>                          |
 | `get_media`                | Returns metadata for all currently available media sessions.                  | _None_                      | Promise<[MediaObject[]](#mediaobject)\> |
@@ -40,6 +40,10 @@ To receive live system audio waveform samples, call `start_audio_capture`. This 
 Because continuous audio capture can increase CPU usage, it is recommended to call `stop_audio_capture` when audio sample updates are no longer needed.
 
 See the list of all available events [here](events.md).
+
+!!! note "`get_system_info` parameters"
+
+    `get_system_info` accepts an optional `has_network` boolean. Pass `true` to include network interface details in the returned object; omit it (or pass `false`) to skip them. From an HTML widget you can call it with no arguments.
 
 ### SystemInfo
 

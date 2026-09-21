@@ -34,7 +34,6 @@
     "core:window:allow-set-always-on-top",
     "core:window:allow-set-resizable",
     "system-info:allow-all",
-    "log:default",
-    "keyring:default"
+    "log:default"
   ]
 }

@@ -4,6 +4,7 @@ import Dropable from "../../DnD/Dropable";
 import ImageComponent from "./ImageComponent";
 import ButtonComponent from "./ButtonComponent";
 import { parseDynamicText } from "../../../utils";
+import { sanitizeHtml } from "../../../../common/sanitizeHtml";
 import MediaSelectComponent from "./MediaSelectComponent";
 import DiskComponent from "./DiskComponent";
 import SliderComponent from "./SliderComponent";
@@ -133,7 +134,7 @@ const ComponentRender: React.FC<ComponentRenderProps> = ({ component }) => {
         <div
           id={`${component.id}-child`}
           dangerouslySetInnerHTML={{
-            __html: parseDynamicText(component.data?.text || "Text"),
+            __html: sanitizeHtml(parseDynamicText(component.data?.text || "Text")),
           }}></div>
       </Dropable>
     );
