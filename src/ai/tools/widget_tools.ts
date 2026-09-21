@@ -6,6 +6,7 @@ import {
   createCreatorWindow,
   createWidgetWindow,
   getWidgetsDirPath,
+  sanitizeString,
 } from "../../main/utils/widgets";
 import { IWidget } from "../../types/manifest";
 import { path } from "@tauri-apps/api";
@@ -553,7 +554,7 @@ Note: window.__TAURI__ is available but fragile — avoid page reloads or redire
       throw new Error("Chat id not defined in tool context");
 
     const { widgetsDir } = await getWidgetsDirPath();
-    const key = label.toLowerCase().replace(/\s+/g, "-");
+    const key = sanitizeString(label);
     const widgetDir = await path.resolve(widgetsDir, key);
     const manifestPath = await path.resolve(widgetDir, "manifest.json");
     const htmlFileFolder = await path.resolve(widgetDir, "files");
@@ -628,6 +629,14 @@ Note: window.__TAURI__ is available but fragile — avoid page reloads or redire
     const { widgetsDir } = await getWidgetsDirPath();
 
     const widgetDir = await path.resolve(widgetsDir, key);
+    // SECURITY: `key` is a raw tool argument — ensure it resolves inside the
+    // widgets directory.
+    if (!widgetDir.startsWith(widgetsDir)) {
+      return {
+        success: false,
+        errors: [`Invalid widget key "${key}".`],
+      };
+    }
     const manifestPath = await path.resolve(widgetDir, "manifest.json");
     const htmlFileFolder = await path.resolve(widgetDir, "files");
     const htmlFilePath = await path.resolve(htmlFileFolder, "index.html");

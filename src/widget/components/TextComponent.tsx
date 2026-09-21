@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { IWidgetElement } from "../../types/manifest";
 import { useDynamicTextStore } from "../stores/useVariableStore";
 import { parseDynamicText } from "../utils/utils";
+import { sanitizeHtml } from "../../common/sanitizeHtml";
 
 interface TextComponentProps {
   component: IWidgetElement;
@@ -17,7 +18,7 @@ const TextComponent: React.FC<TextComponentProps> = ({ component }) => {
     <div
       id={`${component.id}-child`}
       dangerouslySetInnerHTML={{
-        __html: text,
+        __html: sanitizeHtml(text),
       }}
     />
   );

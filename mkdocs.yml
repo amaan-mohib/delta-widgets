@@ -128,10 +128,18 @@ nav:
   - Home:
       - Introduction: index.md
       - Resources: resources.md
-      - Contribution: contribution.md
   - Getting Started:
       - Installation: getting_started.md
       - Overview: overview.md
-  - Commands:
+  - Guides:
+      - Variables Reference: variables.md
+      - AI Assistant: ai-assistant.md
+      - Sharing & Audio Visualizer: sharing.md
+      - Settings & Data: settings.md
+      - Troubleshooting & FAQ: troubleshooting.md
+  - Reference:
       - Tauri Commands: commands.md
       - Tauri Events: events.md
+      - Widget Manifest: manifest.md
+  - Contributing:
+      - Contributing & Architecture: contribution.md

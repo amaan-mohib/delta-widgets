@@ -87,6 +87,28 @@ Do not fabricate data or actions.
 
 If a request is outside these capabilities, explain the limitation.`;
 
+const redactSecrets = (text: string): string =>
+  text
+    .replace(/sk-[A-Za-z0-9_-]{16,}/g, "sk-***") // OpenAI / OpenRouter style keys
+    .replace(/([?&](?:key|api[-_]?key|token|access_token)=)[^&\s]+/gi, "$1***") // ?key=… (Google etc.)
+    .replace(/(bearer\s+)[A-Za-z0-9._-]+/gi, "$1***") // Authorization: Bearer …
+    .replace(
+      /((?:x-api-key|api[_-]?key|apiKey|authorization)["']?\s*[:=]\s*"?)[A-Za-z0-9._-]{8,}/gi,
+      "$1***",
+    );
+
+const toSafeErrorMessage = (error: unknown): string => {
+  const raw =
+    error == null
+      ? "Unknown error"
+      : typeof error === "string"
+        ? error
+        : error instanceof Error
+          ? error.message
+          : JSON.stringify(error);
+  return redactSecrets(raw).slice(0, 500);
+};
+
 export class CustomChatTransport implements ChatTransport<UIMessage> {
   private model: LanguageModel;
   private updateChatName: (id: string, name: string) => void;
@@ -176,21 +198,7 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
     });
 
     return result.toUIMessageStream({
-      onError: (error) => {
-        // Note: By default, the AI SDK will return "An error occurred",
-        // which is intentionally vague in case the error contains sensitive information like API keys.
-        // If you want to provide more detailed error messages, keep the code below. Otherwise, remove this whole onError callback.
-        if (error == null) {
-          return "Unknown error";
-        }
-        if (typeof error === "string") {
-          return error;
-        }
-        if (error instanceof Error) {
-          return error.message;
-        }
-        return JSON.stringify(error);
-      },
+      onError: (error) => toSafeErrorMessage(error),
       originalMessages: messages,
       generateMessageId: createIdGenerator({ prefix: "msg" }),
       onFinish: async ({ responseMessage }) => {
