@@ -78,12 +78,10 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   hasUpdate,
 }) => {
   const styles = useStyles();
-  const [visible, setVisible] = useState(widget.visible ?? false);
-  const [alwaysOnTop, setAlwaysOnTop] = useState(widget.alwaysOnTop ?? false);
-  const [pinned, setPinned] = useState(widget.pinned ?? false);
   const loading = useDataStore((state) => state.openingCreator);
   const [widgetLoading, setWidgetLoading] = useState(false);
-  const { updateAllWidgets, editWidget } = useDataStore();
+  const { updateAllWidgets, updateInstalledWidget, editWidget } =
+    useDataStore();
   const { setDialogState, importHTML } = useAddDialogStore();
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -98,11 +96,6 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       </Toast>,
       { toastId: widget.key, intent: "info" },
     );
-
-  useEffect(() => {
-    setVisible(widget.visible ?? false);
-    setPinned(widget.pinned ?? false);
-  }, [widget]);
 
   useEffect(() => {
     if (saves || focusWidget !== widget.key || !cardRef.current) return;
@@ -245,17 +238,17 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       condition:
         !saves &&
         widget.widgetType !== "url" &&
-        visible &&
+        widget.visible &&
         !(widget.key in templateWidgets),
     },
     {
       key: "pin",
-      icon: pinned ? <PinOffRegular /> : <PinRegular />,
+      icon: widget.pinned ? <PinOffRegular /> : <PinRegular />,
       onClick: async (e) => {
         e.stopPropagation();
         try {
-          await togglePinned(widget.path, !pinned);
-          setPinned((prev) => !prev);
+          await togglePinned(widget.path, !widget.pinned);
+          updateInstalledWidget(widget.key, { pinned: !widget.pinned });
         } catch (error) {
           await message("Could not set pinned", {
             title: "Error",
@@ -263,7 +256,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
           });
         }
       },
-      children: pinned ? "Unpin" : "Pin",
+      children: widget.pinned ? "Unpin" : "Pin",
       condition: !saves && widget.widgetType !== "html",
     },
     {
@@ -274,16 +267,18 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
         await refreshHTML();
       },
       children: "Refresh",
-      condition: !saves && widget.widgetType === "html" && visible,
+      condition: !saves && widget.widgetType === "html" && widget.visible,
     },
     {
       key: "always-on-top",
-      icon: alwaysOnTop ? <CheckmarkRegular /> : undefined,
+      icon: widget.alwaysOnTop ? <CheckmarkRegular /> : undefined,
       onClick: async (e) => {
         e.stopPropagation();
         try {
-          await toggleAlwaysOnTop(widget.path, !alwaysOnTop);
-          setAlwaysOnTop((prev) => !prev);
+          await toggleAlwaysOnTop(widget.path, !widget.alwaysOnTop);
+          updateInstalledWidget(widget.key, {
+            alwaysOnTop: !widget.alwaysOnTop,
+          });
         } catch (error) {
           await message("Could not set always on top", {
             title: "Error",
@@ -306,7 +301,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
         widgetType: widget.widgetType,
       }).catch(console.error);
 
-      if (!alwaysOnTop) {
+      if (!widget.alwaysOnTop) {
         notify();
       }
     } else {
@@ -314,7 +309,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       dismissToast(widget.key);
     }
     setWidgetLoading(false);
-    setVisible(checked);
+    updateInstalledWidget(widget.key, { visible: checked });
   };
 
   const refreshHTML = async () => {
@@ -324,10 +319,10 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
 
   const editWidgetAction = async () => {
     if (widget.key in templateWidgets) {
-      const wasVisible = visible;
+      const wasVisible = widget.visible;
       if (wasVisible) {
         await closeWidgetWindow(`widget-${widget.key}`, true, widget.path);
-        setVisible(false);
+        updateInstalledWidget(widget.key, { visible: false });
       }
       const newManifest = await duplicateWidget(widget.path, false, true);
       if (!newManifest) {
@@ -428,9 +423,9 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
           <Switch
             disabled={widgetLoading}
             className={styles.switch}
-            label={visible ? "Enabled" : "Disabled"}
+            label={widget.visible ? "Enabled" : "Disabled"}
             style={{ margin: 0 }}
-            checked={visible}
+            checked={widget.visible}
             indicator={{ className: styles.switch }}
             onChange={(_, { checked }) => {
               toggleWidget(checked);

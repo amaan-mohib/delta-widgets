@@ -16,6 +16,10 @@ interface IDataStore {
   setActiveTab: (tab: TActiveTab) => void;
   setSettingsActiveTab: (tab: TSettingsActiveTab) => void;
   updateAllWidgets: () => Promise<void>;
+  updateInstalledWidget: (
+    key: string,
+    values: Pick<ILiteWidget, "alwaysOnTop" | "pinned" | "visible">,
+  ) => void;
   createWidget: () => Promise<void>;
   editWidget: (widget: ILiteWidget) => Promise<void>;
   openWhatsNew: boolean;
@@ -67,6 +71,14 @@ export const useDataStore = create<IDataStore>((set, get) => ({
     } catch (error) {
       console.error(error);
     }
+  },
+  updateInstalledWidget(key, values) {
+    const installedWidgets = get().installedWidgets;
+    set({
+      installedWidgets: installedWidgets.map((item) =>
+        item.key === key ? { ...item, ...values } : item,
+      ),
+    });
   },
   createWidget: async () => {
     sendMixpanelEvent("created_new", {}).catch(console.error);
