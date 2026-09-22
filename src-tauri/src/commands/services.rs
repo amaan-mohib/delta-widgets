@@ -137,6 +137,54 @@ pub async fn create_url_thumbnail(
     Ok(-1)
 }
 
+#[tauri::command]
+pub async fn get_weather(city: Option<String>) -> Result<Value, String> {
+    let client = reqwest::Client::new();
+    let city = match city.filter(|value| !value.trim().is_empty()) {
+        Some(city) => city,
+        None => {
+            let location = client
+                .get("http://ip-api.com/json")
+                .send()
+                .await
+                .map_err(|error| error.to_string())?
+                .error_for_status()
+                .map_err(|error| error.to_string())?
+                .json::<Value>()
+                .await
+                .map_err(|error| error.to_string())?;
+
+            ["city", "regionName", "country"]
+                .iter()
+                .filter_map(|field| location.get(field).and_then(Value::as_str))
+                .filter(|value| !value.is_empty())
+                .collect::<Vec<_>>()
+                .join(", ")
+        }
+    };
+
+    if city.is_empty() {
+        return Err("Unable to determine city from IP address".to_string());
+    }
+
+    let api_key = option_env!("WEATHER_API_KEY").unwrap_or("");
+    if api_key.is_empty() {
+        return Err("No weather API key found".to_string());
+    }
+
+    client
+        .get("https://api.weatherapi.com/v1/current.json")
+        .query(&[("q", city), ("key", api_key.to_string())])
+        .send()
+        .await
+        .map_err(|error| error.to_string())?
+        .error_for_status()
+        .map_err(|error| error.to_string())?
+        .json::<Value>()
+        .await
+        .map_err(|error| error.to_string())
+}
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WidgetWithMeta {

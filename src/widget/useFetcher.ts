@@ -3,9 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { IWidgetElement, TCustomFields } from "../common/types/manifest";
 import debounce from "lodash.debounce";
 import { useVariableStore } from "./stores/useVariableStore";
-import { getCityFromIp, getWeather } from "./utils/weather";
-import { useDataTrackStore } from "./stores/useDataTrackStore";
 import { commands } from "../common/commands";
+import { useDataTrackStore } from "./stores/useDataTrackStore";
 
 const extractDynamicVariables = (
   elements: IWidgetElement[],
@@ -184,11 +183,9 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
 
     (async () => {
       try {
-        let city = customFields?.weatherCity?.value;
-        if (!city) {
-          city = await getCityFromIp();
-        }
-        const data = await getWeather(city);
+        const data = await commands.getWeather({
+          city: customFields?.weatherCity?.value,
+        });
         useVariableStore.setState({ weatherInfo: data });
       } catch (error) {
         console.log(error);

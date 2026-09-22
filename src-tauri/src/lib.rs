@@ -80,6 +80,7 @@ pub fn run() {
             services::copy_custom_assets_dir,
             services::apply_blur_theme,
             services::create_url_thumbnail,
+            services::get_weather,
             services::update_manifest_value,
             services::create_gallery_window,
             services::capture_widget_screenshot,

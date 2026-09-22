@@ -22,16 +22,17 @@ Here's a list of available commands, their purpose, and usage examples.
 
 ## Command Reference
 
-| Command                    | Description                                                                   | Parameters                  | Returns                                 |
-| -------------------------- | ----------------------------------------------------------------------------- | --------------------------- | --------------------------------------- |
-| `get_system_info`          | Returns current system information such as CPU usage, memory usage, etc.      | `has_network?: boolean`     | Promise<[SystemInfo](#systeminfo)\>     |
-| `start_media_listener_cmd` | Starts the system media session listener required for `media_updated` events. | _None_                      | Promise<void\>                          |
-| `stop_media_listener_cmd`  | Stops the active system media session listener.                               | _None_                      | Promise<void\>                          |
-| `get_media`                | Returns metadata for all currently available media sessions.                  | _None_                      | Promise<[MediaObject[]](#mediaobject)\> |
-| `media_action`             | Perform action on the currently playing media.                                | [MediaAction](#mediaaction) | Promise<void\>                          |
-| `start_audio_capture`      | Starts capturing live system audio samples for waveform visualization.        | _None_                      | Promise<void\>                          |
-| `stop_audio_capture`       | Stops the active system audio capture stream.                                 | _None_                      | Promise<void\>                          |
-| `get_current_device_cmd`   | Returns the ID of the current audio output device.                            | _None_                      | Promise<String\>                        |
+| Command                    | Description                                                                   | Parameters                  | Returns                                       |
+| -------------------------- | ----------------------------------------------------------------------------- | --------------------------- | --------------------------------------------- |
+| `get_system_info`          | Returns current system information such as CPU usage, memory usage, etc.      | `has_network?: boolean`     | Promise<[SystemInfo](#systeminfo)\>           |
+| `get_weather`              | Returns current weather for a city, or the city detected from the client IP.  | `city?: string`             | Promise<[WeatherResponse](#weatherresponse)\> |
+| `start_media_listener_cmd` | Starts the system media session listener required for `media_updated` events. | _None_                      | Promise<void\>                                |
+| `stop_media_listener_cmd`  | Stops the active system media session listener.                               | _None_                      | Promise<void\>                                |
+| `get_media`                | Returns metadata for all currently available media sessions.                  | _None_                      | Promise<[MediaObject[]](#mediaobject)\>       |
+| `media_action`             | Perform action on the currently playing media.                                | [MediaAction](#mediaaction) | Promise<void\>                                |
+| `start_audio_capture`      | Starts capturing live system audio samples for waveform visualization.        | _None_                      | Promise<void\>                                |
+| `stop_audio_capture`       | Stops the active system audio capture stream.                                 | _None_                      | Promise<void\>                                |
+| `get_current_device_cmd`   | Returns the ID of the current audio output device.                            | _None_                      | Promise<String\>                              |
 
 Use `start_media_listener_cmd` to begin monitoring system media metadata. Once started, the application will emit a `media_updated` event whenever information about the currently playing media changes (such as title, artist, album art, or playback state).
 
@@ -62,6 +63,17 @@ See the list of all available events [here](events.md).
 | `cpus`           | Array  | List of CPU information                              |
 | `cpu`            | Object | CPU summary containing count, speed, usage and brand |
 | `networks`       | Array  | List of network interfaces                           |
+
+### WeatherResponse
+
+`get_weather` accepts an optional `city` parameter. If it is omitted or empty, the command determines the city from the client IP address before requesting current weather data.
+
+```js
+const weather = await invoke("get_weather", { city: "London" });
+// Omit city to use the location detected from the client IP:
+const localWeather = await invoke("get_weather");
+console.log(localWeather.location, localWeather.current);
+```
 
 ### MediaObject
 

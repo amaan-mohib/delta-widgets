@@ -1,5 +1,5 @@
 import { invoke, InvokeArgs } from "@tauri-apps/api/core";
-import { IMedia, ISystemInformation } from "./types/variables";
+import { IMedia, ISystemInformation, WeatherResponse } from "./types/variables";
 import { ILiteWidget, IWidget } from "./types/manifest";
 
 export interface IMediaActionCmd {
@@ -107,6 +107,8 @@ export const commands = {
     invoke<boolean>("apply_blur_theme", params),
   createUrlThumbnail: (params: { url: string; fileName: string }) =>
     invoke<number>("create_url_thumbnail", params),
+  getWeather: (params?: { city?: string }) =>
+    invoke<WeatherResponse>("get_weather", params),
   updateManifestValue: (params: {
     field: keyof IWidget;
     value: any;
