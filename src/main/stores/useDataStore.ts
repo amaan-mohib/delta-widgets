@@ -81,15 +81,23 @@ export const useDataStore = create<IDataStore>((set, get) => ({
     });
   },
   createWidget: async () => {
-    sendMixpanelEvent("created_new", {}).catch(console.error);
-    await createCreatorWindow();
-    get().updateAllWidgets();
+    try {
+      sendMixpanelEvent("created_new", {}).catch(console.error);
+      await createCreatorWindow();
+      get().updateAllWidgets();
+    } catch (error) {
+      console.error(error);
+    }
   },
   editWidget: async (widget: ILiteWidget) => {
-    const draftPath = await isWidgetInDraft(widget.key);
-    await createCreatorWindow(draftPath, widget.path);
-    get().setActiveTab("drafts");
-    get().updateAllWidgets();
+    try {
+      const draftPath = await isWidgetInDraft(widget.key);
+      await createCreatorWindow(draftPath, widget.path);
+      get().setActiveTab("drafts");
+      get().updateAllWidgets();
+    } catch (error) {
+      console.error(error);
+    }
   },
   settingsActiveTab: "about",
   setSettingsActiveTab(tab) {

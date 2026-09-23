@@ -147,7 +147,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       icon: <EditRegular />,
       onClick: async (e) => {
         e.stopPropagation();
-        editWidgetAction();
+        await editWidgetAction();
       },
       children: "Edit",
       condition: widget.isGalleryWidget
@@ -181,9 +181,9 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
     {
       key: "edit-html",
       icon: <EditRegular />,
-      onClick: (e) => {
+      onClick: async (e) => {
         e.stopPropagation();
-        importHTML(widget);
+        await importHTML(widget);
       },
       children: "Edit",
       condition: widget.isGalleryWidget
@@ -332,8 +332,9 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
         await createWidgetWindow(newManifest.path, false, true);
       }
       await editWidget(newManifest);
+    } else {
+      await editWidget(widget);
     }
-    await editWidget(widget);
   };
 
   return (

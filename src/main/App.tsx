@@ -11,6 +11,7 @@ import WhatsNew from "./components/WhatsNew";
 import WidgetList from "./components/WidgetList";
 import "./App.css";
 import { commands } from "../common/commands";
+import WidgetSettingsDialog from "./components/WidgetSettings/WidgetSettingsDialog";
 
 type DeepLinkEvent = { type: "upload" } | { type: "install"; key: string };
 
@@ -97,6 +98,7 @@ function App() {
 
       <AddWidgetDialog />
       <WhatsNew />
+      <WidgetSettingsDialog />
       <Toaster toasterId={"toaster"} />
     </main>
   );

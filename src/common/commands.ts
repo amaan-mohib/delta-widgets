@@ -1,5 +1,10 @@
 import { invoke, InvokeArgs } from "@tauri-apps/api/core";
-import { IMedia, ISystemInformation, WeatherResponse } from "./types/variables";
+import {
+  IMedia,
+  ISystemInformation,
+  Location,
+  WeatherResponse,
+} from "./types/variables";
 import { ILiteWidget, IWidget } from "./types/manifest";
 
 export interface IMediaActionCmd {
@@ -91,6 +96,9 @@ export type IDownloadWidgetParams = {
 };
 export type IDownloadWidget = void;
 
+export type ISearchCityParams = { city: string };
+export type ISearchCity = Location[];
+
 export const commands = {
   getMedia: () => invoke<IMedia[]>("get_media"),
   startMediaListenerCmd: () => invoke<void>("start_media_listener_cmd"),
@@ -171,4 +179,6 @@ export const commands = {
     invoke<IValidateWidgetAsset>("validate_widget_asset", params),
   downloadWidget: (params: IDownloadWidgetParams) =>
     invoke<IDownloadWidget>("download_widget", params),
+  searchCity: (params: ISearchCityParams) =>
+    invoke<ISearchCity>("search_city", params),
 };

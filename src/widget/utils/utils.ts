@@ -2,7 +2,11 @@ import { path } from "@tauri-apps/api";
 import { exists, writeFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { format, intervalToDuration } from "date-fns";
 import { toBlob } from "html-to-image";
-import { ILiteWidget, IWidget } from "../../common/types/manifest";
+import {
+  ILiteWidget,
+  IWidget,
+  IWidgetElement,
+} from "../../common/types/manifest";
 import { formatInTimeZone } from "date-fns-tz";
 import { emitTo } from "@tauri-apps/api/event";
 import { getManifestPath } from "../../common";
@@ -21,7 +25,7 @@ export const parseDynamicText = (
   });
 };
 
-const getMatches = (str: string, regex: RegExp) => {
+export const getMatches = (str: string, regex = DATE_REGEX) => {
   let matches: string[] = [];
   str.replace(regex, (_, dateStr, timezone) => {
     matches = [dateStr, timezone];
@@ -34,7 +38,7 @@ const getMatches = (str: string, regex: RegExp) => {
 };
 
 export const formatDate = (date: Date, formatStr: string) => {
-  const [dateStr, timezone] = getMatches(formatStr, DATE_REGEX);
+  const [dateStr, timezone] = getMatches(formatStr);
   if (timezone) {
     return formatInTimeZone(date, timezone, dateStr);
   }
@@ -155,4 +159,61 @@ export const updateManifest = async (manifest: IWidget) => {
     manifestPath,
     JSON.stringify({ ...manifest, path: undefined }, null, 2),
   );
+};
+
+export const extractDynamicVariables = (
+  elements: IWidgetElement[],
+  results = new Set<string>(),
+  typesSet = new Set<string>(),
+  fontsSet = new Set<string>(),
+  variableMap = new Map<string, string[]>(),
+) => {
+  elements.forEach((element) => {
+    typesSet.add(element.type);
+    if (element.styles?.fontFamily) {
+      fontsSet.add(element.styles.fontFamily);
+    }
+    const values: string[] = [];
+
+    Object.values(element.data || {}).forEach((value) => {
+      if (typeof value === "string") {
+        values.push(value);
+      } else if (Array.isArray(value)) {
+        value.forEach((v) => {
+          if (typeof v === "string") {
+            values.push(v);
+          }
+        });
+      } else if (typeof value === "object" && value !== null) {
+        Object.values(value).forEach((v) => {
+          if (typeof v === "string") {
+            values.push(v);
+          }
+        });
+      }
+    });
+    values.forEach((value) => {
+      const matches = [...value.matchAll(/\{\{([^}]+)\}\}/g)];
+      matches.forEach((match) => {
+        const variable = match[1].trim().split(":")[0].trim();
+        if (variable) {
+          results.add(variable);
+          variableMap.set(variable, [
+            ...(variableMap.get(variable) || []),
+            match[1],
+          ]);
+        }
+      });
+    });
+    if (element.children) {
+      extractDynamicVariables(
+        element.children,
+        results,
+        typesSet,
+        fontsSet,
+        variableMap,
+      );
+    }
+  });
+  return { dynamicVariables: results, typesSet, fontsSet, variableMap };
 };

@@ -28,6 +28,12 @@ export const getManifestFromPath = async (manifestPath: string) => {
   return JSON.parse(manifest) as Omit<IWidget, "path">;
 };
 
+export const getManifestAsString = async (manifestPath: string) => {
+  manifestPath = await getManifestPath(manifestPath);
+  const manifest = await readTextFile(manifestPath);
+  return manifest;
+};
+
 export const closeWidgetWindow = async (
   label: string,
   toggleVisibility?: boolean,

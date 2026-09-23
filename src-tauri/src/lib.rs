@@ -81,6 +81,7 @@ pub fn run() {
             services::apply_blur_theme,
             services::create_url_thumbnail,
             services::get_weather,
+            services::search_city,
             services::update_manifest_value,
             services::create_gallery_window,
             services::capture_widget_screenshot,

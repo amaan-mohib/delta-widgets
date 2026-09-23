@@ -17,7 +17,7 @@ import {
   TabList,
   Tooltip,
 } from "@fluentui/react-components";
-import { ArrowUploadRegular, FilterRegular } from "@fluentui/react-icons";
+import { ArrowSortRegular, ArrowUploadRegular } from "@fluentui/react-icons";
 import { isBuiltIn } from "../../../common";
 import { commands } from "../../../common/commands";
 
@@ -129,10 +129,10 @@ const InstalledWidgets: React.FC<InstalledWidgetsProps> = () => {
             <Button
               appearance={
                 sort.sortBy[0] === "label" && sort.sortDir[0] === "asc"
-                  ? "secondary"
+                  ? "outline"
                   : "primary"
               }
-              icon={<FilterRegular />}
+              icon={<ArrowSortRegular />}
             />
           </MenuTrigger>
 

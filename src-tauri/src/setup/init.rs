@@ -187,7 +187,7 @@ pub fn init_widgets(app: &tauri::AppHandle) -> anyhow::Result<()> {
             }
         }
         for path in paths {
-            create_widget_window(
+            let _ = create_widget_window(
                 app_handle.clone(),
                 serde_json::json!(path).to_string(),
                 Some(false),

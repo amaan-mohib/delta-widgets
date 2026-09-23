@@ -5,57 +5,10 @@ import debounce from "lodash.debounce";
 import { useVariableStore } from "./stores/useVariableStore";
 import { commands } from "../common/commands";
 import { useDataTrackStore } from "./stores/useDataTrackStore";
-
-const extractDynamicVariables = (
-  elements: IWidgetElement[],
-  results = new Set<string>(),
-  typesSet = new Set<string>(),
-  fontsSet = new Set<string>(),
-) => {
-  elements.forEach((element) => {
-    typesSet.add(element.type);
-    if (element.styles?.fontFamily) {
-      fontsSet.add(element.styles.fontFamily);
-    }
-    const values: string[] = [];
-
-    Object.values(element.data || {}).forEach((value) => {
-      if (typeof value === "string") {
-        values.push(value);
-      } else if (Array.isArray(value)) {
-        value.forEach((v) => {
-          if (typeof v === "string") {
-            values.push(v);
-          }
-        });
-      } else if (typeof value === "object" && value !== null) {
-        Object.values(value).forEach((v) => {
-          if (typeof v === "string") {
-            values.push(v);
-          }
-        });
-      }
-    });
-    values.forEach((value) => {
-      if (typeof value === "string") {
-        const matches = [...value.matchAll(/\{\{([^}]+)\}\}/g)];
-        matches.forEach((match) => {
-          const variable = match[1].trim().split(":")[0].trim();
-          if (variable) {
-            results.add(variable);
-          }
-        });
-      }
-    });
-    if (element.children) {
-      extractDynamicVariables(element.children, results, typesSet, fontsSet);
-    }
-  });
-  return { dynamicVariables: results, typesSet, fontsSet };
-};
+import { extractDynamicVariables } from "./utils/utils";
 
 function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
-  const { typesSet, dynamicVariables, fontsSet } = useMemo(
+  const { typesSet, dynamicVariables, fontsSet, variableMap } = useMemo(
     () => extractDynamicVariables(elements),
     [elements],
   );
@@ -74,6 +27,10 @@ function useFetcher(elements: IWidgetElement[], customFields: TCustomFields) {
     });
     useVariableStore.setState({ customFields: customFieldsData });
   }, [customFields]);
+
+  useEffect(() => {
+    useVariableStore.setState({ dynamicVariableMap: variableMap });
+  }, [variableMap]);
 
   const getMediaRef = useRef(
     debounce(

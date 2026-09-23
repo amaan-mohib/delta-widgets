@@ -20,7 +20,7 @@ pub async fn create_creator_window(
     app: tauri::AppHandle,
     webview: tauri::WebviewWindow,
     manifest_path: String,
-) {
+) -> Result<(), String> {
     let cached_wallpaper = match get_wallpaper_preview(&app) {
         Ok(p) => p,
         Err(e) => {
@@ -29,7 +29,9 @@ pub async fn create_creator_window(
         }
     };
 
-    let current_monitor = webview.current_monitor().unwrap();
+    let current_monitor = webview
+        .current_monitor()
+        .map_err(|_| "Failed to get current monitor")?;
     let position = match current_monitor {
         Some(monitor) => {
             let x = monitor.clone();
@@ -47,7 +49,7 @@ pub async fn create_creator_window(
     });
     let init_script: &str = &format!(
         "window.__INITIAL_STATE__ = {};",
-        serde_json::to_string(&init_obj).unwrap()
+        serde_json::to_string(&init_obj).map_err(|_| "Failed to stringify")?
     );
 
     let new_window = tauri::WebviewWindowBuilder::new(
@@ -60,7 +62,7 @@ pub async fn create_creator_window(
     .visible(false)
     .initialization_script(init_script)
     .build()
-    .unwrap();
+    .map_err(|_| "Failed to build creator window")?;
 
     new_window.set_position(position).unwrap();
     new_window.maximize().unwrap();
@@ -76,6 +78,8 @@ pub async fn create_creator_window(
             webview.show().unwrap();
         };
     });
+
+    Ok(())
 }
 
 #[derive(serde::Deserialize, PartialEq)]
@@ -132,11 +136,17 @@ async fn clear_window_listeners_on_close(
 }
 
 #[tauri::command]
-pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_preview: Option<bool>) {
-    let clean_path = serde_json::from_str::<String>(&path).unwrap();
-    let manifest_content = fs::read_to_string(clean_path.as_str()).expect("Cannot read manifest");
+pub async fn create_widget_window(
+    app: tauri::AppHandle,
+    path: String,
+    is_preview: Option<bool>,
+) -> Result<(), String> {
+    let clean_path =
+        serde_json::from_str::<String>(&path).map_err(|_| "Failed to get manifest path")?;
+    let manifest_content =
+        fs::read_to_string(clean_path.as_str()).map_err(|_| "Failed to read manifest")?;
     let manifest: WidgetManifest =
-        serde_json::from_str(&manifest_content).expect("invalid manifest");
+        serde_json::from_str(&manifest_content).map_err(|_| "Failed to read manifest")?;
 
     let title = manifest.label.unwrap_or_else(|| "Widget".to_string());
     let manifest_key = manifest.key.unwrap_or_else(|| "widget".to_string());
@@ -301,6 +311,8 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
             };
         });
     }
+
+    Ok(())
 }
 
 #[tauri::command]
