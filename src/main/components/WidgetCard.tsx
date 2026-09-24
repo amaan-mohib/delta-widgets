@@ -137,7 +137,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       onClick: async (e) => {
         e.stopPropagation();
         await duplicateWidget(widget.path, !!saves);
-        updateAllWidgets();
+        await updateAllWidgets();
       },
       children: saves ? "Clone" : "Duplicate",
       condition: true,
@@ -196,7 +196,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       onClick: async (e) => {
         e.stopPropagation();
         await removeWidget(widget.path, widget);
-        updateAllWidgets();
+        await updateAllWidgets();
       },
       children: "Remove",
       condition: !(widget.key in templateWidgets),
@@ -416,7 +416,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
               onClick={async (e) => {
                 e.stopPropagation();
                 await removeWidget(widget.path);
-                updateAllWidgets();
+                await updateAllWidgets();
               }}
             />
           </>

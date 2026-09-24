@@ -207,6 +207,10 @@ export const duplicateWidget = async (
       label: copyLabel,
       manifest: {
         ...widget,
+        position: {
+          x: (widget.position?.x || 0) + 30,
+          y: (widget.position?.y || 0) + 30,
+        },
         label: copyLabel,
         key: copyKey,
         description: `Copy of ${widget.label}`,

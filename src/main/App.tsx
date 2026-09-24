@@ -12,12 +12,14 @@ import WidgetList from "./components/WidgetList";
 import "./App.css";
 import { commands } from "../common/commands";
 import WidgetSettingsDialog from "./components/WidgetSettings/WidgetSettingsDialog";
+import { createWidgetWindow, duplicateWidget } from "./utils/widgets";
 
 type DeepLinkEvent = { type: "upload" } | { type: "install"; key: string };
 
 function App() {
   const { updateAllWidgets, showSettings } = useDataStore();
   const deepLinkRef = useRef(false);
+  const duplicateRef = useRef(false);
 
   useEffect(() => {
     updateAllWidgets();
@@ -53,6 +55,28 @@ function App() {
         useDataStore.setState({ focusWidgetKey: null });
       }, 3000);
     });
+
+    return () => {
+      unsub.then((f) => f());
+    };
+  }, []);
+
+  useEffect(() => {
+    if (duplicateRef.current) return;
+
+    const unsub = listen<string>("duplicate-widget", async ({ payload }) => {
+      const widget = useDataStore
+        .getState()
+        .installedWidgets.find((w) => w.key === payload);
+      if (!widget) return;
+
+      const duplicate = await duplicateWidget(widget.manifestPath, false, true);
+      if (duplicate) {
+        await createWidgetWindow(duplicate.path, false, false);
+      }
+      await updateAllWidgets();
+    });
+    duplicateRef.current = true;
 
     return () => {
       unsub.then((f) => f());

@@ -64,4 +64,6 @@ export type ILiteWidget = Omit<
 export type TWidgetWithDate = ILiteWidget & {
   modifiedAt: number;
   createdAt: number;
+  manifestPath: string;
+  thumbPath: string;
 };
