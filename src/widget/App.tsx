@@ -10,9 +10,9 @@ import { createThumb } from "./utils/utils";
 import { listen } from "@tauri-apps/api/event";
 import { getManifestFromPath, templateWidgets } from "../common";
 import Toolbar from "./components/Toolbar";
+import { Spinner, tokens } from "@fluentui/react-components";
 
 import "./index.css";
-import { Spinner, tokens } from "@fluentui/react-components";
 
 interface AppProps {}
 

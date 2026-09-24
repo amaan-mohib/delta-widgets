@@ -1,70 +1,39 @@
 import { getVersion } from "@tauri-apps/api/app";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { getStore } from "../../../common";
-import { CHANGELOG, IChangelogItem } from "./data";
+import { CHANGELOG } from "./data";
 import {
+  Body2,
   Button,
-  Carousel,
-  CarouselAnnouncerFunction,
-  CarouselCard,
-  CarouselNav,
-  CarouselNavButton,
-  CarouselSlider,
-  CarouselViewport,
   Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
   DialogSurface,
+  DialogTitle,
   Image,
-  makeStyles,
+  Tab,
+  TabList,
+  Text,
+  Title3,
   tokens,
-  typographyStyles,
 } from "@fluentui/react-components";
 import { useDataStore } from "../../stores/useDataStore";
 import { commands } from "../../../common/commands";
 
-const useStyles = makeStyles({
-  surface: {
-    padding: 0,
-    border: "none",
-    overflow: "hidden",
-  },
-  carousel: { padding: 0 },
-  card: {},
-  footer: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "auto",
-    padding: `${tokens.spacingVerticalS} ${tokens.spacingVerticalXXL} ${tokens.spacingVerticalXXL} ${tokens.spacingVerticalXXL}`,
-  },
-  header: {
-    display: "block",
-    // We use margin instead of padding to avoid messing with the focus indicator in the header
-    margin: `${tokens.spacingVerticalXXL} ${tokens.spacingVerticalXXL} ${tokens.spacingVerticalS} ${tokens.spacingVerticalXXL}`,
-    ...typographyStyles.subtitle1,
-  },
-  text: {
-    display: "block",
-    padding: `${tokens.spacingVerticalS} ${tokens.spacingVerticalXXL}`,
-    ...typographyStyles.body1,
-  },
-});
-
-const getLatestItems = () => {
-  const latestKey = Object.keys(CHANGELOG).sort((a, b) =>
-    b.localeCompare(a, undefined, { numeric: true }),
-  )[0];
-  return CHANGELOG[latestKey];
-};
-
 interface WhatsNewProps {}
 
 const WhatsNew: React.FC<WhatsNewProps> = () => {
-  const styles = useStyles();
-  const [changelogItems, setChangelogItems] = useState<IChangelogItem[]>([]);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [selectedVersion, setSelectedVersion] = useState("");
   const [version, setVersion] = useState("0");
-  const [openedAuto, setOpenedAuto] = useState(false);
+  const [lastSeenVersion, setLastSeenVersion] = useState("0");
   const open = useDataStore((state) => state.openWhatsNew);
+
+  const changelogItems = useMemo(
+    () =>
+      CHANGELOG.find((item) => item.version === selectedVersion)?.items || [],
+    [selectedVersion],
+  );
 
   const setOpen = (open: boolean) => {
     useDataStore.setState({ openWhatsNew: open });
@@ -73,115 +42,114 @@ const WhatsNew: React.FC<WhatsNewProps> = () => {
   const initData = useCallback(async () => {
     const version = await getVersion();
     const { lastSeenVersion = "0" } = await getStore();
-    setVersion(version);
-    let items: IChangelogItem[] = [];
+
     if (version !== lastSeenVersion) {
-      items = Object.entries(CHANGELOG)
-        .filter(([version]) => version > lastSeenVersion)
-        .sort(([a], [b]) => b.localeCompare(a, undefined, { numeric: true }))
-        .flatMap(([_, items]) => items);
-    }
-    if (items.length > 0) {
-      setOpenedAuto(true);
-      setChangelogItems(items);
       setOpen(true);
-    } else {
-      setChangelogItems(getLatestItems());
     }
+    setVersion(version);
+    setLastSeenVersion(lastSeenVersion);
+    setSelectedVersion(CHANGELOG[0].version);
   }, []);
 
   useEffect(() => {
     initData();
   }, []);
 
-  useEffect(() => {
-    if (open) {
-      setActiveIndex(0);
-      setOpenedAuto(false);
+  const onClose = async () => {
+    if (version !== lastSeenVersion) {
+      await commands.writeToStoreCmd({
+        pairs: [{ key: "lastSeenVersion", value: version }],
+      });
+      setLastSeenVersion(version);
     }
-  }, [open]);
-
-  const totalPages = changelogItems.length;
-
-  const setPage = async (page: number) => {
-    if (page < 0 || page >= totalPages) {
-      setOpen(false);
-      if (page >= totalPages) {
-        await commands.writeToStoreCmd({
-          pairs: [{ key: "lastSeenVersion", value: version }],
-        });
-      }
-      return;
-    }
-    setActiveIndex(page);
-  };
-
-  const getAnnouncement: CarouselAnnouncerFunction = (
-    index: number,
-    totalSlides: number,
-  ) => {
-    return `Carousel slide ${index + 1} of ${totalSlides}, ${
-      changelogItems[index].title
-    }`;
+    setOpen(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={(_, data) => setOpen(data.open)}>
-      <DialogSurface className={styles.surface} aria-label="Whats new">
-        <Carousel
-          className={styles.carousel}
-          groupSize={1}
-          circular
-          announcement={getAnnouncement}
-          activeIndex={activeIndex}
-          motion={{ kind: "slide", duration: 20 }}
-          onActiveIndexChange={(_, data) => setActiveIndex(data.index)}>
-          <CarouselViewport>
-            <CarouselSlider>
-              {changelogItems.map((page) => (
-                <CarouselCard className={styles.card} key={page.title}>
-                  <Image
-                    style={{
-                      objectFit: "contain",
-                      background: tokens.colorNeutralBackground2,
-                    }}
-                    src={page.image}
-                    width={600}
-                    height={337.5}
-                    alt={page.title}
-                  />
-                  <h1 tabIndex={-1} className={styles.header}>
-                    {page.title}
-                  </h1>
-                  <span className={styles.text}>{page.description}</span>
-                </CarouselCard>
-              ))}
-            </CarouselSlider>
-          </CarouselViewport>
-          <div className={styles.footer}>
-            <Button onClick={() => setPage(activeIndex - 1)}>
-              {activeIndex <= 0
-                ? openedAuto
-                  ? "Not Now"
-                  : "Close"
-                : "Previous"}
-            </Button>
-
-            <CarouselNav appearance="brand">
-              {(index) => (
-                <CarouselNavButton
-                  aria-label={`Carousel Nav Button ${index}`}
-                />
-              )}
-            </CarouselNav>
-
-            <Button
-              appearance="primary"
-              onClick={() => setPage(activeIndex + 1)}>
-              {activeIndex === totalPages - 1 ? "Got it" : "Next"}
-            </Button>
-          </div>
-        </Carousel>
+      <DialogSurface
+        aria-label="Whats new"
+        style={{ maxWidth: "calc(100vw - 64px)" }}>
+        <DialogBody>
+          <DialogTitle>What's New</DialogTitle>
+          <DialogContent>
+            <div
+              style={{
+                display: "flex",
+                width: "100%",
+                position: "relative",
+                height: "calc(100vh - 195px)",
+                overflow: "auto",
+              }}>
+              <div
+                style={{
+                  display: "flex",
+                  position: "sticky",
+                  top: 0,
+                  width: 120,
+                  overflow: "auto",
+                  borderRightWidth: tokens.strokeWidthThin,
+                  borderRightStyle: "solid",
+                  borderRightColor: tokens.colorNeutralStroke2,
+                }}>
+                <TabList
+                  style={{
+                    flex: 1,
+                  }}
+                  selectedValue={selectedVersion}
+                  vertical
+                  onTabSelect={(_, { value }) =>
+                    setSelectedVersion(value as string)
+                  }>
+                  {CHANGELOG.map((item) => (
+                    <Tab key={item.version} value={item.version}>
+                      v{item.version}
+                    </Tab>
+                  ))}
+                </TabList>
+              </div>
+              <div style={{ flex: 1, padding: "0 1rem" }}>
+                <Title3>v{selectedVersion}</Title3>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1rem",
+                    marginTop: "1rem",
+                  }}>
+                  {changelogItems.map((item) => (
+                    <div
+                      key={item.title}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 8,
+                      }}>
+                      {item.image && (
+                        <Image
+                          src={item.image}
+                          width={480}
+                          style={{ borderRadius: 8 }}
+                        />
+                      )}
+                      <Body2 style={{ fontWeight: 600 }}>{item.title}</Body2>
+                      {typeof item.description === "string" ? (
+                        <Text>{item.description}</Text>
+                      ) : (
+                        item.description
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </DialogBody>
+        <DialogActions style={{ paddingTop: "1rem" }}>
+          <Button appearance="primary" onClick={onClose}>
+            Done
+          </Button>
+        </DialogActions>
       </DialogSurface>
     </Dialog>
   );
