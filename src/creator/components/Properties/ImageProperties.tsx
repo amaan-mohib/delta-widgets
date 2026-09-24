@@ -1,6 +1,13 @@
 import {
   Button,
   Checkbox,
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogSurface,
+  DialogTitle,
+  DialogTrigger,
   Select,
   SpinButton,
   Tooltip,
@@ -14,13 +21,17 @@ import {
 import { browseImage, spinButtonOnChange } from "../../utils";
 import Panel from "./Panel";
 import TemplateEditor from "../TemplateEditor";
-import { DocumentRegular } from "@fluentui/react-icons";
+import { DocumentRegular, SettingsRegular } from "@fluentui/react-icons";
+import WeatherCity, {
+  WeatherCityValue,
+} from "../../../common/components/WeatherCity";
 
 interface ImagePropertiesProps {}
 
 const ImageProperties: React.FC<ImagePropertiesProps> = () => {
   const selectedId = useDataTrackStore((state) => state.selectedId);
   const elementMap = useManifestStore((state) => state.elementMap);
+  const manifest = useManifestStore((state) => state.manifest);
 
   const updateProperties = (value: IUpdateElementProperties) => {
     if (!selectedId) return;
@@ -39,6 +50,15 @@ const ImageProperties: React.FC<ImagePropertiesProps> = () => {
   if (!selectedId || !elementMap[selectedId]) return null;
 
   const imageData = elementMap[selectedId]?.data;
+  const hasWeatherVariable = /\{\{weather(?::[^}]+)?\}\}/.test(
+    String(imageData?.src || ""),
+  );
+  const selectWeatherCity = (weatherCity: WeatherCityValue) => {
+    useManifestStore.getState().updateCustomValues({ weatherCity });
+  };
+  const resetWeatherCity = () => {
+    useManifestStore.getState().removeCustomValues("weatherCity");
+  };
 
   return (
     <Panel
@@ -143,6 +163,39 @@ const ImageProperties: React.FC<ImagePropertiesProps> = () => {
                 />
               ),
             },
+            ...(hasWeatherVariable
+              ? [
+                  {
+                    label: "Weather City",
+                    control: (
+                      <Dialog>
+                        <DialogTrigger disableButtonEnhancement>
+                          <Button icon={<SettingsRegular />} />
+                        </DialogTrigger>
+                        <DialogSurface>
+                          <DialogBody>
+                            <DialogTitle>Weather Settings</DialogTitle>
+                            <DialogContent>
+                              <WeatherCity
+                                weatherCity={
+                                  manifest?.customFields?.weatherCity
+                                }
+                                onSelect={selectWeatherCity}
+                                onReset={resetWeatherCity}
+                              />
+                            </DialogContent>
+                            <DialogActions>
+                              <DialogTrigger disableButtonEnhancement>
+                                <Button appearance="secondary">Close</Button>
+                              </DialogTrigger>
+                            </DialogActions>
+                          </DialogBody>
+                        </DialogSurface>
+                      </Dialog>
+                    ),
+                  },
+                ]
+              : []),
           ],
         },
         {

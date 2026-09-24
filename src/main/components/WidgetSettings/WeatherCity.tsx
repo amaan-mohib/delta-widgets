@@ -1,20 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { IWidget, TCustomFields } from "../../../common/types/manifest";
+import { IWidget } from "../../../common/types/manifest";
 import { getManifestFromPath } from "../../../common";
-import {
-  Body1Strong,
-  Link,
-  MenuItem,
-  MenuList,
-  SearchBox,
-  Spinner,
-  Text,
-} from "@fluentui/react-components";
-import { Location } from "../../../common/types/variables";
-import { commands } from "../../../common/commands";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { emitTo } from "@tauri-apps/api/event";
 import { cloneDeep } from "lodash";
+import WeatherCityControl, {
+  WeatherCityValue,
+} from "../../../common/components/WeatherCity";
 
 interface WeatherCityProps {
   manifestPath: string;
@@ -36,13 +28,7 @@ const WeatherCity: React.FC<WeatherCityProps> = ({
   manifestPath,
 }) => {
   const [manifest, setManifest] = useState<Omit<IWidget, "path"> | null>(null);
-  const [weatherCity, setWeatherCity] = useState<TCustomFields[""] | null>(
-    null,
-  );
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Location[]>([]);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const cancelRef = React.useRef<(() => void) | null>(null);
+  const [weatherCity, setWeatherCity] = useState<WeatherCityValue | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -60,47 +46,8 @@ const WeatherCity: React.FC<WeatherCityProps> = ({
     init();
   }, [manifestPath]);
 
-  useEffect(() => {
-    if (!query.trim()) {
-      setResults([]);
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-
-    const debounceTimer = setTimeout(() => {
-      let cancelled = false;
-      commands.searchCity({ city: query.trim() }).then((data) => {
-        if (!cancelled) {
-          setResults(data);
-          setIsLoading(false);
-        }
-      });
-
-      cancelRef.current = () => {
-        cancelled = true;
-      };
-    }, 300);
-
-    return () => {
-      clearTimeout(debounceTimer);
-      cancelRef.current?.();
-      cancelRef.current = null;
-    };
-  }, [query]);
-
-  const handleSelect = async (result: Location) => {
+  const handleSelect = async (data: WeatherCityValue) => {
     if (!manifest) return;
-
-    const data: typeof weatherCity = {
-      key: "weatherCity",
-      value: `${result.lat},${result.lon}`,
-      label: "Weather City Location",
-      description: [result.name, result.region, result.country]
-        .filter(Boolean)
-        .join(", "),
-    };
     if (!manifest.customFields) {
       manifest.customFields = {};
     }
@@ -115,8 +62,9 @@ const WeatherCity: React.FC<WeatherCityProps> = ({
       !manifest ||
       !manifest.customFields ||
       !manifest.customFields.weatherCity
-    )
+    ) {
       return;
+    }
 
     delete manifest.customFields.weatherCity;
     await writeAndEmit(manifestPath, manifestKey, manifest);
@@ -125,60 +73,11 @@ const WeatherCity: React.FC<WeatherCityProps> = ({
   };
 
   return (
-    <div>
-      <Body1Strong>Location</Body1Strong>
-      <div style={{ margin: "8px 0" }}>
-        <Text>
-          Selected:{" "}
-          {weatherCity?.description || weatherCity?.value || "Automatic"}
-          {weatherCity && (
-            <Link as="button" onClick={reset} style={{ marginLeft: 10 }}>
-              Reset
-            </Link>
-          )}
-        </Text>
-      </div>
-      <div>
-        <SearchBox
-          placeholder="Search city"
-          value={query}
-          onChange={(_, { value }) => {
-            setQuery(value);
-          }}
-        />
-        <MenuList
-          style={{
-            height: 150,
-            overflow: "auto",
-            padding: 5,
-          }}
-          aria-label="Search results">
-          {isLoading ? (
-            <MenuItem disabled>
-              <Spinner
-                size="tiny"
-                label="Loading results…"
-                labelPosition="after"
-              />
-            </MenuItem>
-          ) : results.length > 0 ? (
-            results.map((result) => (
-              <MenuItem
-                key={result.id}
-                role="option"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                }}
-                onClick={() => handleSelect(result)}>
-                {result.name}
-              </MenuItem>
-            ))
-          ) : (
-            query && <MenuItem disabled>No results found</MenuItem>
-          )}
-        </MenuList>
-      </div>
-    </div>
+    <WeatherCityControl
+      weatherCity={weatherCity}
+      onSelect={handleSelect}
+      onReset={reset}
+    />
   );
 };
 

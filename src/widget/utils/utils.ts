@@ -11,7 +11,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import { emitTo } from "@tauri-apps/api/event";
 import { getManifestPath } from "../../common";
 
-const DATE_REGEX = /^(.+?)(?::\[(.+?)\])?$/g;
+const DATE_REGEX = /^(.*?)(?::\[(.+?)\])?$/;
 
 export const parseDynamicText = (
   text: string,
@@ -25,20 +25,30 @@ export const parseDynamicText = (
   });
 };
 
-export const getMatches = (str: string, regex = DATE_REGEX) => {
-  let matches: string[] = [];
-  str.replace(regex, (_, dateStr, timezone) => {
-    matches = [dateStr, timezone];
-    return "";
-  });
-  if (matches.length === 0) {
-    return [str];
+export const getMatches = (
+  str: string,
+  regex = DATE_REGEX,
+  defaultFormat = "",
+) => {
+  const timezoneOnly = str.match(/^\[(.+?)\]$/);
+  if (timezoneOnly) {
+    return [defaultFormat, timezoneOnly[1]];
   }
-  return matches;
+
+  const matches = str.match(regex);
+  if (!matches) {
+    return [str || defaultFormat];
+  }
+
+  return [matches[1] || defaultFormat, matches[2]];
 };
 
-export const formatDate = (date: Date, formatStr: string) => {
-  const [dateStr, timezone] = getMatches(formatStr);
+export const formatDate = (
+  date: Date,
+  formatStr: string,
+  defaultFormat = "yyyy-MM-dd",
+) => {
+  const [dateStr, timezone] = getMatches(formatStr, DATE_REGEX, defaultFormat);
   if (timezone) {
     return formatInTimeZone(date, timezone, dateStr);
   }

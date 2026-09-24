@@ -26,9 +26,9 @@ const useVariableUpdater = () => {
   const playerIconUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const formatDateSafely = (format: string) => {
+    const formatDateSafely = (format: string, defaultFormat: string) => {
       try {
-        return formatDate(currentDate, format);
+        return formatDate(currentDate, format, defaultFormat);
       } catch (error) {
         console.log(error);
         return "Invalid date or format";
@@ -36,10 +36,12 @@ const useVariableUpdater = () => {
     };
 
     useDynamicTextStore.setState({
-      date: (formatStr?: string) => formatDateSafely(formatStr || "yyyy-MM-dd"),
-      time: (formatStr?: string) => formatDateSafely(formatStr || "hh:mm aa"),
+      date: (formatStr?: string) =>
+        formatDateSafely(formatStr || "", "yyyy-MM-dd"),
+      time: (formatStr?: string) =>
+        formatDateSafely(formatStr || "", "hh:mm aa"),
       datetime: (formatStr?: string) =>
-        formatDateSafely(formatStr || "eeee, MMMM d yyyy, h:mm aa"),
+        formatDateSafely(formatStr || "", "eeee, MMMM d yyyy, h:mm aa"),
     });
   }, [currentDate]);
 
