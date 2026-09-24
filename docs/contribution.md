@@ -25,14 +25,14 @@ npm run build          # Frontend typecheck + build (tsc && vite build)
 
 Vite has **four HTML entry points** (`vite.config.ts` → `rollupOptions.input`), each a fully independent React app with its own `main.tsx` and stores:
 
-| Entry HTML | Source dir | Tauri window label | Purpose |
-|---|---|---|---|
-| `index.html` | `src/main` | `main` | Library/management window, settings, add-widget. Closing **hides** it (app lives in the tray). |
-| `creator-index.html` | `src/creator` | `creator` | Visual drag-and-drop editor. |
-| `widget-index.html` | `src/widget` | `widget-<key>` | Runtime that renders a `json` widget. |
-| `ai-index.html` | `src/ai` | assistant | Optional [AI assistant](ai-assistant.md). |
+| Entry HTML           | Source dir    | Tauri window label | Purpose                                                                                        |
+| -------------------- | ------------- | ------------------ | ---------------------------------------------------------------------------------------------- |
+| `index.html`         | `src/main`    | `main`             | Library/management window, settings, add-widget. Closing **hides** it (app lives in the tray). |
+| `creator-index.html` | `src/creator` | `creator`          | Visual drag-and-drop editor.                                                                   |
+| `widget-index.html`  | `src/widget`  | `widget-<key>`     | Runtime that renders a `json` widget.                                                          |
+| `ai-index.html`      | `src/ai`      | assistant          | Optional [AI assistant](ai-assistant.md).                                                      |
 
-Windows are created from Rust in `src-tauri/src/commands/widget.rs`. Cross-window data is passed via **injected init scripts** (e.g. `window.__INITIAL_STATE__`, `window.__INITIAL_WIDGET_STATE__`), not props or routing.
+Windows are created from Rust in `src-tauri/src/commands/widget.rs`. Cross-window data is passed via **URL search params**.
 
 `html` widgets don't load a Vite bundle — they're served by a **local HTTP server** (`src-tauri/src/plugins/localhost.rs`). `url` widgets load the remote page directly.
 
@@ -56,11 +56,11 @@ A widget is a folder containing a `manifest.json`, typed as `IWidget`. See the [
 
 1. **Manifest migrations** — `src-tauri/src/migrations/*.rs` implementing the `Migration` trait. They transform every installed widget's `manifest.json`, or seed/remove template widgets. Run on startup, tracked in `.migrations.json`. Scaffold with:
 
-    ```bash
-    npm run create:migration <name>
-    ```
+   ```bash
+   npm run create:migration <name>
+   ```
 
-    This generates the `.rs` file **and** rebuilds `migrations/mod.rs::all_migrations()` in chronological order. The generated `up()` panics until you implement it.
+   This generates the `.rs` file **and** rebuilds `migrations/mod.rs::all_migrations()` in chronological order. The generated `up()` panics until you implement it.
 
 2. **SQLite migrations** — `src-tauri/migrations/*.sql` (sqlx), for the local DB (`chats`, `messages`, `media_history`) backing the AI assistant and media history.
 

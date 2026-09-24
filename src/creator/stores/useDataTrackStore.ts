@@ -2,8 +2,6 @@ import { create } from "zustand";
 
 export interface IUseDataTrackStore {
   initialStateLoading: boolean;
-  initialStateLoadCounter: number;
-  incrementInitialStateLoadCounter: () => void;
   activeId: string | null;
   selectedId: string | null;
   hoveredId: string | null;
@@ -21,12 +19,8 @@ export interface IUseDataTrackStore {
   contextMenuData: { x: number; y: number; node: HTMLElement } | null;
 }
 
-export const useDataTrackStore = create<IUseDataTrackStore>((set, get) => ({
+export const useDataTrackStore = create<IUseDataTrackStore>((set) => ({
   initialStateLoading: true,
-  initialStateLoadCounter: 0,
-  incrementInitialStateLoadCounter: () => {
-    set({ initialStateLoadCounter: get().initialStateLoadCounter + 1 });
-  },
   activeId: null,
   selectedId: null,
   hoveredId: null,

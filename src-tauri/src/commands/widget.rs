@@ -1,6 +1,7 @@
 use serde_json::{json, Value};
 use std::{collections::HashMap, fs};
 use tauri::{Emitter, Manager, PhysicalPosition, PhysicalSize, State};
+use uri_encode::encode_uri_component;
 
 use crate::{
     commands::{
@@ -21,14 +22,6 @@ pub async fn create_creator_window(
     webview: tauri::WebviewWindow,
     manifest_path: String,
 ) -> Result<(), String> {
-    let cached_wallpaper = match get_wallpaper_preview(&app) {
-        Ok(p) => p,
-        Err(e) => {
-            eprintln!("Error caching wallpaper: {e}");
-            "".to_string()
-        }
-    };
-
     let current_monitor = webview
         .current_monitor()
         .map_err(|_| "Failed to get current monitor")?;
@@ -40,27 +33,20 @@ pub async fn create_creator_window(
         None => tauri::PhysicalPosition::new(0, 0),
     };
 
-    let existing_keys = get_existing_keys(&app, manifest_path.clone());
-
-    let init_obj = json!({
-        "manifestPath": manifest_path,
-        "wallpaper": cached_wallpaper,
-        "existingKeys": existing_keys
-    });
-    let init_script: &str = &format!(
-        "window.__INITIAL_STATE__ = {};",
-        serde_json::to_string(&init_obj).map_err(|_| "Failed to stringify")?
-    );
-
     let new_window = tauri::WebviewWindowBuilder::new(
         &app,
         "creator",
-        tauri::WebviewUrl::App("creator-index.html".into()),
+        tauri::WebviewUrl::App(
+            format!(
+                "creator-index.html?manifestPath={}",
+                encode_uri_component(manifest_path)
+            )
+            .into(),
+        ),
     )
     .title("Widget Creator")
     .min_inner_size(1280.0, 720.0)
     .visible(false)
-    .initialization_script(init_script)
     .build()
     .map_err(|_| "Failed to build creator window")?;
 
@@ -150,6 +136,7 @@ pub async fn create_widget_window(
 
     let title = manifest.label.unwrap_or_else(|| "Widget".to_string());
     let manifest_key = manifest.key.unwrap_or_else(|| "widget".to_string());
+    let is_preview = is_preview.unwrap_or(false);
 
     let physical_size = manifest
         .dimensions
@@ -184,15 +171,15 @@ pub async fn create_widget_window(
                 manifest_key.clone(),
             )
         }
-        _ => "widget-index.html".into(),
+        _ => format!(
+            "widget-index.html?manifestPath={}&isPreview={}",
+            encode_uri_component(&clean_path),
+            is_preview
+        ),
     };
     let label = format!(
         "widget-{}{}",
-        if is_preview.unwrap_or(false) {
-            "preview-"
-        } else {
-            ""
-        },
+        if is_preview { "preview-" } else { "" },
         manifest_key
     );
 
@@ -202,15 +189,10 @@ pub async fn create_widget_window(
 
     match manifest.widget_type {
         WidgetType::Json => {
-            let init_script: &str = &format!(
-                "window.__INITIAL_WIDGET_STATE__ = {{ manifestPath: {} }};",
-                path
-            );
             window_builder = window_builder
                 .transparent(true)
                 .decorations(false)
-                .shadow(false)
-                .initialization_script(init_script);
+                .shadow(false);
         }
         WidgetType::Url => {
             window_builder = window_builder
@@ -254,7 +236,7 @@ pub async fn create_widget_window(
         new_window.set_size(physical_size).unwrap();
     }
     new_window.show().unwrap();
-    if !is_preview.unwrap_or(false) {
+    if !is_preview {
         new_window.set_skip_taskbar(true).unwrap();
         new_window.set_maximizable(false).unwrap();
         new_window.set_minimizable(false).unwrap();
@@ -419,9 +401,14 @@ pub async fn open_devtools(app: tauri::AppHandle, label: String) {
 }
 
 #[tauri::command]
-pub fn get_existing_keys_cmd(
+pub fn get_all_manifest_keys(
     app: tauri::AppHandle,
     current_folder: String,
 ) -> HashMap<String, Option<()>> {
     get_existing_keys(&app, current_folder)
+}
+
+#[tauri::command]
+pub fn get_wallpaper_path(app: tauri::AppHandle) -> Result<String, String> {
+    get_wallpaper_preview(&app).map_err(|e| e.to_string())
 }

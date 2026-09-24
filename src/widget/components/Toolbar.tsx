@@ -50,7 +50,7 @@ const openDevtools = async (manifest: IWidget) => {
 };
 
 const Toolbar: React.FC<ToolbarProps> = () => {
-  const { manifest } = useDataTrackStore();
+  const { manifest, isPreview } = useDataTrackStore();
   const dynamicVariableMap = useVariableStore((s) => s.dynamicVariableMap);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -64,7 +64,7 @@ const Toolbar: React.FC<ToolbarProps> = () => {
   }, [dynamicVariableMap]);
 
   const openSettings = async () => {
-    if (!manifest) return;
+    if (!manifest || isPreview) return;
 
     const mainWindow = await WebviewWindow.getByLabel("main");
     if (!mainWindow) return;
@@ -86,7 +86,7 @@ const Toolbar: React.FC<ToolbarProps> = () => {
     });
   };
 
-  if (!manifest) {
+  if (!manifest || isPreview) {
     return null;
   }
 

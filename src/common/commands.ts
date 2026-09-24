@@ -99,6 +99,11 @@ export type IDownloadWidget = void;
 export type ISearchCityParams = { city: string };
 export type ISearchCity = Location[];
 
+export type IGetAllManifestKeysParams = { currentFolder: string };
+export type IGetAllManifestKeys = Record<string, null>;
+
+export type IGetWallpaperPath = string;
+
 export const commands = {
   getMedia: () => invoke<IMedia[]>("get_media"),
   startMediaListenerCmd: () => invoke<void>("start_media_listener_cmd"),
@@ -157,8 +162,6 @@ export const commands = {
   }) => invoke("upsert_message", params),
   updateChatName: (params: { name: string; chatId: string }) =>
     invoke<void>("update_chat_name", params),
-  getExistingKeysCmd: (params: { currentFolder: string }) =>
-    invoke<Record<string, null>>("get_existing_keys_cmd", params),
   updateChatWidgetKeys: (params: { chatId: string; key: string }) =>
     invoke<void>("update_chat_widget_keys", params),
   getChatById: (params: { id: string }) =>
@@ -181,4 +184,7 @@ export const commands = {
     invoke<IDownloadWidget>("download_widget", params),
   searchCity: (params: ISearchCityParams) =>
     invoke<ISearchCity>("search_city", params),
+  getAllManifestKeys: (params: IGetAllManifestKeysParams) =>
+    invoke<IGetAllManifestKeys>("get_all_manifest_keys", params),
+  getWallpaperPath: () => invoke<IGetWallpaperPath>("get_wallpaper_path"),
 };

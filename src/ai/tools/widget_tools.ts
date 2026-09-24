@@ -401,7 +401,7 @@ const validateWidget = async (
         widget.key,
         "manifest.json",
       );
-      const existingKeys = await commands.getExistingKeysCmd({
+      const existingKeys = await commands.getAllManifestKeys({
         currentFolder: widgetPath,
       });
       if (widget.key in existingKeys) {

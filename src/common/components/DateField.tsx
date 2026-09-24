@@ -9,6 +9,7 @@ import {
 } from "@fluentui/react-components";
 import React, { useEffect, useMemo, useState } from "react";
 import { getMatches } from "../../widget/utils/utils";
+import { ArrowUndoRegular } from "@fluentui/react-icons";
 
 export interface DateFieldProps {
   type: string;
@@ -35,7 +36,7 @@ const DateField: React.FC<DateFieldProps> = ({
     setTzValue(timezone || "auto");
   }, [dateStr, type]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (tzValue: string) => {
     const format = formatValue.trim();
 
     const value = `{{${type}${format ? `:${format}` : ""}${tzValue && tzValue !== "auto" ? `:[${tzValue}]` : ""}}}`;
@@ -97,8 +98,17 @@ const DateField: React.FC<DateFieldProps> = ({
             <option value="UTC">Coordinated Universal Time (UTC)</option>
           </Select>
         </Field>
+        {tzValue && tzValue !== "auto" && (
+          <div style={{ marginTop: "auto" }}>
+            <Button
+              size="small"
+              icon={<ArrowUndoRegular fontSize={16} />}
+              onClick={() => handleSubmit("auto")}
+            />
+          </div>
+        )}
         <div style={{ marginTop: "auto" }}>
-          <Button size="small" onClick={handleSubmit}>
+          <Button size="small" onClick={() => handleSubmit(tzValue)}>
             Update
           </Button>
         </div>

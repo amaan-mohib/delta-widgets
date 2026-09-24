@@ -57,6 +57,7 @@ walkdir = "2.5.0"
 zip = "8.6.0"
 futures = "0.3.34"
 win-screenshot = "4.0.14"
+uri_encode = "1.0.4"
 
 [profile.release]
 opt-level = 'z'     # Optimize for size

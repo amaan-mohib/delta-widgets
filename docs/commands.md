@@ -33,6 +33,7 @@ Here's a list of available commands, their purpose, and usage examples.
 | `start_audio_capture`      | Starts capturing live system audio samples for waveform visualization.        | _None_                      | Promise<void\>                                |
 | `stop_audio_capture`       | Stops the active system audio capture stream.                                 | _None_                      | Promise<void\>                                |
 | `get_current_device_cmd`   | Returns the ID of the current audio output device.                            | _None_                      | Promise<String\>                              |
+| `get_wallpaper_path`       | Returns the optimized desktop wallpaper path.                                 | _None_                      | Promise<String\>                              |
 
 Use `start_media_listener_cmd` to begin monitoring system media metadata. Once started, the application will emit a `media_updated` event whenever information about the currently playing media changes (such as title, artist, album art, or playback state).
 
