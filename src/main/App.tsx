@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Toaster } from "@fluentui/react-components";
 import { listen } from "@tauri-apps/api/event";
-import { trackInstall, trackUpdated } from "./utils/analytics";
+import { trackInstall, trackUpdated } from "../common/analytics";
 import Sidebar, { sidebarWidth } from "./components/Sidebar";
 import { useDataStore } from "./stores/useDataStore";
 import SettingsSidebar from "./components/Settings/Sidebar";
@@ -9,20 +9,21 @@ import Settings from "./components/Settings";
 import AddWidgetDialog from "./components/AddWidgetDialog";
 import WhatsNew from "./components/WhatsNew";
 import WidgetList from "./components/WidgetList";
-import "./App.css";
 import { commands } from "../common/commands";
 import WidgetSettingsDialog from "./components/WidgetSettings/WidgetSettingsDialog";
 import { createWidgetWindow, duplicateWidget } from "./utils/widgets";
+import Notifications from "./components/Notifications";
+import "./App.css";
 
 type DeepLinkEvent = { type: "upload" } | { type: "install"; key: string };
 
 function App() {
-  const { updateAllWidgets, showSettings } = useDataStore();
+  const showSettings = useDataStore((s) => s.showSettings);
   const deepLinkRef = useRef(false);
   const duplicateRef = useRef(false);
 
   useEffect(() => {
-    updateAllWidgets();
+    useDataStore.getState().initData();
     trackInstall();
     trackUpdated();
   }, []);
@@ -30,14 +31,17 @@ function App() {
   useEffect(() => {
     const unsub = listen<string>("creator-close", () => {
       const scrollY = window.scrollY;
-      updateAllWidgets().then(() => {
-        useDataStore.setState({
-          listRefreshKey: useDataStore.getState().listRefreshKey + 1,
+      useDataStore
+        .getState()
+        .updateAllWidgets()
+        .then(() => {
+          useDataStore.setState({
+            listRefreshKey: useDataStore.getState().listRefreshKey + 1,
+          });
+          setTimeout(() => {
+            window.scrollTo({ top: scrollY });
+          }, 500);
         });
-        setTimeout(() => {
-          window.scrollTo({ top: scrollY });
-        }, 500);
-      });
     });
 
     return () => {
@@ -74,7 +78,7 @@ function App() {
       if (duplicate) {
         await createWidgetWindow(duplicate.path, false, false);
       }
-      await updateAllWidgets();
+      await useDataStore.getState().updateAllWidgets();
     });
     duplicateRef.current = true;
 
@@ -123,6 +127,7 @@ function App() {
       <AddWidgetDialog />
       <WhatsNew />
       <WidgetSettingsDialog />
+      <Notifications />
       <Toaster toasterId={"toaster"} />
     </main>
   );

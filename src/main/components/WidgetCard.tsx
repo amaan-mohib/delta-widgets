@@ -46,7 +46,7 @@ import {
   PinRegular,
 } from "@fluentui/react-icons";
 import { ILiteWidget } from "../../common/types/manifest";
-import { sendMixpanelEvent } from "../utils/analytics";
+import { sendMixpanelEvent } from "../../common/analytics";
 import WidgetPreview from "./WidgetPreview";
 import { emitTo } from "@tauri-apps/api/event";
 import { closeWidgetWindow, isBuiltIn, templateWidgets } from "../../common";
@@ -80,8 +80,6 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   const styles = useStyles();
   const loading = useDataStore((state) => state.openingCreator);
   const [widgetLoading, setWidgetLoading] = useState(false);
-  const { updateAllWidgets, updateInstalledWidget, editWidget } =
-    useDataStore();
   const { setDialogState, importHTML } = useAddDialogStore();
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -137,7 +135,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       onClick: async (e) => {
         e.stopPropagation();
         await duplicateWidget(widget.path, !!saves);
-        await updateAllWidgets();
+        await useDataStore.getState().updateAllWidgets();
       },
       children: saves ? "Clone" : "Duplicate",
       condition: true,
@@ -196,7 +194,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       onClick: async (e) => {
         e.stopPropagation();
         await removeWidget(widget.path, widget);
-        await updateAllWidgets();
+        await useDataStore.getState().updateAllWidgets();
       },
       children: "Remove",
       condition: !(widget.key in templateWidgets),
@@ -248,7 +246,9 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
         e.stopPropagation();
         try {
           await togglePinned(widget.path, !widget.pinned);
-          updateInstalledWidget(widget.key, { pinned: !widget.pinned });
+          useDataStore
+            .getState()
+            .updateInstalledWidget(widget.key, { pinned: !widget.pinned });
         } catch (error) {
           await message("Could not set pinned", {
             title: "Error",
@@ -276,7 +276,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
         e.stopPropagation();
         try {
           await toggleAlwaysOnTop(widget.path, !widget.alwaysOnTop);
-          updateInstalledWidget(widget.key, {
+          useDataStore.getState().updateInstalledWidget(widget.key, {
             alwaysOnTop: !widget.alwaysOnTop,
           });
         } catch (error) {
@@ -309,7 +309,9 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       dismissToast(widget.key);
     }
     setWidgetLoading(false);
-    updateInstalledWidget(widget.key, { visible: checked });
+    useDataStore
+      .getState()
+      .updateInstalledWidget(widget.key, { visible: checked });
   };
 
   const refreshHTML = async () => {
@@ -322,7 +324,9 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       const wasVisible = widget.visible;
       if (wasVisible) {
         await closeWidgetWindow(`widget-${widget.key}`, true, widget.path);
-        updateInstalledWidget(widget.key, { visible: false });
+        useDataStore
+          .getState()
+          .updateInstalledWidget(widget.key, { visible: false });
       }
       const newManifest = await duplicateWidget(widget.path, false, true);
       if (!newManifest) {
@@ -331,9 +335,9 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       if (wasVisible) {
         await createWidgetWindow(newManifest.path, false, true);
       }
-      await editWidget(newManifest);
+      await useDataStore.getState().editWidget(newManifest);
     } else {
-      await editWidget(widget);
+      await useDataStore.getState().editWidget(widget);
     }
   };
 
@@ -416,7 +420,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
               onClick={async (e) => {
                 e.stopPropagation();
                 await removeWidget(widget.path);
-                await updateAllWidgets();
+                await useDataStore.getState().updateAllWidgets();
               }}
             />
           </>

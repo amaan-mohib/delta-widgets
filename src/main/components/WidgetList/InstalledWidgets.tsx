@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useDataStore } from "../../stores/useDataStore";
 import GridContainer from "./GridContainer";
 import WidgetCard from "../WidgetCard";
@@ -28,40 +28,10 @@ const InstalledWidgets: React.FC<InstalledWidgetsProps> = () => {
   const key = useDataStore((s) => s.listRefreshKey);
   const activeTab = useDataStore((s) => s.activeTab);
   const focusWidgetKey = useDataStore((s) => s.focusWidgetKey);
+  const galleryWidgetVersions = useDataStore((s) => s.galleryWidgetVersions);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState({ sortBy: ["label"], sortDir: ["asc"] });
   const [selectedFilter, setSelectedFilter] = useState("all");
-  const [galleryWidgetVersions, setGalleryWidgetVersions] = useState<
-    Record<string, { version: string; revision: number }>
-  >({});
-
-  useEffect(() => {
-    const getVersions = async () => {
-      try {
-        const galleryWidgets = installedWidgets.filter(
-          (w) => !!w.isGalleryWidget,
-        );
-
-        const searchParams = new URLSearchParams();
-        galleryWidgets.forEach((w) => {
-          searchParams.append("keys", w.key);
-        });
-
-        const res = await fetch(
-          `${import.meta.env.VITE_GALLERY_LINK}/api/updates?${searchParams.toString()}`,
-          {
-            method: "GET",
-          },
-        );
-        const body = await res.json();
-        setGalleryWidgetVersions(body);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    getVersions();
-  }, [installedWidgets]);
 
   const filteredWidgets = useMemo(() => {
     let res = [...installedWidgets];

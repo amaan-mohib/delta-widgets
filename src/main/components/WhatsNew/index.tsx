@@ -1,6 +1,4 @@
-import { getVersion } from "@tauri-apps/api/app";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { getStore } from "../../../common";
+import React, { useEffect, useMemo, useState } from "react";
 import { CHANGELOG } from "./data";
 import {
   Body2,
@@ -25,9 +23,9 @@ interface WhatsNewProps {}
 
 const WhatsNew: React.FC<WhatsNewProps> = () => {
   const [selectedVersion, setSelectedVersion] = useState("");
-  const [version, setVersion] = useState("0");
-  const [lastSeenVersion, setLastSeenVersion] = useState("0");
   const open = useDataStore((state) => state.openWhatsNew);
+  const version = useDataStore((state) => state.version);
+  const lastSeenVersion = useDataStore((state) => state.lastSeenVersion);
 
   const changelogItems = useMemo(
     () =>
@@ -39,28 +37,19 @@ const WhatsNew: React.FC<WhatsNewProps> = () => {
     useDataStore.setState({ openWhatsNew: open });
   };
 
-  const initData = useCallback(async () => {
-    const version = await getVersion();
-    const { lastSeenVersion = "0" } = await getStore();
-
+  useEffect(() => {
     if (version !== lastSeenVersion) {
       setOpen(true);
     }
-    setVersion(version);
-    setLastSeenVersion(lastSeenVersion);
     setSelectedVersion(CHANGELOG[0].version);
-  }, []);
-
-  useEffect(() => {
-    initData();
-  }, []);
+  }, [version, lastSeenVersion]);
 
   const onClose = async () => {
     if (version !== lastSeenVersion) {
       await commands.writeToStoreCmd({
         pairs: [{ key: "lastSeenVersion", value: version }],
       });
-      setLastSeenVersion(version);
+      useDataStore.setState({ lastSeenVersion: version });
     }
     setOpen(false);
   };
