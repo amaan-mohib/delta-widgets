@@ -14,7 +14,7 @@ import { emitTo } from "@tauri-apps/api/event";
 import getTemplateCategories from "../../creator/components/TemplateEditor/categories";
 import { mkdir, writeTextFile } from "@tauri-apps/plugin-fs";
 import { closeWidgetWindow } from "../../common";
-import { sendMixpanelEvent } from "../../main/utils/analytics";
+import { sendMixpanelEvent } from "../../common/analytics";
 
 const GridSizeSchema = z.object({
   rows: z.union([z.literal("auto"), z.number()]).optional(),

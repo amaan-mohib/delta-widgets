@@ -10,7 +10,7 @@ import { nanoid } from "nanoid";
 import { commands } from "../common/commands";
 import { useManifestStore } from "./stores/useManifestStore";
 import { ICustomAssets } from "../common/types/manifest";
-import { sendMixpanelEvent } from "../main/utils/analytics";
+import { sendMixpanelEvent } from "../common/analytics";
 
 export const spinButtonOnChange = (
   event: SpinButtonChangeEvent,
