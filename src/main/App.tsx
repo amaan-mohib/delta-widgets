@@ -113,6 +113,7 @@ function App() {
           toggleVisibility,
           widget.manifestPath,
         );
+        await useDataStore.getState().updateAllWidgets();
       },
     );
     closeRef.current = true;

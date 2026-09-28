@@ -229,6 +229,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
               refresh: true,
             })
             .catch(console.error);
+          await emitTo("main", "creator-close", {});
           setWidgetLoading(false);
         }
       },

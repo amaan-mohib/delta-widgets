@@ -417,9 +417,11 @@ pub async fn capture_widget_screenshot(
     refresh: Option<bool>,
     custom_name: Option<String>,
 ) -> Result<String, String> {
-    let img_path = Path::new(&manifest_path)
-        .join("..")
-        .join(custom_name.unwrap_or("thumb.png".to_string()));
+    let mut img_path = Path::new(&manifest_path).to_path_buf();
+    if manifest_path.ends_with("manifest.json") {
+        img_path = img_path.join("..");
+    }
+    let img_path = img_path.join(custom_name.unwrap_or("thumb.png".to_string()));
     let refresh = refresh.unwrap_or(false);
     if !refresh && img_path.try_exists().unwrap_or(false) {
         return Ok(img_path.to_string_lossy().to_string());
@@ -431,6 +433,7 @@ pub async fn capture_widget_screenshot(
     let id = existing_window.hwnd().map_err(|e| e.to_string())?;
 
     std::thread::sleep(Duration::from_secs(2));
+    let _ = fs::remove_file(&img_path);
     let buf = capture_window(id.0 as isize).map_err(|e| e.to_string())?;
     let img = DynamicImage::ImageRgba8(
         RgbaImage::from_raw(buf.width, buf.height, buf.pixels)
