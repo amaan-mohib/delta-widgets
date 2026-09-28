@@ -14,6 +14,7 @@ import WidgetSettingsDialog from "./components/WidgetSettings/WidgetSettingsDial
 import { createWidgetWindow, duplicateWidget } from "./utils/widgets";
 import Notifications from "./components/Notifications";
 import "./App.css";
+import { closeWidgetWindow } from "../common";
 
 type DeepLinkEvent = { type: "upload" } | { type: "install"; key: string };
 
@@ -21,6 +22,7 @@ function App() {
   const showSettings = useDataStore((s) => s.showSettings);
   const deepLinkRef = useRef(false);
   const duplicateRef = useRef(false);
+  const closeRef = useRef(false);
 
   useEffect(() => {
     useDataStore.getState().initData();
@@ -72,7 +74,9 @@ function App() {
       const widget = useDataStore
         .getState()
         .installedWidgets.find((w) => w.key === payload);
-      if (!widget) return;
+      if (!widget) {
+        return Promise.reject("No such widget found");
+      }
 
       const duplicate = await duplicateWidget(widget.manifestPath, false, true);
       if (duplicate) {
@@ -81,6 +85,37 @@ function App() {
       await useDataStore.getState().updateAllWidgets();
     });
     duplicateRef.current = true;
+
+    return () => {
+      unsub.then((f) => f());
+    };
+  }, []);
+
+  useEffect(() => {
+    if (closeRef.current) return;
+
+    const unsub = listen<{
+      key: string;
+      toggleVisibility?: boolean;
+      isPreview?: boolean;
+    }>(
+      "close-widget",
+      async ({ payload: { key, toggleVisibility, isPreview } }) => {
+        const widget = useDataStore
+          .getState()
+          .installedWidgets.find((w) => w.key === key);
+        if (!widget) {
+          return Promise.reject("No such widget found");
+        }
+
+        await closeWidgetWindow(
+          `widget${isPreview ? `-preview` : ""}-${key}`,
+          toggleVisibility,
+          widget.manifestPath,
+        );
+      },
+    );
+    closeRef.current = true;
 
     return () => {
       unsub.then((f) => f());

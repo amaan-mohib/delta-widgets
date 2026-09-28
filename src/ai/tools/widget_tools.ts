@@ -310,7 +310,23 @@ The \`media_updated\` event acts as a notification trigger. To retrieve the late
 
 After starting system audio capture with \`start_audio_capture\`, the application begins emitting the \`audio-samples\` event at roughly 33 ms intervals.
 
-Each \`audio-samples\` event returns an array of approximately 256 numeric sample values representing the current system audio waveform.`;
+Each \`audio-samples\` event returns an array of approximately 256 numeric sample values representing the current system audio waveform.
+
+### \`duplicate-widget\`
+
+Emit this event to the main window with an installed widget's key as the string payload. The application creates and opens a copy of the widget.
+
+### \`close-widget\`
+
+Emit this event to the main window with an object containing the installed widget's \`key\`. The optional \`toggleVisibility\` field can be set to \`true\` to mark the widget as not visible before closing it.
+
+\`\`\`js
+await window.__TAURI__.event.emitTo("main", "duplicate-widget", "weather");
+await window.__TAURI__.event.emitTo("main", "close-widget", {
+  key: "weather",
+  toggleVisibility: true,
+});
+\`\`\``;
 
 export const readWidgetSchemaTool = tool({
   description:
