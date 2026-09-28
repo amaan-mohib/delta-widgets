@@ -85,6 +85,7 @@ pub fn run() {
             services::update_manifest_value,
             services::create_gallery_window,
             services::capture_widget_screenshot,
+            services::fetch_request,
             widget::create_creator_window,
             widget::create_widget_window,
             widget::close_widget_window,

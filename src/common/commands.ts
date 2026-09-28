@@ -104,6 +104,9 @@ export type IGetAllManifestKeys = Record<string, null>;
 
 export type IGetWallpaperPath = string;
 
+export type IFetchRequestParams = { url: string };
+export type IFetchRequest = string;
+
 export const commands = {
   getMedia: () => invoke<IMedia[]>("get_media"),
   startMediaListenerCmd: () => invoke<void>("start_media_listener_cmd"),
@@ -187,4 +190,6 @@ export const commands = {
   getAllManifestKeys: (params: IGetAllManifestKeysParams) =>
     invoke<IGetAllManifestKeys>("get_all_manifest_keys", params),
   getWallpaperPath: () => invoke<IGetWallpaperPath>("get_wallpaper_path"),
+  fetchRequest: (params: IFetchRequestParams) =>
+    invoke<IFetchRequest>("fetch_request", params),
 };

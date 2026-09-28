@@ -443,3 +443,11 @@ pub async fn capture_widget_screenshot(
 
     Ok(img_path.to_string_lossy().to_string())
 }
+
+#[tauri::command]
+pub async fn fetch_request(url: String) -> Result<String, String> {
+    let response = reqwest::get(&url).await.map_err(|e| e.to_string())?;
+
+    let body = response.text().await.map_err(|e| e.to_string())?;
+    Ok(body)
+}

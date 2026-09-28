@@ -22,14 +22,10 @@ const getVersions = async (keys: string[]) => {
     keys.forEach((key) => {
       searchParams.append("keys", key);
     });
-
-    const res = await fetch(
-      `${import.meta.env.VITE_GALLERY_LINK}/api/updates?${searchParams.toString()}`,
-      {
-        method: "GET",
-      },
-    );
-    const body = await res.json();
+    const res = await commands.fetchRequest({
+      url: `${import.meta.env.VITE_GALLERY_LINK}/api/updates?${searchParams.toString()}`,
+    });
+    const body = JSON.parse(res);
     return body;
   } catch (error) {
     console.error(error);
@@ -39,13 +35,10 @@ const getVersions = async (keys: string[]) => {
 
 const getNotifications = async () => {
   try {
-    const res = await fetch(
-      `${import.meta.env.VITE_GALLERY_LINK}/api/notifications`,
-      {
-        method: "GET",
-      },
-    );
-    const body = await res.json();
+    const res = await commands.fetchRequest({
+      url: `${import.meta.env.VITE_GALLERY_LINK}/api/notifications`,
+    });
+    const body = JSON.parse(res);
     return body as INotification[];
   } catch (error) {
     console.error(error);

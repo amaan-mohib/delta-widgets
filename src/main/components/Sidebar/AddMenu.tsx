@@ -137,6 +137,7 @@ const AddMenu: React.FC<AddMenuProps> = () => {
               }}>
               {createItems.map((item) => (
                 <Card
+                  key={item.value}
                   appearance="filled-alternative"
                   style={{
                     justifyContent: "center",
