@@ -26,7 +26,7 @@ pub struct UploadValues {
 }
 
 fn should_skip(entry: &DirEntry) -> bool {
-    if !entry.file_type().is_dir() {
+    if entry.depth() == 0 || !entry.file_type().is_dir() {
         return false;
     }
 
@@ -111,6 +111,7 @@ pub async fn upload_html_asset(
 
     let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
 
+    let mut count = 0;
     for entry in WalkDir::new(local_dir)
         .into_iter()
         .filter_entry(|e| !should_skip(e))
@@ -134,9 +135,14 @@ pub async fn upload_html_asset(
             zip.add_directory(rel_path_str, options)
                 .map_err(|e| e.to_string())?;
         }
+        count += 1;
     }
 
     zip.finish().map_err(|e| e.to_string())?;
+
+    if count == 0 {
+        return Err("No files found while creating assets zip".to_string());
+    }
 
     upload_file(&job.url, &zip_path, Some("application/zip"))
         .await
@@ -343,6 +349,9 @@ pub async fn validate_widget_asset(asset_path: String) -> Result<(), String> {
         }
     }
 
+    if file_count == 0 {
+        return Err("Empty directory".to_string());
+    }
     if file_count > MAX_FILES {
         return Err("Too many files".to_string());
     }
