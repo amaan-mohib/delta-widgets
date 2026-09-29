@@ -15,6 +15,7 @@ import { createWidgetWindow, duplicateWidget } from "./utils/widgets";
 import Notifications from "./components/Notifications";
 import "./App.css";
 import { closeWidgetWindow } from "../common";
+import RenameWidgetDialog from "./components/RenameWidgetDialog";
 
 type DeepLinkEvent = { type: "upload" } | { type: "install"; key: string };
 
@@ -164,6 +165,7 @@ function App() {
       <WhatsNew />
       <WidgetSettingsDialog />
       <Notifications />
+      <RenameWidgetDialog />
       <Toaster toasterId={"toaster"} />
     </main>
   );

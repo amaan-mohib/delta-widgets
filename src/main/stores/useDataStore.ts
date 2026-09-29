@@ -73,6 +73,7 @@ interface IDataStore {
   lastSeenNotificationAt: string | null;
   notifications: INotification[];
   openNotifications: boolean;
+  renameWidget: ILiteWidget | null;
 }
 
 export const useDataStore = create<IDataStore>((set, get) => ({
@@ -191,4 +192,5 @@ export const useDataStore = create<IDataStore>((set, get) => ({
   galleryWidgetVersions: {},
   notifications: [],
   openNotifications: false,
+  renameWidget: null,
 }));

@@ -44,6 +44,7 @@ import {
   OpenRegular,
   PinOffRegular,
   PinRegular,
+  RenameRegular,
 } from "@fluentui/react-icons";
 import { ILiteWidget } from "../../common/types/manifest";
 import { sendMixpanelEvent } from "../../common/analytics";
@@ -151,6 +152,20 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       condition: widget.isGalleryWidget
         ? false
         : !saves && widget.widgetType === "json",
+    },
+    {
+      key: "rename-json",
+      icon: <RenameRegular />,
+      onClick: async (e) => {
+        e.stopPropagation();
+        useDataStore.setState({ renameWidget: widget });
+      },
+      children: "Rename",
+      condition:
+        !saves &&
+        widget.widgetType === "json" &&
+        !isBuiltIn(widget) &&
+        !widget.isGalleryWidget,
     },
     {
       key: "edit-url",
