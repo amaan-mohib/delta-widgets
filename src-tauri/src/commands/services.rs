@@ -419,7 +419,7 @@ pub async fn capture_widget_screenshot(
 ) -> Result<String, String> {
     let mut img_path = Path::new(&manifest_path).to_path_buf();
     if manifest_path.ends_with("manifest.json") {
-        img_path = img_path.join("..");
+        img_path.pop();
     }
     let img_path = img_path.join(custom_name.unwrap_or("thumb.png".to_string()));
     let refresh = refresh.unwrap_or(false);
