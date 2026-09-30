@@ -34,6 +34,8 @@ Templates
 
 ## AI Assistant (Optional)
 
+<img src="./ss-assistant.png" alt="assistant" width="350">
+
 Delta Widgets includes an optional AI assistant that can help create and modify widgets, answer questions about media history, and assist with application workflows.
 
 The AI assistant follows a Bring Your Own Key (BYOK) model:

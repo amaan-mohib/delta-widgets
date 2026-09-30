@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { IWidgetElement } from "../../../types/manifest";
+import { IWidgetElement } from "../../../common/types/manifest";
 import ButtonComponent from "../ButtonComponent";
 import { useVariableStore } from "../../stores/useVariableStore";
 import { commands } from "../../../common/commands";

@@ -1,5 +1,7 @@
 # AI Assistant
 
+<img src="./img/ss-assistant.png" alt="assistant" width="350">
+
 Delta Widgets ships with an **optional** AI assistant that can generate and edit widgets for you from a chat prompt, and answer questions about your media history.
 
 !!! info "Completely optional (BYOK)"
@@ -20,26 +22,26 @@ The first time you open the assistant you'll be asked to set up a model. You can
 
 Each model has the following fields:
 
-| Field | Required | Notes |
-|---|---|---|
-| **Provider** | Yes | One of the supported providers below. |
-| **Name** | No | A friendly display name (e.g. `Work GPT-5`). Defaults to the model id. |
-| **Model** | Yes | The provider's model id (e.g. `gpt-4`, `claude-3`, `gemini-2.5-flash`, `phi4-mini:3.8b`, `openrouter/free`). |
-| **API Key** | Yes (except Ollama) | Stored encrypted in your OS keyring — see [Where keys are stored](#where-keys-are-stored). |
-| **Base URL** | No (hidden for Gemini) | Override the provider endpoint. Defaults are shown per-provider below. |
-| **Custom headers** | No | Extra request headers as a JSON object. |
+| Field              | Required               | Notes                                                                                                        |
+| ------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Provider**       | Yes                    | One of the supported providers below.                                                                        |
+| **Name**           | No                     | A friendly display name (e.g. `Work GPT-5`). Defaults to the model id.                                       |
+| **Model**          | Yes                    | The provider's model id (e.g. `gpt-4`, `claude-3`, `gemini-2.5-flash`, `phi4-mini:3.8b`, `openrouter/free`). |
+| **API Key**        | Yes (except Ollama)    | Stored encrypted in your OS keyring — see [Where keys are stored](#where-keys-are-stored).                   |
+| **Base URL**       | No (hidden for Gemini) | Override the provider endpoint. Defaults are shown per-provider below.                                       |
+| **Custom headers** | No                     | Extra request headers as a JSON object.                                                                      |
 
 When you click **Add**/**Update**, the app runs a quick **test connection** (a `Ping → pong` request with retries disabled). The model is only saved if that request succeeds, so an invalid key or model id surfaces immediately.
 
 ### Supported providers
 
-| Provider | Default base URL | API key |
-|---|---|---|
-| **OpenAI** | `https://api.openai.com/v1` | Required |
-| **Anthropic** | `https://api.anthropic.com/v1` | Required |
-| **Google Gemini** | _(SDK default)_ | Required |
-| **Ollama** | `http://localhost:11434` | Not needed (local) |
-| **OpenRouter** | `https://openrouter.ai/api/v1` | Required |
+| Provider          | Default base URL               | API key            |
+| ----------------- | ------------------------------ | ------------------ |
+| **OpenAI**        | `https://api.openai.com/v1`    | Required           |
+| **Anthropic**     | `https://api.anthropic.com/v1` | Required           |
+| **Google Gemini** | _(SDK default)_                | Required           |
+| **Ollama**        | `http://localhost:11434`       | Not needed (local) |
+| **OpenRouter**    | `https://openrouter.ai/api/v1` | Required           |
 
 !!! tip "Try it for free"
 

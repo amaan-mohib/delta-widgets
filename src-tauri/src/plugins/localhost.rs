@@ -123,7 +123,7 @@ impl Builder {
                                     .expect("unable to respond");
                                     continue;
                                 }
-                                if let Some(data) = fs::read(asset_path.clone()).ok() {
+                                if let Ok(data) = fs::read(asset_path.clone()) {
                                     let mime_type =
                                         mime_guess::from_path::<&Path>(asset_path.as_ref())
                                             .first_or_octet_stream();

@@ -1,7 +1,7 @@
 import { getVersion } from "@tauri-apps/api/app";
 import { nanoid } from "nanoid";
-import { getStore } from "../../common";
-import { commands } from "../../common/commands";
+import { getStore } from ".";
+import { commands } from "./commands";
 
 export const getOrCreateClientId = async () => {
   const store = await getStore();

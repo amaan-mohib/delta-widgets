@@ -6,12 +6,15 @@
     "main",
     "creator",
     "widget-*",
-    "assistant"
+    "assistant",
+    "gallery"
   ],
   "remote": {
     "urls": [
       "http://*.localhost:*",
-      "http://localhost:*"
+      "http://localhost:*",
+      "https://*.deltawidgets.com",
+      "https://delta-widgets-marketplace.vercel.app"
     ]
   },
   "permissions": [
@@ -33,7 +36,11 @@
     "core:window:allow-set-always-on-bottom",
     "core:window:allow-set-always-on-top",
     "core:window:allow-set-resizable",
+    "core:window:allow-set-closable",
+    "core:window:allow-set-theme",
+    "core:window:allow-set-background-color",
     "system-info:allow-all",
-    "log:default"
+    "log:default",
+    "deep-link:default"
   ]
 }

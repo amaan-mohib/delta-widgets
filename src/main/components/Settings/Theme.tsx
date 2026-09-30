@@ -78,9 +78,8 @@ const Theme: React.FC<ThemeProps> = () => {
   };
 
   useEffect(() => {
-    if (!open) return;
     getDefaults();
-  }, [open]);
+  }, []);
 
   return (
     <div>

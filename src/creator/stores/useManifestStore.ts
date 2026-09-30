@@ -1,5 +1,9 @@
 import { create } from "zustand";
-import { IWidget, IWidgetElement, TCustomFields } from "../../types/manifest";
+import {
+  IWidget,
+  IWidgetElement,
+  TCustomFields,
+} from "../../common/types/manifest";
 import { subscribeWithSelector } from "zustand/middleware";
 import lodashSet from "lodash.set";
 import lodashGet from "lodash.get";

@@ -1,22 +1,18 @@
 import { create } from "zustand";
-import { IWidget } from "../../types/manifest";
+import { IWidget } from "../../common/types/manifest";
 
 export interface IUseDataTrackStore {
   initialStateLoading: boolean;
-  initialStateLoadCounter: number;
-  incrementInitialStateLoadCounter: () => void;
   manifest: IWidget | null;
   fontsToLoad: string[];
   audioSampleCapturing: boolean;
+  isPreview: boolean;
 }
 
-export const useDataTrackStore = create<IUseDataTrackStore>((set, get) => ({
+export const useDataTrackStore = create<IUseDataTrackStore>(() => ({
   initialStateLoading: true,
-  initialStateLoadCounter: 0,
-  incrementInitialStateLoadCounter: () => {
-    set({ initialStateLoadCounter: get().initialStateLoadCounter + 1 });
-  },
   manifest: null,
   fontsToLoad: [],
   audioSampleCapturing: false,
+  isPreview: false,
 }));

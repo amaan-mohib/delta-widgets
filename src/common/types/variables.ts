@@ -116,6 +116,7 @@ export interface ISystemInformation {
 // Weather API TypeScript types
 
 export interface Location {
+  id: number;
   name: string;
   region: string;
   country: string;
@@ -171,4 +172,12 @@ interface Current {
 export interface WeatherResponse {
   location: Location;
   current: Current;
+}
+
+export interface IEmitSettings {
+  label: string;
+  key: string;
+  path: string;
+  dateValues: Record<string, string[]>;
+  hasWeather: boolean;
 }

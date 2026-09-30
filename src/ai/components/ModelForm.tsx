@@ -17,7 +17,7 @@ import { getModelProvider, providers, saveModel } from "../utils";
 import { nanoid } from "nanoid";
 import { useChatStore } from "../stores/useChatStore";
 import { ArrowLeftRegular } from "@fluentui/react-icons";
-import { sendMixpanelEvent } from "../../main/utils/analytics";
+import { sendMixpanelEvent } from "../../common/analytics";
 
 const getPlaceholderForProvider = (provider: string) => {
   switch (provider) {

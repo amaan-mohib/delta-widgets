@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ImageComponent from "./ImageComponent";
 import SliderComponent from "./SliderComponent";
-import { IWidgetElement } from "../../types/manifest";
+import { IWidgetElement } from "../../common/types/manifest";
 import ButtonComponent from "./ButtonComponent";
 import TextComponent from "./TextComponent";
 import PlayButton from "./media-components/PlayButton";
@@ -13,11 +13,10 @@ import DiskComponent from "./DiskComponent";
 import ProgressComponent from "./ProgressComponent";
 import { parseDynamicText } from "../utils/utils";
 import { useDynamicTextStore } from "../stores/useVariableStore";
-import { path } from "@tauri-apps/api";
-import { appCacheDir } from "@tauri-apps/api/path";
-import { convertFileSrc } from "@tauri-apps/api/core";
 import VisualizerComponent from "./audio-visualizer-components/VisualizerComponent";
 import AudioToggleComponent from "./audio-visualizer-components/ToggleComponent";
+import { getBgAssetPath } from "../../common/utils";
+import { useDataTrackStore } from "../stores/useDataTrackStore";
 
 interface ElementProps {
   component: IWidgetElement;
@@ -96,18 +95,12 @@ const Element: React.FC<ElementProps> = ({ component }) => {
   useEffect(() => {
     const { data } = component;
     if (!data?.imageData) return;
-    (async () => {
-      if (data.imageData.kind === "url") {
-        setBgImage(data.imageData.path);
-        return;
-      }
-      const dir = await path.resolve(
-        await appCacheDir(),
-        "assets",
-        data.imageData?.key || "",
-      );
-      setBgImage(convertFileSrc(dir));
-    })();
+    getBgAssetPath(
+      data?.imageData,
+      useDataTrackStore.getState().manifest?.customAssets,
+    ).then((img) => {
+      setBgImage(img);
+    });
   }, [JSON.stringify(component.data?.imageData || {})]);
 
   if (component.type === "container" || component.type === "container-grid") {

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   NavDivider,
   makeStyles,
@@ -12,15 +12,15 @@ import {
   Badge,
 } from "@fluentui/react-components";
 import {
+  Alert20Regular,
   Apps20Color,
   Apps20Regular,
   BotSparkle20Regular,
-  BuildingShop20Regular,
-  BuildingStore20Color,
   bundleIcon,
   Drafts20Color,
   Drafts20Regular,
   ErrorCircle20Color,
+  Grid20Regular,
   Heart20Color,
   Megaphone20Regular,
   QuestionCircle20Regular,
@@ -29,7 +29,7 @@ import {
 import AddMenu from "./AddMenu";
 import { check } from "@tauri-apps/plugin-updater";
 import { useDataStore } from "../../stores/useDataStore";
-import DiscordIcon from "../icons/Discord";
+import DiscordIcon from "../../icons/Discord";
 import { commands } from "../../../common/commands";
 
 export const sidebarWidth = 250;
@@ -40,7 +40,7 @@ export const commonItems = [
   {
     value: "donate",
     text: "Donate",
-    href: "https://buymeacoffee.com/amaan.mohib",
+    href: "https://delta-widgets.vercel.app/#sponsor",
     icon: <Heart20Color />,
   },
   {
@@ -91,13 +91,14 @@ const useStyles = makeStyles({
 const Sidebar: React.FC<SidebarProps> = () => {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const styles = useStyles();
-  const { draftWidgets, activeTab, setActiveTab } = useDataStore();
+  const draftWidgets = useDataStore((s) => s.draftWidgets);
+  const activeTab = useDataStore((s) => s.activeTab);
+  const setActiveTab = useDataStore((s) => s.setActiveTab);
+  const notifications = useDataStore((s) => s.notifications);
+  const lastSeenNotificationAt = useDataStore((s) => s.lastSeenNotificationAt);
+
   const InstalledIcon = bundleIcon(Apps20Color, Apps20Regular);
   const DraftIcon = bundleIcon(Drafts20Color, Drafts20Regular);
-  const MarketplaceIcon = bundleIcon(
-    BuildingStore20Color,
-    BuildingShop20Regular,
-  );
 
   const checkForUpdates = useCallback(async () => {
     const update = await check();
@@ -108,98 +109,125 @@ const Sidebar: React.FC<SidebarProps> = () => {
     checkForUpdates();
   }, []);
 
+  const unreadNotifications = useMemo(
+    () =>
+      lastSeenNotificationAt
+        ? notifications.filter(
+            (item) =>
+              new Date(item.created_at) > new Date(lastSeenNotificationAt),
+          ).length
+        : notifications.length,
+    [lastSeenNotificationAt, notifications],
+  );
+
   return (
-    <>
-      <NavDrawer
-        className={`${styles.drawer} ${styles.transparent}`}
-        selectedValue={activeTab}
-        type="inline"
-        open>
-        <NavDrawerHeader style={{ paddingTop: 8 }}>
-          <AppItemStatic className={styles.transparent}>
-            <AddMenu />
-          </AppItemStatic>
-        </NavDrawerHeader>
-        <NavDrawerBody className={styles.drawerBody}>
+    <NavDrawer
+      className={`${styles.drawer} ${styles.transparent}`}
+      selectedValue={activeTab}
+      type="inline"
+      open>
+      <NavDrawerHeader style={{ paddingTop: 8 }}>
+        <AppItemStatic className={styles.transparent}>
+          <AddMenu />
+        </AppItemStatic>
+      </NavDrawerHeader>
+      <NavDrawerBody className={styles.drawerBody}>
+        <NavItem
+          className={styles.navItem}
+          onClick={() => setActiveTab("installed")}
+          value={"installed"}
+          icon={<InstalledIcon />}>
+          Installed
+        </NavItem>
+        <NavItem
+          className={styles.navItem}
+          onClick={() => setActiveTab("drafts")}
+          value={"drafts"}
+          icon={<DraftIcon />}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            Drafts
+            <CounterBadge showZero={false} count={draftWidgets.length} />
+          </div>
+        </NavItem>
+        <NavItem
+          className={styles.navItem}
+          onClick={async () => {
+            await commands.createGalleryWindow();
+          }}
+          value={"gallery"}
+          icon={<Grid20Regular />}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            Community Gallery<Badge appearance="tint">New</Badge>
+          </div>
+        </NavItem>
+        <NavItem
+          className={styles.navItem}
+          onClick={async () => {
+            await commands.createAssistantWindow();
+          }}
+          value={"assistant"}
+          icon={<BotSparkle20Regular />}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            Assistant
+          </div>
+        </NavItem>
+        <NavDivider style={{ marginTop: "auto" }} />
+        {updateAvailable && (
           <NavItem
             className={styles.navItem}
-            onClick={() => setActiveTab("installed")}
-            value={"installed"}
-            icon={<InstalledIcon />}>
-            Installed
-          </NavItem>
-          <NavItem
-            className={styles.navItem}
-            onClick={() => setActiveTab("drafts")}
-            value={"drafts"}
-            icon={<DraftIcon />}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              Drafts
-              <CounterBadge showZero={false} count={draftWidgets.length} />
-            </div>
-          </NavItem>
-          <NavItem
-            className={styles.navItem}
-            onClick={() => setActiveTab("marketplace")}
-            value={"marketplace"}
-            icon={<MarketplaceIcon />}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              Marketplace
-            </div>
-          </NavItem>
-          <NavItem
-            className={styles.navItem}
-            onClick={async () => {
-              await commands.createAssistantWindow();
-            }}
-            value={"assistant"}
-            icon={<BotSparkle20Regular />}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              Assistant<Badge appearance="tint">New</Badge>
-            </div>
-          </NavItem>
-          <NavDivider style={{ marginTop: "auto" }} />
-          {updateAvailable && (
-            <NavItem
-              className={styles.navItem}
-              value={"help"}
-              icon={<ErrorCircle20Color />}
-              onClick={() => {
-                useDataStore.setState({
-                  showSettings: true,
-                  settingsActiveTab: "about",
-                });
-              }}>
-              Update available
-            </NavItem>
-          )}
-          {commonItems.map((item) => (
-            <NavItem
-              key={item.value}
-              className={styles.navItem}
-              value={item.value}
-              href={item.href}
-              target="_blank"
-              icon={item.icon}
-              onClick={item.onClick}>
-              {item.text}
-            </NavItem>
-          ))}
-          <NavItem
-            className={styles.navItem}
-            value={"settings"}
+            value={"help"}
+            icon={<ErrorCircle20Color />}
             onClick={() => {
               useDataStore.setState({
                 showSettings: true,
-                settingsActiveTab: "general",
+                settingsActiveTab: "about",
               });
-            }}
-            icon={<Settings20Regular />}>
-            Settings
+            }}>
+            Update available
           </NavItem>
-        </NavDrawerBody>
-      </NavDrawer>
-    </>
+        )}
+        {notifications.length > 0 && (
+          <NavItem
+            className={styles.navItem}
+            value={"notifications"}
+            icon={<Alert20Regular />}
+            onClick={() => {
+              useDataStore.setState({
+                openNotifications: true,
+              });
+            }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              Notifications
+              <CounterBadge showZero={false} count={unreadNotifications} />
+            </div>
+          </NavItem>
+        )}
+        {commonItems.map((item) => (
+          <NavItem
+            key={item.value}
+            className={styles.navItem}
+            value={item.value}
+            href={item.href}
+            target="_blank"
+            icon={item.icon}
+            onClick={item.onClick}>
+            {item.text}
+          </NavItem>
+        ))}
+        <NavItem
+          className={styles.navItem}
+          value={"settings"}
+          onClick={() => {
+            useDataStore.setState({
+              showSettings: true,
+              settingsActiveTab: "general",
+            });
+          }}
+          icon={<Settings20Regular />}>
+          Settings
+        </NavItem>
+      </NavDrawerBody>
+    </NavDrawer>
   );
 };
 

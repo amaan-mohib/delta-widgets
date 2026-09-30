@@ -7,8 +7,7 @@ import { Buffer } from "buffer";
 import { formatDate, formatDuration, humanStorageSize } from "./utils/utils";
 import { convertFileSrc } from "@tauri-apps/api/core";
 
-const FALLBACK_THUMB_URL =
-  "https://cdn.pixabay.com/photo/2017/03/13/04/25/play-button-2138735_1280.png";
+const FALLBACK_THUMB_URL = "/assets/no-media.png";
 const FALLBACK_PLAYER_ICON =
   "https://i.pinimg.com/736x/bd/47/48/bd47480253e31367320c6f31eb2844ea.jpg";
 
@@ -26,9 +25,9 @@ const useVariableUpdater = () => {
   const playerIconUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const formatDateSafely = (format: string) => {
+    const formatDateSafely = (format: string, defaultFormat: string) => {
       try {
-        return formatDate(currentDate, format);
+        return formatDate(currentDate, format, defaultFormat);
       } catch (error) {
         console.log(error);
         return "Invalid date or format";
@@ -36,10 +35,12 @@ const useVariableUpdater = () => {
     };
 
     useDynamicTextStore.setState({
-      date: (formatStr?: string) => formatDateSafely(formatStr || "yyyy-MM-dd"),
-      time: (formatStr?: string) => formatDateSafely(formatStr || "hh:mm aa"),
+      date: (formatStr?: string) =>
+        formatDateSafely(formatStr || "", "yyyy-MM-dd"),
+      time: (formatStr?: string) =>
+        formatDateSafely(formatStr || "", "hh:mm aa"),
       datetime: (formatStr?: string) =>
-        formatDateSafely(formatStr || "eeee, MMMM d yyyy, h:mm aa"),
+        formatDateSafely(formatStr || "", "eeee, MMMM d yyyy, h:mm aa"),
     });
   }, [currentDate]);
 
@@ -65,7 +66,7 @@ const useVariableUpdater = () => {
               return "No media playing";
             case "status":
             case "thumbnail":
-              return "https://cdn.pixabay.com/photo/2017/03/13/04/25/play-button-2138735_1280.png";
+              return FALLBACK_THUMB_URL;
             case "position_text":
             case "duration_text":
               return "0:00";

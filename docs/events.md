@@ -1,6 +1,6 @@
 # Tauri Events
 
-Some widgets need to react to system changes (e.g., media playback, system audio samples). For this, Delta Widgets exposes Tauri events that you can subscribe to.
+Some widgets need to react to system changes (e.g., media playback, system audio samples). For this, Delta Widgets exposes Tauri events that you can subscribe to. Widgets can also emit widget-management events to the main window.
 
 ### `media_updated`
 
@@ -28,6 +28,31 @@ async function setup() {
 }
 
 setup();
+```
+
+### `duplicate-widget`
+
+Emit `duplicate-widget` to the main window with an installed widget's key as the payload. The application creates and opens a copy of that widget.
+
+```ts
+import { emitTo } from "@tauri-apps/api/event";
+// or const {event: { emitTo }} = window.__TAURI__;
+
+await emitTo("main", "duplicate-widget", "weather");
+```
+
+### `close-widget`
+
+Emit `close-widget` to the main window with the installed widget's key. Set the optional `toggleVisibility` field to `true` to mark the widget as not visible before closing it.
+
+```ts
+import { emitTo } from "@tauri-apps/api/event";
+// or const {event: { emitTo}} = window.__TAURI__;
+
+await emitTo("main", "close-widget", {
+  key: "weather",
+  toggleVisibility: true,
+});
 ```
 
 This ensures your widget updates whenever the media session changes.

@@ -8,13 +8,13 @@ import {
   getWidgetsDirPath,
   sanitizeString,
 } from "../../main/utils/widgets";
-import { IWidget } from "../../types/manifest";
+import { IWidget } from "../../common/types/manifest";
 import { path } from "@tauri-apps/api";
 import { emitTo } from "@tauri-apps/api/event";
 import getTemplateCategories from "../../creator/components/TemplateEditor/categories";
 import { mkdir, writeTextFile } from "@tauri-apps/plugin-fs";
 import { closeWidgetWindow } from "../../common";
-import { sendMixpanelEvent } from "../../main/utils/analytics";
+import { sendMixpanelEvent } from "../../common/analytics";
 
 const GridSizeSchema = z.object({
   rows: z.union([z.literal("auto"), z.number()]).optional(),
@@ -310,7 +310,23 @@ The \`media_updated\` event acts as a notification trigger. To retrieve the late
 
 After starting system audio capture with \`start_audio_capture\`, the application begins emitting the \`audio-samples\` event at roughly 33 ms intervals.
 
-Each \`audio-samples\` event returns an array of approximately 256 numeric sample values representing the current system audio waveform.`;
+Each \`audio-samples\` event returns an array of approximately 256 numeric sample values representing the current system audio waveform.
+
+### \`duplicate-widget\`
+
+Emit this event to the main window with an installed widget's key as the string payload. The application creates and opens a copy of the widget.
+
+### \`close-widget\`
+
+Emit this event to the main window with an object containing the installed widget's \`key\`. The optional \`toggleVisibility\` field can be set to \`true\` to mark the widget as not visible before closing it.
+
+\`\`\`js
+await window.__TAURI__.event.emitTo("main", "duplicate-widget", "weather");
+await window.__TAURI__.event.emitTo("main", "close-widget", {
+  key: "weather",
+  toggleVisibility: true,
+});
+\`\`\``;
 
 export const readWidgetSchemaTool = tool({
   description:
@@ -401,7 +417,7 @@ const validateWidget = async (
         widget.key,
         "manifest.json",
       );
-      const existingKeys = await commands.getExistingKeysCmd({
+      const existingKeys = await commands.getAllManifestKeys({
         currentFolder: widgetPath,
       });
       if (widget.key in existingKeys) {
