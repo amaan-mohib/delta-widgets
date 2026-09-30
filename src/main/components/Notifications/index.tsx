@@ -21,9 +21,6 @@ interface NotificationsProps {}
 const Notifications: React.FC<NotificationsProps> = () => {
   const open = useDataStore((state) => state.openNotifications);
   const notifications = useDataStore((state) => state.notifications);
-  // const lastSeenNotificationAt = useDataStore(
-  //   (state) => state.lastSeenNotificationAt,
-  // );
 
   const setOpen = (open: boolean) => {
     useDataStore.setState({ openNotifications: open });
@@ -36,6 +33,28 @@ const Notifications: React.FC<NotificationsProps> = () => {
     });
     useDataStore.setState({ lastSeenNotificationAt: date });
     setOpen(false);
+  };
+
+  const onItemClick = async (link: string) => {
+    try {
+      const parsedUrl = new URL(link);
+      const allowedHosts = new Set([
+        "gallery.deltawidgets.com",
+        "delta-widgets-marketplace.vercel.app",
+      ]);
+      if (
+        parsedUrl.protocol === "https:" &&
+        allowedHosts.has(parsedUrl.hostname)
+      ) {
+        await commands.createGalleryWindow({
+          url: `${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`,
+        });
+      } else {
+        window.open(link);
+      }
+    } catch {
+      window.open(link);
+    }
   };
 
   return (
@@ -58,27 +77,7 @@ const Notifications: React.FC<NotificationsProps> = () => {
                   key={item.id}
                   appearance="outline"
                   onClick={
-                    item.link
-                      ? async () => {
-                          if (
-                            item.link?.startsWith(
-                              "https://gallery.deltawidgets.com",
-                            ) ||
-                            item.link?.startsWith(
-                              "https://delta-widgets-marketplace.vercel.app",
-                            )
-                          ) {
-                            await commands.createGalleryWindow({
-                              url: item.link.replace(
-                                /https\:\/\/gallery.deltawidgets.com|https\:\/\/delta-widgets-marketplace.vercel.app/,
-                                "",
-                              ),
-                            });
-                          } else {
-                            window.open(item.link!);
-                          }
-                        }
-                      : undefined
+                    item.link ? () => onItemClick(item.link!) : undefined
                   }>
                   <CardHeader
                     header={<Body1Strong>{item.title}</Body1Strong>}
