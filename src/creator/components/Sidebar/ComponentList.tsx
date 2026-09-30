@@ -24,7 +24,7 @@ import React, { ReactNode, useMemo } from "react";
 import Draggable from "../DnD/Draggable";
 import { DragOverlay } from "@dnd-kit/core";
 import { useDataTrackStore } from "../../stores/useDataTrackStore";
-import { IWidgetElement } from "../../../types/manifest";
+import { IWidgetElement } from "../../../common/types/manifest";
 import { nanoid } from "nanoid";
 import SliderIcon from "../icons/SliderIcon";
 import { restrictToWindowEdges } from "@dnd-kit/modifiers";

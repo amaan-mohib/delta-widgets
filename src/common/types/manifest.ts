@@ -46,6 +46,9 @@ export interface IWidget {
     color: string;
   } | null;
   pinned?: boolean;
+  version?: string;
+  installedAt?: string | number;
+  isGalleryWidget?: boolean;
 }
 
 export type ILiteWidget = Omit<
@@ -57,3 +60,10 @@ export type ILiteWidget = Omit<
   | "customAssets"
   | "theme"
 >;
+
+export type TWidgetWithDate = ILiteWidget & {
+  modifiedAt: number;
+  createdAt: number;
+  manifestPath: string;
+  thumbPath: string;
+};

@@ -3,7 +3,6 @@ import Canvas from "./components/Canvas";
 import { makeStyles, Spinner, tokens } from "@fluentui/react-components";
 import { getManifestStore, useManifestStore } from "./stores/useManifestStore";
 import { useEffect } from "react";
-import { nanoid } from "nanoid";
 import CreatorToolbar from "./components/Toolbar";
 import { useDataTrackStore } from "./stores/useDataTrackStore";
 import Properties from "./components/Properties";
@@ -25,49 +24,28 @@ interface AppProps {}
 const App: React.FC<AppProps> = () => {
   const styles = useStyles();
   const manifestStore = getManifestStore();
-  const {
-    initialStateLoading,
-    incrementInitialStateLoadCounter,
-    initialStateLoadCounter,
-  } = useDataTrackStore();
+  const initialStateLoading = useDataTrackStore((s) => s.initialStateLoading);
 
   useCustomAssets(manifestStore);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (window.__INITIAL_STATE__) {
-        useDataTrackStore.setState({ initialStateLoading: false });
-      } else {
-        incrementInitialStateLoadCounter();
-      }
-    }, 100);
+    useDataTrackStore.setState({ initialStateLoading: true });
+    const searchParams = new URLSearchParams(window.location.search);
+    const manifestPath = searchParams.get("manifestPath");
+    if (!manifestPath) return;
 
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [initialStateLoadCounter]);
-
-  useEffect(() => {
-    if (initialStateLoading) return;
-    const initialManifest = window.__INITIAL_STATE__?.manifestPath;
-    if (initialManifest && manifestStore === null) {
-      const manifestPath = initialManifest;
-      getManifestFromPath(manifestPath).then((manifest) => {
+    getManifestFromPath(manifestPath)
+      .then((manifest) => {
         useManifestStore.setState({
           manifest: { ...manifest, path: manifestPath },
         });
+        useDataTrackStore.setState({ initialStateLoading: false });
+      })
+      .catch((error) => {
+        console.error(error);
+        useDataTrackStore.setState({ initialStateLoading: false });
       });
-    } else {
-      const { key, label } = manifestStore || {};
-      if (!key || !label) {
-        const newLabel = `Untitled-${nanoid(4)}`;
-        const newKey = newLabel.toLowerCase();
-        useManifestStore
-          .getState()
-          .updateManifest({ key: newKey, label: newLabel });
-      }
-    }
-  }, [initialStateLoading]);
+  }, []);
 
   return initialStateLoading ? (
     <main

@@ -1,12 +1,13 @@
 use serde_json::{json, Value};
 use std::{collections::HashMap, fs};
 use tauri::{Emitter, Manager, PhysicalPosition, PhysicalSize, State};
+use uri_encode::encode_uri_component;
 
 use crate::{
     commands::{
         audio::{stop_capture as stop_audio_capture, AudioState},
         media::{stop_media_listener, MediaState},
-        services::copy_custom_assets_dir,
+        services::{capture_widget_screenshot, copy_custom_assets_dir},
         utils::{
             attach_window_events, ensure_window_position_bounds, get_existing_keys,
             get_wallpaper_preview,
@@ -20,47 +21,34 @@ pub async fn create_creator_window(
     app: tauri::AppHandle,
     webview: tauri::WebviewWindow,
     manifest_path: String,
-) {
-    let cached_wallpaper = match get_wallpaper_preview(&app) {
-        Ok(p) => p,
-        Err(e) => {
-            eprintln!("Error caching wallpaper: {e}");
-            "".to_string()
-        }
-    };
-
-    let current_monitor = webview.current_monitor().unwrap();
+) -> Result<(), String> {
+    let current_monitor = webview
+        .current_monitor()
+        .map_err(|_| "Failed to get current monitor")?;
     let position = match current_monitor {
         Some(monitor) => {
             let x = monitor.clone();
-            x.position().clone()
+            *x.position()
         }
         None => tauri::PhysicalPosition::new(0, 0),
     };
 
-    let existing_keys = get_existing_keys(&app, manifest_path.clone());
-
-    let init_obj = json!({
-        "manifestPath": manifest_path,
-        "wallpaper": cached_wallpaper,
-        "existingKeys": existing_keys
-    });
-    let init_script: &str = &format!(
-        "window.__INITIAL_STATE__ = {};",
-        serde_json::to_string(&init_obj).unwrap()
-    );
-
     let new_window = tauri::WebviewWindowBuilder::new(
         &app,
         "creator",
-        tauri::WebviewUrl::App("creator-index.html".into()),
+        tauri::WebviewUrl::App(
+            format!(
+                "creator-index.html?manifestPath={}",
+                encode_uri_component(manifest_path)
+            )
+            .into(),
+        ),
     )
     .title("Widget Creator")
     .min_inner_size(1280.0, 720.0)
     .visible(false)
-    .initialization_script(init_script)
     .build()
-    .unwrap();
+    .map_err(|_| "Failed to build creator window")?;
 
     new_window.set_position(position).unwrap();
     new_window.maximize().unwrap();
@@ -71,14 +59,13 @@ pub async fn create_creator_window(
     new_window.show().unwrap();
 
     new_window.on_window_event(move |event| {
-        match event {
-            tauri::WindowEvent::CloseRequested { .. } => {
-                let _ = app.emit_to("main", "creator-close", 1);
-                webview.show().unwrap();
-            }
-            _ => {}
+        if let tauri::WindowEvent::CloseRequested { .. } = event {
+            let _ = app.emit_to("main", "creator-close", 1);
+            webview.show().unwrap();
         };
     });
+
+    Ok(())
 }
 
 #[derive(serde::Deserialize, PartialEq)]
@@ -135,14 +122,21 @@ async fn clear_window_listeners_on_close(
 }
 
 #[tauri::command]
-pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_preview: Option<bool>) {
-    let clean_path = serde_json::from_str::<String>(&path).unwrap();
-    let manifest_content = fs::read_to_string(clean_path.as_str()).expect("Cannot read manifest");
+pub async fn create_widget_window(
+    app: tauri::AppHandle,
+    path: String,
+    is_preview: Option<bool>,
+) -> Result<(), String> {
+    let clean_path =
+        serde_json::from_str::<String>(&path).map_err(|_| "Failed to get manifest path")?;
+    let manifest_content =
+        fs::read_to_string(clean_path.as_str()).map_err(|_| "Failed to read manifest")?;
     let manifest: WidgetManifest =
-        serde_json::from_str(&manifest_content).expect("invalid manifest");
+        serde_json::from_str(&manifest_content).map_err(|_| "Failed to read manifest")?;
 
     let title = manifest.label.unwrap_or_else(|| "Widget".to_string());
     let manifest_key = manifest.key.unwrap_or_else(|| "widget".to_string());
+    let is_preview = is_preview.unwrap_or(false);
 
     let physical_size = manifest
         .dimensions
@@ -164,7 +158,7 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
         });
 
     let url = match manifest.widget_type {
-        WidgetType::Url => manifest.url.unwrap_or_else(|| "".to_string()),
+        WidgetType::Url => manifest.url.unwrap_or_default(),
         WidgetType::Html => {
             let html_folder = manifest.file.unwrap_or_else(|| "index.html".to_string());
             let _ = copy_custom_assets_dir(app.clone(), manifest_key.clone(), html_folder.clone())
@@ -177,15 +171,15 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
                 manifest_key.clone(),
             )
         }
-        _ => "widget-index.html".into(),
+        _ => format!(
+            "widget-index.html?manifestPath={}&isPreview={}",
+            encode_uri_component(&clean_path),
+            is_preview
+        ),
     };
     let label = format!(
         "widget-{}{}",
-        if is_preview.unwrap_or(false) {
-            "preview-"
-        } else {
-            ""
-        },
+        if is_preview { "preview-" } else { "" },
         manifest_key
     );
 
@@ -195,15 +189,10 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
 
     match manifest.widget_type {
         WidgetType::Json => {
-            let init_script: &str = &format!(
-                "window.__INITIAL_WIDGET_STATE__ = {{ manifestPath: {} }};",
-                path
-            );
             window_builder = window_builder
                 .transparent(true)
                 .decorations(false)
-                .shadow(false)
-                .initialization_script(init_script);
+                .shadow(false);
         }
         WidgetType::Url => {
             window_builder = window_builder
@@ -229,8 +218,8 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
             ensure_window_position_bounds(
                 &new_window,
                 PhysicalPosition {
-                    x: p.x.unwrap_or(30 as f64) as i32,
-                    y: p.y.unwrap_or(30 as f64) as i32,
+                    x: p.x.unwrap_or(30_f64) as i32,
+                    y: p.y.unwrap_or(30_f64) as i32,
                 },
                 physical_size,
             )
@@ -247,7 +236,7 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
         new_window.set_size(physical_size).unwrap();
     }
     new_window.show().unwrap();
-    if !is_preview.unwrap_or(false) {
+    if !is_preview {
         new_window.set_skip_taskbar(true).unwrap();
         new_window.set_maximizable(false).unwrap();
         new_window.set_minimizable(false).unwrap();
@@ -265,7 +254,19 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
         } else {
             new_window.set_always_on_bottom(true).unwrap();
         }
-        attach_window_events(new_window.clone(), clean_path);
+        attach_window_events(new_window.clone(), clean_path.clone());
+        if manifest.widget_type == WidgetType::Html {
+            let _ = capture_widget_screenshot(
+                app.clone(),
+                label,
+                clean_path.clone(),
+                Some(false),
+                None,
+            )
+            .await
+            .unwrap_or_default();
+            let _ = app.emit_to("main", "creator-close", json!({}));
+        }
     } else {
         let label = label.clone();
         let app = app.clone();
@@ -292,6 +293,8 @@ pub async fn create_widget_window(app: tauri::AppHandle, path: String, is_previe
             };
         });
     }
+
+    Ok(())
 }
 
 #[tauri::command]
@@ -352,7 +355,7 @@ pub async fn publish_widget(app: tauri::AppHandle, path: String) -> Result<Strin
     } else {
         if let Value::Object(ref mut map) = config {
             let old_config_content =
-                fs::read_to_string(&manifest_path.join("manifest.json")).unwrap();
+                fs::read_to_string(manifest_path.join("manifest.json")).unwrap();
             let old_config: Value = match serde_json::from_str(&old_config_content) {
                 Ok(json) => json,
                 Err(_) => json!({}),
@@ -379,7 +382,7 @@ pub async fn publish_widget(app: tauri::AppHandle, path: String) -> Result<Strin
     }
     // Copy the widget to the published directory
     if let Ok(json_string) = serde_json::to_string_pretty(&config) {
-        let _ = fs::write(&manifest_path.join("manifest.json"), json_string);
+        let _ = fs::write(manifest_path.join("manifest.json"), json_string);
     }
 
     manifest_path
@@ -398,9 +401,14 @@ pub async fn open_devtools(app: tauri::AppHandle, label: String) {
 }
 
 #[tauri::command]
-pub fn get_existing_keys_cmd(
+pub fn get_all_manifest_keys(
     app: tauri::AppHandle,
     current_folder: String,
 ) -> HashMap<String, Option<()>> {
     get_existing_keys(&app, current_folder)
+}
+
+#[tauri::command]
+pub fn get_wallpaper_path(app: tauri::AppHandle) -> Result<String, String> {
+    get_wallpaper_preview(&app).map_err(|e| e.to_string())
 }

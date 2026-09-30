@@ -1,7 +1,7 @@
 # https://github.com/squidfunk/mkdocs-material/blob/master/mkdocs.yml
 
 site_name: Delta Widgets Wiki
-site_url: https://delta-widgets.vercel.app/
+site_url: https://docs.deltawidgets.com/
 repo_name: amaan-mohib/delta-widgets
 repo_url: https://github.com/amaan-mohib/delta-widgets
 edit_uri: edit/main/docs/
@@ -128,10 +128,18 @@ nav:
   - Home:
       - Introduction: index.md
       - Resources: resources.md
-      - Contribution: contribution.md
   - Getting Started:
       - Installation: getting_started.md
       - Overview: overview.md
-  - Commands:
+  - Guides:
+      - Variables Reference: variables.md
+      - AI Assistant: ai-assistant.md
+      - Sharing & Audio Visualizer: sharing.md
+      - Settings & Data: settings.md
+      - Troubleshooting & FAQ: troubleshooting.md
+  - Reference:
       - Tauri Commands: commands.md
       - Tauri Events: events.md
+      - Widget Manifest: manifest.md
+  - Contributing:
+      - Contributing & Architecture: contribution.md

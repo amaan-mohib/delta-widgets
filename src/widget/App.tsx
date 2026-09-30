@@ -10,19 +10,14 @@ import { createThumb } from "./utils/utils";
 import { listen } from "@tauri-apps/api/event";
 import { getManifestFromPath, templateWidgets } from "../common";
 import Toolbar from "./components/Toolbar";
+import { Spinner, tokens } from "@fluentui/react-components";
 
 import "./index.css";
 
 interface AppProps {}
 
 const App: React.FC<AppProps> = () => {
-  const {
-    initialStateLoading,
-    incrementInitialStateLoadCounter,
-    initialStateLoadCounter,
-    manifest,
-    fontsToLoad,
-  } = useDataTrackStore();
+  const { initialStateLoading, manifest, fontsToLoad } = useDataTrackStore();
   const [key, setKey] = useState(0);
 
   const { elements, customFields } = useMemo(
@@ -37,40 +32,34 @@ const App: React.FC<AppProps> = () => {
   useVariableUpdater();
   useCustomAssets(manifest);
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (window.__INITIAL_WIDGET_STATE__) {
-        useDataTrackStore.setState({ initialStateLoading: false });
-      } else {
-        incrementInitialStateLoadCounter();
-      }
-    }, 100);
+  const initManifest = () => {
+    useDataTrackStore.setState({ initialStateLoading: true });
+    const searchParams = new URLSearchParams(window.location.search);
+    const manifestPath = searchParams.get("manifestPath");
+    if (!manifestPath) return;
 
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [initialStateLoadCounter]);
-
-  const initManifest = (update?: boolean) => {
-    const manifestPath = window.__INITIAL_WIDGET_STATE__?.manifestPath;
-    if (manifestPath && (update || manifest === null)) {
-      getManifestFromPath(manifestPath).then((manifest) => {
+    getManifestFromPath(manifestPath)
+      .then((manifest) => {
         useDataTrackStore.setState({
           manifest: { ...manifest, path: manifestPath },
+          initialStateLoading: false,
+          isPreview: searchParams.get("isPreview") === "true",
         });
         setKey((prev) => prev + 1);
+      })
+      .catch((error) => {
+        console.error(error);
+        useDataTrackStore.setState({ initialStateLoading: false });
       });
-    }
   };
 
   useEffect(() => {
-    if (initialStateLoading) return;
     initManifest();
-  }, [initialStateLoading]);
+  }, []);
 
   useEffect(() => {
     const unsub = listen("update-manifest", () => {
-      initManifest(true);
+      initManifest();
     });
 
     return () => {
@@ -127,7 +116,24 @@ const App: React.FC<AppProps> = () => {
     }
   }, [manifest]);
 
-  if (initialStateLoading || !manifest) return null;
+  if (initialStateLoading) {
+    return (
+      <div
+        id="widget-window-loading"
+        style={{
+          width: "100%",
+          height: "100vh",
+          display: "grid",
+          placeItems: "center",
+          background: tokens.colorNeutralBackgroundAlpha,
+          borderRadius: 10,
+        }}>
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (!manifest) return null;
 
   return (
     <div

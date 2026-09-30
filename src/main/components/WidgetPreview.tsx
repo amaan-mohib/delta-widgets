@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ILiteWidget } from "../../types/manifest";
+import { ILiteWidget } from "../../common/types/manifest";
 import {
   AppsColor,
   DocumentColor,
@@ -65,7 +65,7 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({ widget, isDraft }) => {
   const styles = useStyles();
 
   useEffect(() => {
-    if (widgetType !== "json") return;
+    if (widgetType === "url") return;
 
     if (key in templateWidgets) {
       setThumbPath(templateWidgets[key]);
@@ -115,7 +115,7 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({ widget, isDraft }) => {
     );
   }
 
-  if (widgetType === "html") {
+  if (widgetType === "html" && !thumbPath) {
     return (
       <div className={styles.container}>
         <div className={styles.url}>
@@ -126,9 +126,6 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({ widget, isDraft }) => {
         </div>
       </div>
     );
-  }
-
-  if (key in templateWidgets) {
   }
 
   if (thumbPath) {

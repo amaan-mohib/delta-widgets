@@ -3,7 +3,7 @@ import {
   IMedia,
   ISystemInformation,
   WeatherResponse,
-} from "../types/variables";
+} from "../../common/types/variables";
 
 export interface IVariableStore {
   currentDate: Date;
@@ -14,6 +14,7 @@ export interface IVariableStore {
   weatherInfo: Partial<WeatherResponse>;
   audioSamples: number[];
   customFields?: Record<string, string>;
+  dynamicVariableMap: Map<string, string[]>;
 }
 
 export const useVariableStore = create<IVariableStore>(() => ({
@@ -24,6 +25,7 @@ export const useVariableStore = create<IVariableStore>(() => ({
   systemInfo: {},
   weatherInfo: {},
   audioSamples: [],
+  dynamicVariableMap: new Map(),
 }));
 
 export const useDynamicTextStore = create<

@@ -3,16 +3,20 @@ import {
   DismissRegular,
   PinOffRegular,
   PinRegular,
+  SettingsRegular,
   WindowDevToolsRegular,
 } from "@fluentui/react-icons";
-import React from "react";
-import { IWidget } from "../../types/manifest";
+import React, { useEffect, useState } from "react";
+import { IWidget } from "../../common/types/manifest";
 import { togglePinned } from "../../main/utils/widgets";
 import { useDataTrackStore } from "../stores/useDataTrackStore";
 import { emitTo } from "@tauri-apps/api/event";
 import { message } from "@tauri-apps/plugin-dialog";
 import { commands } from "../../common/commands";
 import { closeWidgetWindow } from "../../common";
+import { useVariableStore } from "../stores/useVariableStore";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { IEmitSettings } from "../../common/types/variables";
 
 interface ToolbarProps {}
 
@@ -46,8 +50,43 @@ const openDevtools = async (manifest: IWidget) => {
 };
 
 const Toolbar: React.FC<ToolbarProps> = () => {
-  const { manifest } = useDataTrackStore();
-  if (!manifest) {
+  const { manifest, isPreview } = useDataTrackStore();
+  const dynamicVariableMap = useVariableStore((s) => s.dynamicVariableMap);
+  const [showSettings, setShowSettings] = useState(false);
+
+  useEffect(() => {
+    setShowSettings(
+      dynamicVariableMap.has("date") ||
+        dynamicVariableMap.has("time") ||
+        dynamicVariableMap.has("datetime") ||
+        dynamicVariableMap.has("weather"),
+    );
+  }, [dynamicVariableMap]);
+
+  const openSettings = async () => {
+    if (!manifest || isPreview) return;
+
+    const mainWindow = await WebviewWindow.getByLabel("main");
+    if (!mainWindow) return;
+    await mainWindow.show();
+    await mainWindow.setFocus();
+    const values: IEmitSettings["dateValues"] = {};
+    const entries = Object.fromEntries(dynamicVariableMap);
+    for (let key in entries) {
+      if (["date", "time", "datetime"].includes(key)) {
+        values[key] = entries[key];
+      }
+    }
+    await emitTo<IEmitSettings>("main", "widget-settings", {
+      label: manifest.label,
+      key: manifest.key,
+      path: manifest.path,
+      dateValues: values,
+      hasWeather: dynamicVariableMap.has("weather"),
+    });
+  };
+
+  if (!manifest || isPreview) {
     return null;
   }
 
@@ -73,6 +112,15 @@ const Toolbar: React.FC<ToolbarProps> = () => {
           });
         }}
       />
+      {showSettings && (
+        <Button
+          icon={<SettingsRegular />}
+          size="small"
+          onClick={() => {
+            openSettings();
+          }}
+        />
+      )}
       {import.meta.env.MODE === "development" && (
         <Button
           icon={<WindowDevToolsRegular />}

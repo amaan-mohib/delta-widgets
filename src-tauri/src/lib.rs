@@ -5,10 +5,10 @@ pub mod migrations;
 mod plugins;
 mod setup;
 
-use commands::{analytics, audio, chat, media, migrate, services, store, system, widget};
+use commands::{analytics, audio, chat, gallery, media, migrate, services, store, system, widget};
 use log::LevelFilter;
 use plugins::localhost;
-use setup::init::init_app;
+use setup::init::{init_app, init_widgets};
 use std::{env, sync::OnceLock};
 use tauri::Manager;
 use tauri_plugin_log::{Target, TargetKind};
@@ -25,7 +25,21 @@ pub fn get_custom_server_port() -> u16 {
 pub fn run() {
     let port = portpicker::pick_unused_port().expect("failed to find unused port");
 
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(webview_window) = app.get_webview_window("main") {
+                let _ = webview_window.show();
+                let _ = webview_window.set_focus();
+            }
+        }));
+    }
+
+    builder
+        // .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(
             tauri_plugin_log::Builder::default()
                 .targets([
@@ -40,12 +54,6 @@ pub fn run() {
         )
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_process::init())
-        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-            if let Some(webview_window) = app.get_webview_window("main") {
-                let _ = webview_window.show();
-                let _ = webview_window.set_focus();
-            }
-        }))
         .plugin(
             tauri_plugin_autostart::Builder::new()
                 .arg("--autostart")
@@ -72,13 +80,19 @@ pub fn run() {
             services::copy_custom_assets_dir,
             services::apply_blur_theme,
             services::create_url_thumbnail,
+            services::get_weather,
+            services::search_city,
             services::update_manifest_value,
+            services::create_gallery_window,
+            services::capture_widget_screenshot,
+            services::fetch_request,
             widget::create_creator_window,
             widget::create_widget_window,
             widget::close_widget_window,
             widget::publish_widget,
             widget::open_devtools,
-            widget::get_existing_keys_cmd,
+            widget::get_all_manifest_keys,
+            widget::get_wallpaper_path,
             system::get_system_info,
             analytics::track_analytics_event,
             store::write_to_store_cmd,
@@ -97,6 +111,9 @@ pub fn run() {
             chat::get_chat_by_id,
             chat::query_media_history,
             chat::create_assistant_window,
+            gallery::upload_widget,
+            gallery::validate_widget_asset,
+            gallery::download_widget,
         ])
         .setup(move |app| {
             CUSTOM_SERVER_PORT
@@ -105,22 +122,23 @@ pub fn run() {
             init_app(&app)?;
             Ok(())
         })
-        .on_window_event(|window, event| match event {
-            tauri::WindowEvent::CloseRequested { api, .. } => {
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 // hide the main window instead of closing it
                 if window.label() == "main" {
                     window.hide().unwrap();
                     api.prevent_close();
                 }
             }
-            _ => {}
         })
         .build(tauri::generate_context!())
         .expect("error while running tauri application")
-        .run(move |_, event| match event {
-            tauri::RunEvent::Ready => {
+        .run(move |app_handle, event| {
+            if let tauri::RunEvent::Ready = event {
                 println!("Tauri application is ready");
+                if let Err(e) = init_widgets(app_handle) {
+                    eprintln!("Error initializing widgets: {}", e);
+                }
             }
-            _ => {}
         });
 }

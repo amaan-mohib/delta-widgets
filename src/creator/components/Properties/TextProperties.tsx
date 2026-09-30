@@ -1,6 +1,14 @@
 import React, { useEffect, useMemo } from "react";
 import {
+  Button,
   Checkbox,
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogSurface,
+  DialogTitle,
+  DialogTrigger,
   SpinButton,
   tokens,
   Toolbar,
@@ -10,6 +18,7 @@ import {
   Tooltip,
 } from "@fluentui/react-components";
 import {
+  SettingsRegular,
   TextAlignCenterRegular,
   TextAlignJustifyRegular,
   TextAlignLeftRegular,
@@ -28,17 +37,50 @@ import { spinButtonOnChange } from "../../utils";
 import { ColorPickerPopup } from "./ColorPickerPopup";
 import Panel from "./Panel";
 import TemplateEditor from "../TemplateEditor";
+import DateField from "../../../common/components/DateField";
+import WeatherCity, {
+  WeatherCityValue,
+} from "../../../common/components/WeatherCity";
 import "react-fontpicker-ts/dist/index.css";
 
 interface TextPropertiesProps {}
+
+const dateExpressionRegex = /\{\{(date|time|datetime)(?::([^}]+))?\}\}/g;
+const weatherExpressionRegex = /\{\{weather(?::[^}]+)?\}\}/;
+
+const replaceDateExpression = (
+  text: string,
+  targetIndex: number,
+  value: string,
+) => {
+  let occurrence = 0;
+  return text.replace(dateExpressionRegex, (match) => {
+    const replacement = occurrence === targetIndex ? value : match;
+    occurrence++;
+    return replacement;
+  });
+};
 
 // const defaultFont = `'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif`;
 
 const TextProperties: React.FC<TextPropertiesProps> = () => {
   const selectedId = useDataTrackStore((state) => state.selectedId);
   const elementMap = useManifestStore((state) => state.elementMap);
+  const manifest = useManifestStore((state) => state.manifest);
   const [isDefaultFont, setIsDefaultFont] = React.useState(true);
-  const textStyles = selectedId ? elementMap[selectedId].styles : {};
+  const selectedElement = selectedId ? elementMap[selectedId] : undefined;
+  const textValue = String(selectedElement?.data?.text || "");
+  const hasWeatherVariable = weatherExpressionRegex.test(textValue);
+  const dateFields = useMemo(() => {
+    return Array.from(textValue.matchAll(dateExpressionRegex)).map(
+      ([match, type, format]) => ({
+        type,
+        dateStr: `${type}${format ? `:${format}` : ""}`,
+        match,
+      }),
+    );
+  }, [textValue]);
+  const textStyles = selectedElement?.styles || {};
   const defaultColor = useMemo(
     () =>
       window
@@ -61,15 +103,27 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
   };
 
   useEffect(() => {
-    if (!selectedId) return;
+    if (!selectedId || !selectedElement) return;
     if (textStyles.fontFamily) {
       setIsDefaultFont(textStyles.fontFamily === tokens.fontFamilyBase);
     } else {
       setIsDefaultFont(true);
     }
-  }, [selectedId, textStyles.fontFamily]);
+  }, [selectedId, selectedElement, textStyles.fontFamily]);
 
-  if (!selectedId || !elementMap[selectedId]) return null;
+  if (!selectedId || !selectedElement) return null;
+
+  const updateText = (text: string) => {
+    updateProperties({ data: { text } });
+  };
+
+  const selectWeatherCity = (weatherCity: WeatherCityValue) => {
+    useManifestStore.getState().updateCustomValues({ weatherCity });
+  };
+
+  const resetWeatherCity = () => {
+    useManifestStore.getState().removeCustomValues("weatherCity");
+  };
 
   return (
     <Panel
@@ -83,11 +137,9 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
               label: "Text",
               control: (
                 <TemplateEditor
-                  value={elementMap[selectedId].data?.text}
+                  value={selectedElement.data?.text}
                   onChange={(value) => {
-                    updateProperties({
-                      data: { text: value || "" },
-                    });
+                    updateText(value || "");
                   }}
                   isHtml
                 />
@@ -117,7 +169,7 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
                         updateProperties({
                           styles: {
                             fontFamily:
-                              elementMap[selectedId].data?.previousFont ||
+                              selectedElement.data?.previousFont ||
                               tokens.fontFamilyBase,
                           },
                         });
@@ -129,7 +181,7 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
                       defaultValue={
                         textStyles.fontFamily !== tokens.fontFamilyBase
                           ? textStyles.fontFamily
-                          : elementMap[selectedId].data?.previousFont
+                          : selectedElement.data?.previousFont
                       }
                       value={(value) => {
                         updateProperties({
@@ -143,6 +195,89 @@ const TextProperties: React.FC<TextPropertiesProps> = () => {
                 </div>
               ),
             },
+            ...(dateFields.length !== 0
+              ? [
+                  {
+                    label: "Date & Time",
+                    control: (
+                      <Dialog>
+                        <DialogTrigger disableButtonEnhancement>
+                          <Button icon={<SettingsRegular />} />
+                        </DialogTrigger>
+                        <DialogSurface>
+                          <DialogBody>
+                            <DialogTitle>Date & Time Settings</DialogTitle>
+                            <DialogContent>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: 12,
+                                }}>
+                                {dateFields.map((field, index) => (
+                                  <DateField
+                                    key={`${field.type}-${index}`}
+                                    type={field.type}
+                                    index={index}
+                                    dateStr={field.dateStr}
+                                    onSubmit={(value) => {
+                                      updateText(
+                                        replaceDateExpression(
+                                          textValue,
+                                          index,
+                                          value,
+                                        ),
+                                      );
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                            </DialogContent>
+                            <DialogActions>
+                              <DialogTrigger disableButtonEnhancement>
+                                <Button appearance="secondary">Close</Button>
+                              </DialogTrigger>
+                            </DialogActions>
+                          </DialogBody>
+                        </DialogSurface>
+                      </Dialog>
+                    ),
+                  },
+                ]
+              : []),
+            ...(hasWeatherVariable
+              ? [
+                  {
+                    label: "Weather City",
+                    control: (
+                      <Dialog>
+                        <DialogTrigger disableButtonEnhancement>
+                          <Button icon={<SettingsRegular />} />
+                        </DialogTrigger>
+                        <DialogSurface>
+                          <DialogBody>
+                            <DialogTitle>Weather Settings</DialogTitle>
+                            <DialogContent>
+                              <WeatherCity
+                                weatherCity={
+                                  manifest?.customFields?.weatherCity
+                                }
+                                onSelect={selectWeatherCity}
+                                onReset={resetWeatherCity}
+                              />
+                            </DialogContent>
+                            <DialogActions>
+                              <DialogTrigger disableButtonEnhancement>
+                                <Button appearance="secondary">Close</Button>
+                              </DialogTrigger>
+                            </DialogActions>
+                          </DialogBody>
+                        </DialogSurface>
+                      </Dialog>
+                    ),
+                  },
+                ]
+              : []),
             {
               label: "Alignment",
               control: (

@@ -77,12 +77,11 @@ impl Builder {
                     .path()
                     .resolve("files", tauri::path::BaseDirectory::AppCache)
                     .unwrap();
-                println!("{:?}", default_asset_path.display());
 
                 std::thread::spawn(move || {
                     let server =
                         Server::http(format!("{host}:{port}")).expect("Unable to spawn server");
-                    println!("Localhost server running at http://{host}:{port}");
+
                     for req in server.incoming_requests() {
                         let mut asset_path = default_asset_path.clone();
                         let path: String = req
@@ -90,7 +89,7 @@ impl Builder {
                             .parse::<Uri>()
                             .map(|uri| uri.path().into())
                             .unwrap_or_else(|_| req.url().into());
-                        println!("Received request for: {}", path);
+
                         let paths = path.split('/');
                         for p in paths {
                             asset_path = asset_path.join(p);
@@ -105,7 +104,26 @@ impl Builder {
                                 )
                                 .expect("unable to respond");
                             } else {
-                                if let Some(data) = fs::read(asset_path.clone()).ok() {
+                                let within_root = match (
+                                    asset_path.canonicalize(),
+                                    default_asset_path.canonicalize(),
+                                ) {
+                                    (Ok(resolved), Ok(root)) => resolved.starts_with(&root),
+                                    _ => false,
+                                };
+                                if !within_root {
+                                    println!(
+                                        "Rejected out-of-root path: {:?}",
+                                        asset_path.display()
+                                    );
+                                    req.respond(
+                                        HttpResponse::from_string("403 Forbidden")
+                                            .with_status_code(403),
+                                    )
+                                    .expect("unable to respond");
+                                    continue;
+                                }
+                                if let Ok(data) = fs::read(asset_path.clone()) {
                                     let mime_type =
                                         mime_guess::from_path::<&Path>(asset_path.as_ref())
                                             .first_or_octet_stream();
