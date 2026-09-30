@@ -73,7 +73,7 @@ export type ICaptureWidgetScreenshotParams = {
   refresh?: boolean;
   customName?: string;
 };
-export type ICaptureWidgetScreenshot = void;
+export type ICaptureWidgetScreenshot = string;
 
 export type IUploadWidgetParams = {
   uploadJobs: { url: string; name: string; path?: string }[];

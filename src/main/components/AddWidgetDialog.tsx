@@ -41,6 +41,7 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ title }) => {
   const [error, setError] = useState("");
   const updateAllWidgets = useDataStore((state) => state.updateAllWidgets);
   const { dialogState, setDialogState, resetDialogState } = useAddDialogStore();
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (dialogState.type === "folder") {
@@ -95,6 +96,7 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ title }) => {
       return;
     }
     try {
+      setSubmitting(true);
       const type = getType(dialogState.type);
       const newManifest = await addWidget(type, {
         label,
@@ -118,10 +120,12 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ title }) => {
         }
       }
       if (newManifest) {
-        updateAllWidgets();
+        await updateAllWidgets();
         onDialogClose();
       }
+      setSubmitting(false);
     } catch (error) {
+      setSubmitting(false);
       console.error(error);
     }
   }, [onDialogClose, dialogState, label, url]);
@@ -198,7 +202,7 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ title }) => {
             <Button
               onClick={onSubmit}
               appearance="primary"
-              disabled={canSubmit}>
+              disabled={canSubmit || submitting}>
               Submit
             </Button>
           </DialogActions>
