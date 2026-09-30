@@ -171,8 +171,13 @@ const AddWidgetDialog: React.FC<AddWidgetDialogProps> = ({ title }) => {
             )}
             {(dialogState.type === "file" || dialogState.type === "folder") && (
               <Field
-                label={dialogState.type === "file" ? "JSON file" : "Folder"}
-                style={{ marginTop: 10 }}>
+                label={dialogState.type === "file" ? "Manifest" : "Folder"}
+                style={{ marginTop: 10 }}
+                hint={
+                  dialogState.type === "file"
+                    ? "This file will be used as the widget configuration."
+                    : 'This folder will be loaded as a widget and must contain index.html. If you use a bundler, choose its build output folder. For Vite, set base to "./" so scripts, styles, and images load correctly.'
+                }>
                 <Button
                   icon={
                     dialogState.type === "file" ? (

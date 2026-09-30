@@ -126,17 +126,40 @@ pub fn ensure_window_position_bounds(
 }
 
 pub fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> {
-    fs::create_dir_all(&dst)?;
-    for entry in fs::read_dir(src)? {
-        let entry = entry?;
-        let ty = entry.file_type()?;
-        if ty.is_dir() {
-            copy_dir_all(entry.path(), dst.as_ref().join(entry.file_name()))?;
-        } else {
-            fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?;
+    const MAX_FILES: usize = 500;
+
+    fn count_files(src: &Path, file_count: &mut usize) -> io::Result<()> {
+        for entry in fs::read_dir(src)? {
+            let entry = entry?;
+            let ty = entry.file_type()?;
+            if ty.is_dir() {
+                count_files(&entry.path(), file_count)?;
+            } else {
+                *file_count += 1;
+                if *file_count > MAX_FILES {
+                    return Err(io::Error::other("Too many files"));
+                }
+            }
         }
+        Ok(())
     }
-    Ok(())
+
+    fn copy_dir(src: &Path, dst: &Path) -> io::Result<()> {
+        fs::create_dir_all(dst)?;
+        for entry in fs::read_dir(src)? {
+            let entry = entry?;
+            let destination = dst.join(entry.file_name());
+            if entry.file_type()?.is_dir() {
+                copy_dir(&entry.path(), &destination)?;
+            } else {
+                fs::copy(entry.path(), destination)?;
+            }
+        }
+        Ok(())
+    }
+
+    count_files(src.as_ref(), &mut 0)?;
+    copy_dir(src.as_ref(), dst.as_ref())
 }
 
 fn save_window_state(window: &tauri::WebviewWindow, config_path: String) {
