@@ -38,6 +38,8 @@ import { Webview } from "@tauri-apps/api/webview";
 import { updateManifest } from "../../widget/utils/utils";
 import { getAllWebviewWindows } from "@tauri-apps/api/webviewWindow";
 import { closeWidgetWindow } from "../../common";
+import { commands } from "../../common/commands";
+import { resolve } from "@tauri-apps/api/path";
 
 interface ToolbarProps {}
 
@@ -89,20 +91,33 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
     };
   }, [manifest]);
 
-  const onSubmit = useCallback(async (key: string, label: string) => {
-    if (key in (window.__INITIAL_STATE__?.existingKeys || {})) {
-      await message("A widget with same label already exist", {
-        title: "Error",
-        kind: "error",
-      });
-      return;
-    }
+  const onSubmit = useCallback(
+    async (key: string, label: string) => {
+      if (!manifest) return;
 
-    useManifestStore
-      .getState()
-      .updateManifest(isPublished ? { label } : { key, label });
-    setEditName(false);
-  }, []);
+      let path = manifest.path;
+      if (path.endsWith("manifest.json")) {
+        path = await resolve(path, "..");
+      }
+      const existingKeys = await commands.getAllManifestKeys({
+        currentFolder: path,
+      });
+
+      if (key in existingKeys) {
+        await message("A widget with same label already exist", {
+          title: "Error",
+          kind: "error",
+        });
+        return;
+      }
+
+      useManifestStore
+        .getState()
+        .updateManifest(isPublished ? { label } : { key, label });
+      setEditName(false);
+    },
+    [manifest],
+  );
 
   const togglePreview = useCallback(async () => {
     if (isPreviewing) {
@@ -243,18 +258,19 @@ const CreatorToolbar: React.FC<ToolbarProps> = () => {
         <Tooltip
           content={
             isPublished && manifest?.publishedAt
-              ? `Last published: ${new Date(
+              ? `Last installed: ${new Date(
                   manifest.publishedAt,
                 ).toLocaleString()}`
-              : "Add the widget to the Installed list"
+              : "Add this widget to the Installed list"
           }
-          relationship="label">
+          relationship="label"
+          positioning={"below-end"}>
           <Button
             size="small"
             appearance="primary"
             onClick={publish}
             disabled={isSaving}>
-            {isPublished ? "Update" : "Publish"}
+            {isPublished ? "Update" : "Install"}
           </Button>
         </Tooltip>
       </ToolbarGroup>

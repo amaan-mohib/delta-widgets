@@ -37,6 +37,22 @@ That's expected. Closing the **main window hides** it — the app keeps running 
 - It's populated **asynchronously** — access it after it becomes available, not at the top of the script.
 - It's **lost on page reloads/redirects**. Avoid navigating away inside the widget. For robust access, prefer the bundler-based approaches in [Commands → Best Practices](commands.md#best-practices).
 
+## Bundled HTML widget assets don't load
+
+When building an HTML widget with Vite or a similar bundler, configure emitted asset URLs to be relative. Root-relative paths such as `/assets/...` may resolve from the wrong location when the widget is loaded locally.
+
+For Vite, set `base` to `"./"` in `vite.config.ts`:
+
+```ts
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  base: "./",
+});
+```
+
+For other build tools, use their equivalent setting to emit relative asset URLs.
+
 ## I can't drag my URL widget
 
 - URL widgets are draggable via their **titlebar**. If you **pinned** the widget, the titlebar is removed and dragging is disabled — unpin it to move the widget again.

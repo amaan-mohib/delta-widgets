@@ -30,6 +30,7 @@ import { useTheme } from "../../theme/useTheme";
 import "react-resizable/css/styles.css";
 import { nanoid } from "nanoid";
 import { convertFileSrc } from "@tauri-apps/api/core";
+import { commands } from "../../../common/commands";
 
 const useStyles = makeStyles({
   canvas: {
@@ -153,10 +154,13 @@ const Canvas: React.FC<CanvasProps> = () => {
 
   useEffect(() => {
     if (initialStateLoading) return;
-    if (window.__INITIAL_STATE__?.wallpaper) {
-      const wallpaperPath = convertFileSrc(window.__INITIAL_STATE__.wallpaper);
-      setWallpaper(`${wallpaperPath}?key=${nanoid()}`);
-    }
+
+    commands
+      .getWallpaperPath()
+      .then((wallpaperPath) => {
+        setWallpaper(`${convertFileSrc(wallpaperPath)}?key=${nanoid()}`);
+      })
+      .catch(console.error);
   }, [initialStateLoading]);
 
   if (initialStateLoading || !widgetDimension) return null;

@@ -1,10 +1,11 @@
 use include_dir::{include_dir, Dir};
+use serde::Serialize;
 use serde_json::Value;
 use std::fs;
 use tauri::{
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
-    Manager,
+    Emitter, Manager, Url,
 };
 use tauri_plugin_autostart::ManagerExt;
 
@@ -16,6 +17,7 @@ use crate::{
     migration::{run_migrations, Direction},
     setup::utils::copy_embedded_dir,
 };
+use tauri_plugin_deep_link::DeepLinkExt;
 
 pub static TEMPLATES: Dir = include_dir!("$CARGO_MANIFEST_DIR/widget_templates");
 
@@ -127,27 +129,24 @@ fn init_autostart(app: &tauri::App) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn init_widgets(app: &tauri::App) -> anyhow::Result<()> {
+pub fn init_widgets(app: &tauri::AppHandle) -> anyhow::Result<()> {
     let widgets_dir = app
         .path()
         .resolve("widgets", tauri::path::BaseDirectory::AppData)?
         .to_path_buf();
 
-    let app_handle = app.handle().clone();
+    let app_handle = app.clone();
     tauri::async_runtime::spawn(async move {
         let mut paths: Vec<String> = vec![];
-        widgets_dir
-            .exists()
-            .then(|| {
-                println!("Widgets directory exists: {:?}", widgets_dir.display());
-            })
-            .unwrap_or_else(|| {
-                println!(
-                    "Widgets directory does not exist, creating: {:?}",
-                    widgets_dir.display()
-                );
-                fs::create_dir_all(&widgets_dir).expect("Failed to create widgets directory");
-            });
+        if widgets_dir.exists() {
+            println!("Widgets directory exists: {:?}", widgets_dir.display());
+        } else {
+            println!(
+                "Widgets directory does not exist, creating: {:?}",
+                widgets_dir.display()
+            );
+            fs::create_dir_all(&widgets_dir).expect("Failed to create widgets directory");
+        };
 
         let is_dir_empty = widgets_dir
             .read_dir()
@@ -173,13 +172,13 @@ fn init_widgets(app: &tauri::App) -> anyhow::Result<()> {
             let manifest_path = entry_path.join("manifest.json");
             if manifest_path.exists() {
                 if let Ok(json) = fs::read_to_string(&manifest_path)
-                    .and_then(|contents| Ok(serde_json::from_str::<serde_json::Value>(&contents)))
+                    .map(|contents| serde_json::from_str::<serde_json::Value>(&contents))
                     .expect("Cannot read manifest")
                 {
                     let visible = json
                         .get("visible")
                         .and_then(Value::as_bool)
-                        .unwrap_or_else(|| false);
+                        .unwrap_or(false);
 
                     if visible {
                         paths.push(manifest_path.to_str().unwrap().to_string());
@@ -188,7 +187,7 @@ fn init_widgets(app: &tauri::App) -> anyhow::Result<()> {
             }
         }
         for path in paths {
-            create_widget_window(
+            let _ = create_widget_window(
                 app_handle.clone(),
                 serde_json::json!(path).to_string(),
                 Some(false),
@@ -203,7 +202,7 @@ fn init_widgets(app: &tauri::App) -> anyhow::Result<()> {
 fn init_db(app: &tauri::App) -> anyhow::Result<()> {
     // Initialize database
     tauri::async_runtime::block_on(async move {
-        let database = db::Database::new(&app.handle())
+        let database = db::Database::new(app.handle())
             .await
             .expect("failed to initialize database");
 
@@ -214,13 +213,69 @@ fn init_db(app: &tauri::App) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[derive(Serialize, Debug, Clone)]
+#[serde(tag = "type")]
+enum DeepLinkEvent {
+    #[serde(rename = "upload")]
+    Upload,
+
+    #[serde(rename = "install")]
+    Install { key: String },
+}
+
+fn parse_deep_link(url: &Url) -> Option<DeepLinkEvent> {
+    match url.host_str()? {
+        "upload" => Some(DeepLinkEvent::Upload),
+        "install" => {
+            let key = url
+                .query_pairs()
+                .find(|(k, _)| k == "key")
+                .map(|(_, v)| v.into_owned())?;
+
+            Some(DeepLinkEvent::Install { key })
+        }
+        _ => None,
+    }
+}
+
+fn handle_deep_link(app: &tauri::AppHandle, urls: &Vec<Url>) {
+    for url in urls {
+        if url.scheme() != "deltawidgets" {
+            continue;
+        }
+
+        if let Some(event) = parse_deep_link(url) {
+            let _ = app.emit_to("main", "deep-link", event);
+        }
+    }
+}
+
+fn init_deep_link(app: &tauri::App) -> anyhow::Result<()> {
+    #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
+    {
+        app.deep_link().register_all()?;
+    }
+
+    let start_urls = app.deep_link().get_current()?;
+    if let Some(urls) = start_urls {
+        handle_deep_link(app.handle(), &urls);
+    }
+
+    let app_handle = app.handle().clone();
+    app.deep_link().on_open_url(move |event| {
+        handle_deep_link(&app_handle.clone(), &event.urls());
+    });
+
+    Ok(())
+}
+
 pub fn init_app(app: &&mut tauri::App) -> anyhow::Result<()> {
-    ensure_paths(&app);
-    init_updater(&app)?;
-    init_tray(&app)?;
-    init_autostart(&app)?;
-    init_widgets(&app)?;
-    init_db(&app)?;
+    ensure_paths(app);
+    init_updater(app)?;
+    init_tray(app)?;
+    init_autostart(app)?;
+    init_db(app)?;
+    init_deep_link(app)?;
 
     Ok(())
 }

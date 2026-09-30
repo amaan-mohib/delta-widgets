@@ -1,5 +1,5 @@
 import { Slider } from "@fluentui/react-components";
-import { IWidgetElement } from "../../types/manifest";
+import { IWidgetElement } from "../../common/types/manifest";
 import { useDynamicTextStore } from "../stores/useVariableStore";
 import { useEffect, useMemo, useState } from "react";
 import { parseDynamicText } from "../utils/utils";
@@ -23,15 +23,15 @@ const SliderComponent: React.FC<SliderComponentProps> = ({
     () => ({
       current: parseDynamicText(
         String(component.data?.current || "0"),
-        textVariables
+        textVariables,
       ),
       min: parseDynamicText(String(component.data?.min || "0"), textVariables),
       max: parseDynamicText(
         String(component.data?.max || "100"),
-        textVariables
+        textVariables,
       ),
     }),
-    [textVariables]
+    [textVariables],
   );
 
   useEffect(() => {

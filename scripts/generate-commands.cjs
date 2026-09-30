@@ -7,7 +7,7 @@ let tsCommands = fs.readFileSync(tsCommandsPath, "utf-8");
 const rsCommandsPath = path.join("src-tauri", "src", "lib.rs");
 const rsCommands = fs.readFileSync(rsCommandsPath, "utf-8");
 
-const snakeToCamel = (str) =>
+const snakeToCamel = (str = "") =>
   str
     .toLowerCase()
     .replace(/(_\w)/g, (match) => match.toUpperCase().replace("_", ""));
@@ -16,7 +16,7 @@ function getAllTauriCommands() {
   const block =
     rsCommands.match(/tauri::generate_handler!\[(.*)\]/s)?.[1] ?? "";
   const commands = [...block.matchAll(/(\w+)(?=\s*[,\]])/g)].map((m) => m[1]);
-  // console.log(commands);
+
   return commands;
 }
 
@@ -46,16 +46,33 @@ if (invalidCommands.length > 0) {
   tsCommands = tsCommands.replace(TS_REGEX, (match, command) =>
     invalidCommands.includes(command) ? "" : match,
   );
-  // return;
 }
 
-const newEntries = missingCommands
-  .map(
-    (cmd) =>
-      `  ${snakeToCamel(cmd)}: (params: {}) => invoke<void>("${cmd}", params),`,
-  )
-  .join("\n");
+const newEntries = [];
+const newTypes = [];
+missingCommands.forEach((cmd) => {
+  const name = snakeToCamel(cmd);
+  const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
+  const typeName = `I${capitalizedName}`;
+  newEntries.push(
+    `  ${name}: (params?: ${typeName}Params) => invoke<${typeName}>("${cmd}", params),`,
+  );
+  newTypes.push(
+    `export type ${typeName}Params = {};\nexport type ${typeName} = void;\n`,
+  );
+});
 
-const updated = tsCommands.replace(/(\s*}\s*;?\s*)$/, `\n${newEntries}$1`);
+const updated =
+  newEntries.length > 0
+    ? tsCommands.replace(/(\s*}\s*;?\s*)$/, `\n${newEntries.join("\n")}$1`)
+    : tsCommands;
 
-fs.writeFileSync(tsCommandsPath, updated);
+const updatedWithTypes =
+  newTypes.length > 0
+    ? updated.replace(
+        "export const commands = {",
+        `${newTypes.join("\n")}\nexport const commands = {`,
+      )
+    : updated;
+
+fs.writeFileSync(tsCommandsPath, updatedWithTypes);

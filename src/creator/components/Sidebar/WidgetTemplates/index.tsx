@@ -11,7 +11,7 @@ import {
 import { ArrowRight16Regular } from "@fluentui/react-icons";
 import React from "react";
 import { useManifestStore } from "../../../stores/useManifestStore";
-import { IWidget } from "../../../../types/manifest";
+import { IWidget } from "../../../../common/types/manifest";
 
 const templates = [
   {

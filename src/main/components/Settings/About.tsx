@@ -12,7 +12,7 @@ import {
 import { getVersion, getName } from "@tauri-apps/api/app";
 import { check as checkUpdate, Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
-import { sendMixpanelEvent } from "../../utils/analytics";
+import { sendMixpanelEvent } from "../../../common/analytics";
 
 const links = [
   {

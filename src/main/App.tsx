@@ -1,80 +1,50 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  Card,
-  makeStyles,
-  Skeleton,
-  SkeletonItem,
-  Text,
-  Toaster,
-  tokens,
-} from "@fluentui/react-components";
-import { AppsAddInRegular } from "@fluentui/react-icons";
-import WidgetCard from "./components/WidgetCard";
+import { useEffect, useRef } from "react";
+import { Toaster } from "@fluentui/react-components";
 import { listen } from "@tauri-apps/api/event";
-import { trackInstall, trackUpdated } from "./utils/analytics";
+import { trackInstall, trackUpdated } from "../common/analytics";
 import Sidebar, { sidebarWidth } from "./components/Sidebar";
 import { useDataStore } from "./stores/useDataStore";
 import SettingsSidebar from "./components/Settings/Sidebar";
 import Settings from "./components/Settings";
-import MartketplaceWaitlist from "./components/MartketplaceWaitlist";
-import "./App.css";
 import AddWidgetDialog from "./components/AddWidgetDialog";
 import WhatsNew from "./components/WhatsNew";
+import WidgetList from "./components/WidgetList";
+import { commands } from "../common/commands";
+import WidgetSettingsDialog from "./components/WidgetSettings/WidgetSettingsDialog";
+import { createWidgetWindow, duplicateWidget } from "./utils/widgets";
+import Notifications from "./components/Notifications";
+import "./App.css";
+import { closeWidgetWindow } from "../common";
+import RenameWidgetDialog from "./components/RenameWidgetDialog";
 
-const useStyles = makeStyles({
-  container: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, 200px)",
-    padding: "16px",
-    gap: "16px",
-    paddingLeft: `${sidebarWidth + 16}px`,
-    width: "100%",
-  },
-  container2: {
-    padding: "16px",
-    paddingLeft: `${sidebarWidth + 16}px`,
-    width: "100%",
-  },
-  header: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "end",
-    gap: "5px",
-  },
-  card: {
-    minHeight: "180px",
-    height: "100%",
-  },
-});
+type DeepLinkEvent = { type: "upload" } | { type: "install"; key: string };
 
 function App() {
-  const styles = useStyles();
-  const {
-    installedWidgets,
-    draftWidgets,
-    createWidget,
-    updateAllWidgets,
-    activeTab,
-    loading,
-    showSettings,
-  } = useDataStore();
-  const [key, setKey] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const showSettings = useDataStore((s) => s.showSettings);
+  const deepLinkRef = useRef(false);
+  const duplicateRef = useRef(false);
+  const closeRef = useRef(false);
 
   useEffect(() => {
-    updateAllWidgets();
+    useDataStore.getState().initData();
     trackInstall();
     trackUpdated();
   }, []);
 
   useEffect(() => {
     const unsub = listen<string>("creator-close", () => {
-      if (containerRef.current) {
-        containerRef.current.style.minHeight = `${containerRef.current.clientHeight}px`;
-      }
-      updateAllWidgets().then(() => {
-        setKey((prev) => prev + 1);
-      });
+      const scrollY = window.scrollY;
+      useDataStore
+        .getState()
+        .updateAllWidgets()
+        .then(() => {
+          useDataStore.setState({
+            listRefreshKey: useDataStore.getState().listRefreshKey + 1,
+          });
+          setTimeout(() => {
+            window.scrollTo({ top: scrollY });
+          }, 500);
+        });
     });
 
     return () => {
@@ -82,96 +52,120 @@ function App() {
     };
   }, []);
 
-  const createNew = (
-    <Card
-      className={styles.card}
-      style={{ justifyContent: "center" }}
-      onClick={createWidget}>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          height: "100%",
-          gap: "3px",
-          minHeight: 150,
-        }}>
-        <AppsAddInRegular fontSize="32px" />
-        <Text weight="semibold">Create new widget</Text>
-        <Text
-          align="center"
-          size={200}
-          style={{ marginTop: 5, color: tokens.colorNeutralForeground2 }}>
-          Build a custom widget for your desktop
-        </Text>
-      </div>
-    </Card>
-  );
+  useEffect(() => {
+    const unsub = listen<string>("focus-widget", ({ payload }) => {
+      useDataStore.setState({
+        activeTab: "installed",
+        focusWidgetKey: payload,
+      });
+      setTimeout(() => {
+        useDataStore.setState({ focusWidgetKey: null });
+      }, 3000);
+    });
+
+    return () => {
+      unsub.then((f) => f());
+    };
+  }, []);
+
+  useEffect(() => {
+    if (duplicateRef.current) return;
+
+    const unsub = listen<string>("duplicate-widget", async ({ payload }) => {
+      const widget = useDataStore
+        .getState()
+        .installedWidgets.find((w) => w.key === payload);
+      if (!widget) {
+        return Promise.reject("No such widget found");
+      }
+
+      const duplicate = await duplicateWidget(widget.manifestPath, false, true);
+      if (duplicate) {
+        await createWidgetWindow(duplicate.path, false, false);
+      }
+      await useDataStore.getState().updateAllWidgets();
+    });
+    duplicateRef.current = true;
+
+    return () => {
+      unsub.then((f) => f());
+    };
+  }, []);
+
+  useEffect(() => {
+    if (closeRef.current) return;
+
+    const unsub = listen<{
+      key: string;
+      toggleVisibility?: boolean;
+      isPreview?: boolean;
+    }>(
+      "close-widget",
+      async ({ payload: { key, toggleVisibility, isPreview } }) => {
+        const widget = useDataStore
+          .getState()
+          .installedWidgets.find((w) => w.key === key);
+        if (!widget) {
+          return Promise.reject("No such widget found");
+        }
+
+        await closeWidgetWindow(
+          `widget${isPreview ? `-preview` : ""}-${key}`,
+          toggleVisibility,
+          widget.manifestPath,
+        );
+        await useDataStore.getState().updateAllWidgets();
+      },
+    );
+    closeRef.current = true;
+
+    return () => {
+      unsub.then((f) => f());
+    };
+  }, []);
+
+  useEffect(() => {
+    if (deepLinkRef.current) return;
+
+    const unsub = listen<DeepLinkEvent>("deep-link", async ({ payload }) => {
+      switch (payload.type) {
+        case "upload":
+          await commands.createGalleryWindow({ url: `/dashboard/upload` });
+          break;
+        case "install":
+          await commands.createGalleryWindow({
+            url: `/widget/${payload.key}?install=true`,
+          });
+          break;
+      }
+    });
+    deepLinkRef.current = true;
+
+    return () => {
+      unsub.then((f) => f());
+    };
+  }, []);
 
   return (
-    <main className="container">
+    <main className="container" style={{ position: "relative" }}>
       {showSettings ? <SettingsSidebar /> : <Sidebar />}
 
       <div
-        style={{ flex: 1, ...(showSettings ? { minHeight: "100vh" } : {}) }}
-        ref={containerRef}>
-        {loading ? (
-          <div className={styles.container} role="list">
-            {Array(9)
-              .fill(null)
-              .map((_, i) => (
-                <Skeleton key={i}>
-                  <SkeletonItem className={styles.card} />
-                </Skeleton>
-              ))}
-          </div>
-        ) : showSettings ? (
-          <div className={styles.container2}>
-            <Settings />
-          </div>
-        ) : (
-          <>
-            {activeTab === "installed" && (
-              <div className={styles.container} role="list" key={key}>
-                {installedWidgets.map((widget) => {
-                  return (
-                    <WidgetCard
-                      key={widget.key}
-                      widget={widget}
-                      cardStyle={styles.card}
-                    />
-                  );
-                })}
-                {createNew}
-              </div>
-            )}
-            {activeTab === "drafts" && (
-              <div className={styles.container} role="list" key={key}>
-                {draftWidgets.length === 0 && createNew}
-                {draftWidgets.map((widget) => {
-                  return (
-                    <WidgetCard
-                      key={widget.key}
-                      widget={widget}
-                      cardStyle={styles.card}
-                      saves
-                    />
-                  );
-                })}
-              </div>
-            )}
-            {activeTab === "marketplace" && (
-              <div className={styles.container2}>
-                <MartketplaceWaitlist />
-              </div>
-            )}
-          </>
-        )}
+        style={{
+          flex: 1,
+          minHeight: "100vh",
+          padding: "16px",
+          paddingLeft: `${sidebarWidth + 16}px`,
+          width: "100%",
+        }}>
+        {showSettings ? <Settings /> : <WidgetList />}
       </div>
 
       <AddWidgetDialog />
       <WhatsNew />
+      <WidgetSettingsDialog />
+      <Notifications />
+      <RenameWidgetDialog />
       <Toaster toasterId={"toaster"} />
     </main>
   );

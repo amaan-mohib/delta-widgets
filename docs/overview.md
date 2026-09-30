@@ -63,6 +63,8 @@ To add an HTML widget, click on `HTML` from the `Add` button, it will ask to ope
 
 This gives you complete control over layout and behavior.
 
+When bundling an HTML widget with Vite or a similar tool, configure it to emit relative asset URLs. In Vite, set `base: "./"` in `vite.config.ts`. See [Troubleshooting](troubleshooting.md#bundled-html-widget-assets) for details.
+
 ### Features
 
 - Embed any HTML and style it with CSS.

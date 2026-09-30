@@ -1,5 +1,5 @@
 use serde::{ser::Serializer, Serialize};
-use sqlx::prelude::FromRow;
+use sqlx::{prelude::FromRow, Pool, Sqlite};
 use std::{
     collections::{HashMap, HashSet},
     sync::Arc,
@@ -156,7 +156,7 @@ fn get_uwp_player_info(app: &AppHandle, app_id: &String) -> Result<MediaPlayerIn
     let app_info = info_iterator.Current()?.AppInfo()?.DisplayInfo()?;
     let app_name = app_info.DisplayName().unwrap_or_default().to_string_lossy();
 
-    let encoded_app_id = get_encoded_app_id(&app_id);
+    let encoded_app_id = get_encoded_app_id(app_id);
     let icon_path = get_player_icon_path(app, &encoded_app_id);
     if icon_path.exists() {
         return Ok(MediaPlayerInfo {
@@ -611,7 +611,7 @@ pub async fn get_media(
     app: AppHandle,
     media_state: State<'_, Mutex<MediaState>>,
 ) -> CommandResult<Vec<MediaInfo>> {
-    // Serialise concurrent calls — a second webview calling get_media while
+    // Serialize concurrent calls — a second webview calling get_media while
     // one is already in flight will wait here until the first completes.
     let fetch_lock = {
         let state = media_state.lock().await;
@@ -763,7 +763,8 @@ pub async fn get_media_metadata(
     state: State<'_, DatabaseState>,
     media_id: i64,
 ) -> Result<MediaMetadataResponse, String> {
-    let pool = &state.0;
+    let db_state: &DatabaseState = state.inner();
+    let pool: &Pool<Sqlite> = &db_state.0;
     let row = sqlx::query_as::<_, MediaMetadataResponse>(
         r#"
         SELECT
@@ -777,7 +778,7 @@ pub async fn get_media_metadata(
         LIMIT 1;
         "#,
     )
-    .bind(&media_id)
+    .bind(media_id)
     .fetch_one(pool)
     .await
     .map_err(|e| e.to_string())?;

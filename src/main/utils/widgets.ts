@@ -11,7 +11,7 @@ import {
   writeTextFile,
 } from "@tauri-apps/plugin-fs";
 import { nanoid } from "nanoid";
-import { ILiteWidget, IWidget } from "../../types/manifest";
+import { ILiteWidget, IWidget } from "../../common/types/manifest";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { Buffer } from "buffer";
 import { commands } from "../../common/commands";
@@ -207,12 +207,18 @@ export const duplicateWidget = async (
       label: copyLabel,
       manifest: {
         ...widget,
+        position: {
+          x: (widget.position?.x || 0) + 30,
+          y: (widget.position?.y || 0) + 30,
+        },
         label: copyLabel,
         key: copyKey,
         description: `Copy of ${widget.label}`,
         visible: keepVisible ? widget.visible : false,
         publishedAt: widget.publishedAt ? Date.now() : undefined,
         path: oldWidgetPath,
+        isGalleryWidget: false,
+        installedAt: undefined,
       },
       path: widget.file,
       url: widget.url,
@@ -338,8 +344,8 @@ export const createWidgetWindow = async (
   } catch (error) {
     console.error("Error creating widget window:", error);
     await message(
-      `Widget maybe already being ${
-        isPreview ? "previewed" : "enabled"
+      `Widget maybe already ${
+        isPreview ? "being previewed" : "enabled"
       } or something went wrong.`,
       {
         title: "Error",

@@ -1,6 +1,11 @@
 import { invoke, InvokeArgs } from "@tauri-apps/api/core";
-import { IMedia, ISystemInformation } from "../widget/types/variables";
-import { ILiteWidget, IWidget } from "../types/manifest";
+import {
+  IMedia,
+  ISystemInformation,
+  Location,
+  WeatherResponse,
+} from "./types/variables";
+import { ILiteWidget, IWidget } from "./types/manifest";
 
 export interface IMediaActionCmd {
   playerId: string;
@@ -9,9 +14,12 @@ export interface IMediaActionCmd {
 }
 
 export interface IGetAllWidget {
-  manifest: ILiteWidget;
+  manifest: Omit<ILiteWidget, "path">;
   path: string;
+  manifestPath: string;
+  thumbPath: string;
   modifiedAt: number;
+  createdAt: number;
   isDraft: boolean;
 }
 
@@ -36,13 +44,77 @@ export interface IMessage {
   updated_at: number;
 }
 
+export type IGetMediaMetadataParams = { mediaId: number };
+export type IGetMediaMetadata = {
+  id: number;
+  title: string;
+  artist: string;
+  album: string;
+  thumbnail: number[];
+};
+
+export type IQueryMediaHistoryParams = {
+  input: {
+    intent: "history" | "top_media" | "top_artists" | "stats" | "search";
+    start_time?: string;
+    end_time?: string;
+    search_query?: string;
+    limit?: number;
+  };
+};
+export type IQueryMediaHistory = any;
+
+export type IUploadHtmlWidgetParams = { manifestPath: string };
+export type IUploadHtmlWidget = void;
+
+export type ICaptureWidgetScreenshotParams = {
+  label: string;
+  manifestPath: string;
+  refresh?: boolean;
+  customName?: string;
+};
+export type ICaptureWidgetScreenshot = string;
+
+export type IUploadWidgetParams = {
+  uploadJobs: { url: string; name: string; path?: string }[];
+  manifestPath: string;
+  uploadValues: {
+    key: string;
+    label: string;
+    version: string;
+    description?: string;
+  };
+};
+export type IUploadWidget = void;
+
+export type IValidateWidgetAssetParams = { assetPath: string };
+export type IValidateWidgetAsset = void;
+
+export type IDownloadWidgetParams = {
+  key: string;
+  files: { manifest: string; assets?: string | null; thumb?: string | null };
+};
+export type IDownloadWidget = void;
+
+export type ISearchCityParams = { city: string };
+export type ISearchCity = Location[];
+
+export type IGetAllManifestKeysParams = { currentFolder: string };
+export type IGetAllManifestKeys = Record<string, null>;
+
+export type IGetWallpaperPath = string;
+
+export type IFetchRequestParams = { url: string };
+export type IFetchRequest = string;
+
 export const commands = {
   getMedia: () => invoke<IMedia[]>("get_media"),
   startMediaListenerCmd: () => invoke<void>("start_media_listener_cmd"),
   stopMediaListenerCmd: () => invoke<void>("stop_media_listener_cmd"),
   mediaAction: (params: IMediaActionCmd) =>
     invoke<void>("media_action", params as unknown as InvokeArgs),
-  getAllWidgets: () => invoke<IGetAllWidget[]>("get_all_widgets"),
+  getAllWidgets: (params?: { dir?: "saves" | "widgets" }) =>
+    invoke<IGetAllWidget[]>("get_all_widgets", params),
   copyCustomAssets: (params: ICopyAssets) =>
     invoke<string>("copy_custom_assets", params as unknown as InvokeArgs),
   copyCustomAssetsDir: (params: ICopyAssets) =>
@@ -51,6 +123,8 @@ export const commands = {
     invoke<boolean>("apply_blur_theme", params),
   createUrlThumbnail: (params: { url: string; fileName: string }) =>
     invoke<number>("create_url_thumbnail", params),
+  getWeather: (params?: { city?: string }) =>
+    invoke<WeatherResponse>("get_weather", params),
   updateManifestValue: (params: {
     field: keyof IWidget;
     value: any;
@@ -91,29 +165,31 @@ export const commands = {
   }) => invoke("upsert_message", params),
   updateChatName: (params: { name: string; chatId: string }) =>
     invoke<void>("update_chat_name", params),
-  getExistingKeysCmd: (params: { currentFolder: string }) =>
-    invoke<Record<string, null>>("get_existing_keys_cmd", params),
   updateChatWidgetKeys: (params: { chatId: string; key: string }) =>
     invoke<void>("update_chat_widget_keys", params),
   getChatById: (params: { id: string }) =>
     invoke<IChat | undefined>("get_chat_by_id", params),
   createAssistantWindow: () => invoke<void>("create_assistant_window"),
-  queryMediaHistory: (params: {
-    input: {
-      intent: "history" | "top_media" | "top_artists" | "stats" | "search";
-      start_time?: string;
-      end_time?: string;
-      search_query?: string;
-      limit?: number;
-    };
-  }) => invoke<any>("query_media_history", params),
-  getMediaMetadata: (params: { mediaId: number }) =>
-    invoke<{
-      id: number;
-      title: string;
-      artist: string;
-      album: string;
-      thumbnail: number[];
-    }>("get_media_metadata", params),
+  queryMediaHistory: (params: IQueryMediaHistoryParams) =>
+    invoke<IQueryMediaHistory>("query_media_history", params),
+  getMediaMetadata: (params: IGetMediaMetadataParams) =>
+    invoke<IGetMediaMetadata>("get_media_metadata", params),
   deleteChat: (params: { id: string }) => invoke<void>("delete_chat", params),
+  createGalleryWindow: (params?: { url?: string }) =>
+    invoke<void>("create_gallery_window", params),
+  captureWidgetScreenshot: (params?: ICaptureWidgetScreenshotParams) =>
+    invoke<ICaptureWidgetScreenshot>("capture_widget_screenshot", params),
+  uploadWidget: (params: IUploadWidgetParams) =>
+    invoke<IUploadWidget>("upload_widget", params),
+  validateWidgetAsset: (params: IValidateWidgetAssetParams) =>
+    invoke<IValidateWidgetAsset>("validate_widget_asset", params),
+  downloadWidget: (params: IDownloadWidgetParams) =>
+    invoke<IDownloadWidget>("download_widget", params),
+  searchCity: (params: ISearchCityParams) =>
+    invoke<ISearchCity>("search_city", params),
+  getAllManifestKeys: (params: IGetAllManifestKeysParams) =>
+    invoke<IGetAllManifestKeys>("get_all_manifest_keys", params),
+  getWallpaperPath: () => invoke<IGetWallpaperPath>("get_wallpaper_path"),
+  fetchRequest: (params: IFetchRequestParams) =>
+    invoke<IFetchRequest>("fetch_request", params),
 };

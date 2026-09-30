@@ -1,6 +1,6 @@
 [package]
 name = "delta_widgets"
-version = "1.0.4"
+version = "1.0.5"
 description = "Widget maker for Windows (for now)"
 authors = ["amaan-mohib"]
 edition = "2021"
@@ -19,6 +19,7 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tokio = { version = "1.37.0", features = ["full"] }
+tokio-util = { version = "0.7", features = ["io"] }
 tauri = { version = "2", features = [ "macos-private-api", "protocol-asset", "tray-icon"] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
@@ -39,7 +40,7 @@ http = "1.3.1"
 mime_guess = "2.0.5"
 include_dir = "0.7.4"
 tauri-plugin-process = "=2.2.0"
-reqwest = { version = "0.12.23", features = ["json"] }
+reqwest = { version = "0.12.23", features = ["json", "stream"] }
 tauri-plugin-notification = "2"
 window-vibrancy = "0.7.1"
 tauri-plugin-log = "2"
@@ -51,6 +52,12 @@ base64 = "0.22.1"
 sqlx = { version = "0.8.1", features = ["runtime-tokio", "sqlite", "chrono"] }
 chrono = { version = "0.4.39", features = ["serde"] }
 tauri-plugin-keyring = "0.1.0"
+tauri-plugin-deep-link = "2"
+walkdir = "2.5.0"
+zip = "8.6.0"
+futures = "0.3.34"
+win-screenshot = "4.0.14"
+uri_encode = "1.0.4"
 
 [profile.release]
 opt-level = 'z'     # Optimize for size
@@ -61,5 +68,5 @@ strip = true        # Strip symbols from binary*
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2"
-tauri-plugin-single-instance = "2"
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
 tauri-plugin-updater = "2"

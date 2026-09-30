@@ -31,7 +31,7 @@ export default defineConfig(async () => ({
   },
   envPrefix: ["VITE_", "TAURI_ENV_*"],
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       input: {
         main: "index.html",
         creator: "creator-index.html",
