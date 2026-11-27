@@ -16,6 +16,7 @@ import Notifications from "./components/Notifications";
 import "./App.css";
 import { closeWidgetWindow } from "../common";
 import RenameWidgetDialog from "./components/RenameWidgetDialog";
+import DonationBox from "./components/Donation";
 
 type DeepLinkEvent = { type: "upload" } | { type: "install"; key: string };
 
@@ -161,6 +162,7 @@ function App() {
         {showSettings ? <Settings /> : <WidgetList />}
       </div>
 
+      <DonationBox />
       <AddWidgetDialog />
       <WhatsNew />
       <WidgetSettingsDialog />
