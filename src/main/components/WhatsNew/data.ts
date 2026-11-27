@@ -13,6 +13,16 @@ export interface IChangelog {
 
 export const CHANGELOG: IChangelog[] = [
   {
+    version: "1.0.6",
+    items: [
+      {
+        description:
+          "Fixed an overflow in media duration calculation for live streams.",
+        title: "Bug fixes",
+      },
+    ],
+  },
+  {
     version: "1.0.5",
     items: [
       {

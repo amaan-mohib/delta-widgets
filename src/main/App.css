@@ -25,3 +25,18 @@
   min-height: 100vh;
   display: flex;
 }
+
+.donate-btn {
+  border: 1px solid var(--colorBrandBackground) !important;
+  background-color: var(--colorBrandBackground2) !important;
+  color: var(--colorBrandForeground2) !important;
+  font-weight: 600 !important;
+}
+.donate-btn:hover {
+  color: var(--colorBrandForeground) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--colorNeutralBackground1Hover),
+    transparent 5%
+  ) !important;
+}

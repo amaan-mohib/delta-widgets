@@ -225,7 +225,7 @@ fn get_timeline_properties(
     timeline_properties: &SessionTimelineProperties,
 ) -> Result<MediaTimelineProperties, Error> {
     fn get_duration(hns: i64) -> u128 {
-        Duration::from_nanos((hns * 100).try_into().unwrap()).as_millis()
+        Duration::from_nanos((hns * 100).try_into().unwrap_or(0)).as_millis()
     }
     Ok(MediaTimelineProperties {
         start_time: get_duration(timeline_properties.StartTime()?.Duration),

@@ -1,5 +1,5 @@
 import { path } from "@tauri-apps/api";
-import { readTextFile } from "@tauri-apps/plugin-fs";
+import { readTextFile, stat } from "@tauri-apps/plugin-fs";
 import { commands } from "./commands";
 import { message } from "@tauri-apps/plugin-dialog";
 import { ILiteWidget, IWidget, TWidgetWithDate } from "./types/manifest";
@@ -11,6 +11,16 @@ export const getStore = async () => {
     return JSON.parse(store) as Record<string, any>;
   } catch (error) {
     return {};
+  }
+};
+
+export const getInstalledAt = async () => {
+  try {
+    const storePath = await path.resolve(await path.appDataDir(), "store.json");
+    const meta = await stat(storePath);
+    return meta.birthtime;
+  } catch (error) {
+    return null;
   }
 };
 

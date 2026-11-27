@@ -4,7 +4,7 @@ import { createCreatorWindow, isWidgetInDraft } from "../utils/widgets";
 import { sendMixpanelEvent } from "../../common/analytics";
 import { commands } from "../../common/commands";
 import { getVersion } from "@tauri-apps/api/app";
-import { getStore } from "../../common";
+import { getInstalledAt, getStore } from "../../common";
 
 export type TActiveTab = "installed" | "drafts";
 export type TSettingsActiveTab = "general" | "theme" | "about";
@@ -74,6 +74,7 @@ interface IDataStore {
   notifications: INotification[];
   openNotifications: boolean;
   renameWidget: ILiteWidget | null;
+  openDonationBox: boolean;
 }
 
 export const useDataStore = create<IDataStore>((set, get) => ({
@@ -94,19 +95,39 @@ export const useDataStore = create<IDataStore>((set, get) => ({
       updates,
       version,
       notifications,
-      { lastSeenVersion = "0", lastSeenNotificationAt = null },
+      {
+        lastSeenVersion = "0",
+        lastSeenNotificationAt = null,
+        lastSeenDonationAt = null,
+        didClickDonate = false,
+      },
+      installedAt,
     ] = await Promise.all([
       getVersions(galleryWidgets),
       getVersion(),
       getNotifications(),
       getStore(),
+      getInstalledAt(),
     ]);
+    let openDonationBox = false;
+    const hasEnabledWidgets =
+      installedWidgets.filter((item) => !!item.visible).length > 0;
+
+    if (!didClickDonate && hasEnabledWidgets) {
+      const createdAt = installedAt || new Date();
+      const lastDonationShowAt = new Date(lastSeenDonationAt || createdAt);
+      openDonationBox =
+        Date.now() - lastDonationShowAt.getTime() >=
+        (lastSeenDonationAt ? 30 : 5) * 86400 * 1000;
+    }
+
     set({
       galleryWidgetVersions: updates,
       version,
       lastSeenVersion,
       lastSeenNotificationAt,
       notifications,
+      openDonationBox,
     });
   },
   updateAllWidgets: async () => {
@@ -193,4 +214,5 @@ export const useDataStore = create<IDataStore>((set, get) => ({
   notifications: [],
   openNotifications: false,
   renameWidget: null,
+  openDonationBox: false,
 }));

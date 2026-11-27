@@ -38,8 +38,9 @@ interface SidebarProps {}
 
 export const commonItems = [
   {
+    className: "donate-btn",
     value: "donate",
-    text: "Donate",
+    text: "Buy us a coffee",
     href: "https://delta-widgets.vercel.app/#sponsor",
     icon: <Heart20Color />,
   },
@@ -205,7 +206,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
         {commonItems.map((item) => (
           <NavItem
             key={item.value}
-            className={styles.navItem}
+            className={`${item.className} ${styles.navItem}`}
             value={item.value}
             href={item.href}
             target="_blank"
