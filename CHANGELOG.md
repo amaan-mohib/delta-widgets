@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.6] - 2026-11-27
+
+### Bug fixes
+
+- Fixed an overflow in media duration calculation for live streams.
+
+### Added
+
+- Added a buy me a coffee dialog box.
+
 ## [1.0.5] - 2026-10-01
 
 ### New Features
